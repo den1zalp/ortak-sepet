@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ortak Sepet</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div>
+          <h1>Ortak Sepet</h1>
+          <p id="appSubtitle"></p>
+        </div>
+
+        <div class="header-controls">
+          <div id="languageControl" class="language-control">
+            <button id="languageToggleBtn" class="language-toggle" type="button" aria-label="Dil değiştir">
+              <span class="language-code language-code-tr" aria-hidden="true">TR</span>
+              <span class="language-code language-code-en" aria-hidden="true">EN</span>
+              <span class="language-thumb" aria-hidden="true">
+                <svg class="language-flag language-flag-tr" viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice">
+                  <rect width="30" height="20" fill="#e30a17"></rect>
+                  <circle cx="12" cy="10" r="5.2" fill="#ffffff"></circle>
+                  <circle cx="13.7" cy="10" r="4.2" fill="#e30a17"></circle>
+                  <polygon points="18.1,10 20.9,9.1 19.2,11.5 19.2,8.5 20.9,10.9" fill="#ffffff"></polygon>
+                </svg>
+                <svg class="language-flag language-flag-en" viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice">
+                  <rect width="30" height="20" fill="#012169"></rect>
+                  <path d="M0 0 30 20M30 0 0 20" stroke="#ffffff" stroke-width="5"></path>
+                  <path d="M0 0 30 20M30 0 0 20" stroke="#c8102e" stroke-width="2"></path>
+                  <path d="M15 0v20M0 10h30" stroke="#ffffff" stroke-width="7"></path>
+                  <path d="M15 0v20M0 10h30" stroke="#c8102e" stroke-width="4"></path>
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <button id="themeToggleBtn" class="theme-toggle" type="button" aria-label="Tema değiştir">
+            <span class="theme-track">
+              <span class="theme-half theme-half-light" aria-hidden="true">
+                <span class="theme-sky-cloud theme-cloud-one"></span>
+                <span class="theme-sky-cloud theme-cloud-two"></span>
+              </span>
+              <span class="theme-half theme-half-dark" aria-hidden="true">
+                <span class="theme-stars"></span>
+              </span>
+            </span>
+            <span class="theme-thumb" aria-hidden="true">
+              <span class="theme-thumb-sun"></span>
+              <span class="theme-thumb-moon"></span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <section class="action-grid" aria-label="Sepet işlemleri">
+        <button id="addCurrentProductBtn" class="action-button action-button-primary">
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          <span class="action-label"></span>
+        </button>
+        <button id="categorizeProductsBtn" class="action-button">
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span class="action-label"></span>
+        </button>
+        <button id="installmentProductsBtn" class="action-button">
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <path d="M2 10h20M6 15h4"></path>
+          </svg>
+          <span class="action-label"></span>
+        </button>
+        <button id="updateAllPricesBtn" class="action-button">
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 7h-5V2"></path>
+            <path d="M20 7a9 9 0 1 0 1 8"></path>
+          </svg>
+          <span class="action-label"></span>
+        </button>
+        <button id="exportCsvBtn" class="action-button">
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12"></path>
+            <path d="m7 10 5 5 5-5"></path>
+            <path d="M5 21h14"></path>
+          </svg>
+          <span class="action-label"></span>
+        </button>
+
+        <div class="view-icon-group">
+          <button id="compactViewBtn" class="icon-action-button" type="button">
+            <span class="compact-action-icon" aria-hidden="true"></span>
+          </button>
+
+          <button id="countryGroupingBtn" class="icon-action-button" type="button">
+            <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M2 12h20"></path>
+              <path d="M12 2a15.3 15.3 0 0 1 0 20"></path>
+              <path d="M12 2a15.3 15.3 0 0 0 0 20"></path>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <p id="status" class="status"></p>
+
+      <section class="summary">
+        <div>
+          <span id="itemCountLabel" class="summary-label"></span>
+          <strong id="itemCount">0</strong>
+        </div>
+
+        <div>
+          <span id="totalPriceLabel" class="summary-label"></span>
+          <strong id="totalPrice">0,00 TL</strong>
+        </div>
+
+        <div>
+          <span id="selectedTotalPriceLabel" class="summary-label"></span>
+          <strong id="selectedTotalPrice">0,00 TL</strong>
+        </div>
+      </section>
+
+      <section class="cart-section">
+        <h2 id="cartTitle"></h2>
+        <div id="cartItems"></div>
+      </section>
+
+      <button id="clearCartBtn" class="secondary-button"></button>
+    </main>
+
+    <script src="browser-polyfill.js"></script>
+    <script src="popup/config.js"></script>
+    <script src="popup/i18n.js"></script>
+    <script src="popup/state.js"></script>
+    <script src="popup/category.js"></script>
+    <script src="popup/totals.js"></script>
+    <script src="popup/render.js"></script>
+    <script src="popup/media.js"></script>
+    <script src="popup/actions.js"></script>
+    <script src="popup/export.js"></script>
+    <script src="popup/init.js"></script>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+{
+  "manifest_version": 3,
+  "name": "Ortak Sepet",
+  "version": "1.3.2",
+  "description": "Türkiye ve Birleşik Krallık alışveriş siteleri için ortak alışveriş sepeti.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "*://*.zara.com/*",
+    "*://*.bershka.com/*",
+    "*://*.hm.com/*",
+    "*://*.jeanslab.com/*",
+    "*://*.trendyol.com/*",
+    "*://*.hepsiburada.com/*",
+    "*://*.n11.com/*",
+    "*://*.amazon.com.tr/*",
+    "*://*.teknosa.com/*",
+    "*://*.vatanbilgisayar.com/*",
+    "*://*.mediamarkt.com.tr/*",
+    "*://*.pazarama.com/*",
+    "*://*.ciceksepeti.com/*",
+    "*://*.idefix.com/*",
+    "*://*.dr.com.tr/*",
+    "*://*.itopya.com/*",
+    "*://*.incehesap.com/*",
+    "*://*.amazon.co.uk/*",
+    "*://*.ebay.co.uk/*",
+    "*://*.vinted.co.uk/*",
+    "*://*.argos.co.uk/*",
+    "*://*.currys.co.uk/*",
+    "*://*.diesel.com/*",
+    "*://*.temu.com/*",
+    "*://*.aliexpress.com/*",
+    "*://*.sephora.com.tr/*",
+    "*://*.sephora.co.uk/*"
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "background": {
+    "scripts": [
+      "browser-polyfill.js",
+      "background.js"
+    ],
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Ortak Sepet",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.zara.com/*",
+        "*://*.bershka.com/*",
+        "*://*.hm.com/*",
+        "*://*.jeanslab.com/*",
+        "*://*.trendyol.com/*",
+        "*://*.hepsiburada.com/*",
+        "*://*.n11.com/*",
+        "*://*.amazon.com.tr/*",
+        "*://*.teknosa.com/*",
+        "*://*.vatanbilgisayar.com/*",
+        "*://*.mediamarkt.com.tr/*",
+        "*://*.pazarama.com/*",
+        "*://*.ciceksepeti.com/*",
+        "*://*.idefix.com/*",
+        "*://*.dr.com.tr/*",
+        "*://*.itopya.com/*",
+        "*://*.incehesap.com/*",
+        "*://*.sephora.com.tr/*"
+      ],
+      "js": [
+        "browser-polyfill.js",
+        "content/shared/core.js",
+        "content/parsers/trendyol.js",
+        "content/parsers/hepsiburada.js",
+        "content/parsers/n11.js",
+        "content/parsers/amazon-tr.js",
+        "content/parsers/teknosa.js",
+        "content/parsers/vatan.js",
+        "content/parsers/mediamarkt.js",
+        "content/parsers/pazarama.js",
+        "content/parsers/idefix.js",
+        "content/parsers/fashion-shared.js",
+        "content/parsers/zara.js",
+        "content/parsers/bershka.js",
+        "content/parsers/hm.js",
+        "content/parsers/jeanslab.js",
+        "content/parsers/itopya.js",
+        "content/parsers/incehesap.js",
+        "content/parsers/sephora-tr.js",
+        "content/parsers/registry.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://*.amazon.co.uk/*",
+        "*://*.ebay.co.uk/*",
+        "*://*.vinted.co.uk/*",
+        "*://*.argos.co.uk/*",
+        "*://*.currys.co.uk/*",
+        "*://*.diesel.com/*",
+        "*://*.temu.com/*",
+        "*://*.aliexpress.com/*",
+        "*://*.sephora.co.uk/*"
+      ],
+      "js": [
+        "content-uk/shared/core.js",
+        "content-uk/parsers/amazon-uk.js",
+        "content-uk/parsers/ebay-uk.js",
+        "content-uk/parsers/vinted-uk.js",
+        "content-uk/parsers/argos-uk.js",
+        "content-uk/parsers/currys-uk.js",
+        "content-uk/parsers/diesel-uk.js",
+        "content-uk/parsers/aliexpress-uk.js",
+        "content-uk/parsers/temu-uk.js",
+        "content-uk/shared/marketplace.js",
+        "content-uk/parsers/sephora-uk.js",
+        "content-uk/parsers/registry.js",
+        "content-uk.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ortak-sepet@deniz.local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
+  }
+}

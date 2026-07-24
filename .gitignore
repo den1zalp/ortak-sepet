@@ -1,0 +1,9 @@
+node_modules/
+web-ext-artifacts/
+dist/
+*.zip
+*.log
+.DS_Store
+Thumbs.db
+.env
+CLAUDE.md
