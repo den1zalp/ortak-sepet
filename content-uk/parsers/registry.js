@@ -81,6 +81,12 @@
       parse: () => parseSephoraUk(),
       waitForPrice: true,
     },
+    {
+      id: "gymshark-uk",
+      label: "Gymshark UK",
+      matches: hostIncludes("gymshark"),
+      parse: () => parseGymsharkUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

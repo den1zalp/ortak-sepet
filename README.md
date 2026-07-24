@@ -67,6 +67,10 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Argos
 * Currys
 * Diesel UK
+* Temu
+* AliExpress
+* Sephora UK
+* Gymshark
 
 ## Kullanım
 

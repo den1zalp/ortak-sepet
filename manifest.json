@@ -35,7 +35,8 @@
     "*://*.temu.com/*",
     "*://*.aliexpress.com/*",
     "*://*.sephora.com.tr/*",
-    "*://*.sephora.co.uk/*"
+    "*://*.sephora.co.uk/*",
+    "*://*.gymshark.com/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -117,7 +118,8 @@
         "*://*.diesel.com/*",
         "*://*.temu.com/*",
         "*://*.aliexpress.com/*",
-        "*://*.sephora.co.uk/*"
+        "*://*.sephora.co.uk/*",
+        "*://*.gymshark.com/*"
       ],
       "js": [
         "content-uk/shared/core.js",
@@ -131,6 +133,7 @@
         "content-uk/parsers/temu-uk.js",
         "content-uk/shared/marketplace.js",
         "content-uk/parsers/sephora-uk.js",
+        "content-uk/parsers/gymshark-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

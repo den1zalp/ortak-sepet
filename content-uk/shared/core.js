@@ -181,6 +181,7 @@ function getSiteName() {
   if (host.includes("temu")) return "Temu";
   if (host.includes("aliexpress")) return "AliExpress";
   if (host.includes("sephora")) return "Sephora UK";
+  if (host.includes("gymshark")) return "Gymshark";
 
   return host;
 }
