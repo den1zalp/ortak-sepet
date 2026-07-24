@@ -169,3 +169,14 @@ Eklenti, desteklenen ürün sayfalarındaki görünür bilgileri okumaya çalı�
 Privacy policy is available here:
 
 [PRIVACY.md](PRIVACY.md)
+
+## Lisans
+
+Bu proje **açık kaynak değildir**; kaynağı görüntülenebilir (source available) olarak sunulmuştur.
+
+* **Serbest:** kaynağı inceleme, kişisel ve ticari olmayan kullanım, bu depoya katkı amaçlı değişiklik.
+* **Yazılı izin gerektirir:** ticari kullanım, kodun başka bir projede kullanılması, yeniden yayınlama veya herhangi bir eklenti mağazasına sunma, türev çalışma dağıtımı.
+
+Ayrıntılar için [LICENSE](LICENSE) dosyasına bakın.
+
+`browser-polyfill.js` bu lisansın kapsamı dışındadır; Mozilla'ya ait olup [MPL-2.0](https://mozilla.org/MPL/2.0/) ile dağıtılmaktadır.

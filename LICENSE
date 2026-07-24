@@ -1,21 +1,92 @@
-MIT License
-
+Ortak Sepet - Source Available License
 Copyright (c) 2026 Deniz Alp
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+================================ TÜRKÇE ================================
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Bu depodaki kaynak kod görüntülemeye açıktır, ancak açık kaynak (OSI onaylı)
+bir lisans altında dağıtılmamaktadır. Aşağıda açıkça izin verilenler dışında
+tüm haklar telif hakkı sahibinde saklıdır.
+
+İZİN VERİLENLER
+
+1. Kaynak kodu görüntülemek, incelemek ve öğrenme amacıyla kullanmak.
+2. Kişisel ve ticari olmayan kullanım: eklentiyi kendi tarayıcınıza kurup
+   çalıştırmak (resmi mağaza sürümü ya da kendi yerel derlemeniz).
+3. Bu depoya katkı sunmak amacıyla kodu değiştirmek ve değişiklikleri pull
+   request olarak göndermek.
+
+TELİF HAKKI SAHİBİNİN ÖNCEDEN YAZILI İZNİNİ GEREKTİRENLER
+
+1. Her türlü ticari kullanım.
+2. Kodun tamamının veya bir kısmının başka bir projede kullanılması.
+3. Yeniden yayınlamak; herhangi bir eklenti mağazasına veya başka bir dağıtım
+   kanalına sunmak.
+4. Türev çalışma üretip dağıtmak.
+5. Alt lisanslamak, satmak veya başkasına lisanslamak.
+
+İzin talepleri için depo sahibiyle iletişime geçin.
+
+GARANTİ REDDİ
+
+YAZILIM "OLDUĞU GİBİ" SUNULMAKTADIR; AÇIK VEYA ÖRTÜLÜ HİÇBİR GARANTİ
+VERİLMEMEKTEDİR. BUNA SATILABİLİRLİK, BELİRLİ BİR AMACA UYGUNLUK VE İHLAL
+ETMEME GARANTİLERİ DE DAHİLDİR. TELİF HAKKI SAHİBİ, YAZILIMIN KULLANIMINDAN
+VEYA YAZILIMLA BAĞLANTILI BAŞKA İŞLEMLERDEN DOĞAN HİÇBİR TALEP, HASAR VEYA
+SORUMLULUKTAN MESUL TUTULAMAZ.
+
+Eklenti, ürün sayfalarındaki görünür bilgileri okumaya çalışır. Fiyat, taksit,
+kargo ve teslimat bilgileri hatalı olabilir veya sepette değişebilir; satın
+alma öncesinde kullanıcı tarafından doğrulanmalıdır.
+
+================================ ENGLISH ===============================
+
+The source code in this repository is available for viewing, but it is NOT
+distributed under an open source (OSI-approved) licence. All rights are
+reserved by the copyright holder except as expressly granted below.
+
+PERMITTED
+
+1. Viewing, studying and reading the source code for educational purposes.
+2. Personal, non-commercial use: installing and running the extension in your
+   own browser (either the official store release or your own local build).
+3. Modifying the code for the purpose of contributing back to this repository
+   via a pull request.
+
+REQUIRES PRIOR WRITTEN PERMISSION FROM THE COPYRIGHT HOLDER
+
+1. Any commercial use.
+2. Use of the whole or any part of the code in another project.
+3. Redistribution, or publishing to any extension store or other distribution
+   channel.
+4. Creating and distributing derivative works.
+5. Sublicensing, selling or otherwise licensing to third parties.
+
+Contact the repository owner to request permission.
+
+DISCLAIMER OF WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+===================== ÜÇÜNCÜ TARAF / THIRD PARTY =======================
+
+Aşağıdaki bileşen bu lisansın kapsamı DIŞINDADIR ve kendi lisansına tabidir.
+The following component is NOT covered by the licence above and remains under
+its own licence.
+
+  browser-polyfill.js
+  webextension-polyfill v0.12.0
+  Copyright (c) Mozilla and contributors
+  Mozilla Public License 2.0 (MPL-2.0)
+  https://mozilla.org/MPL/2.0/
+  https://github.com/mozilla/webextension-polyfill
+
+Bu dosyaya ilişkin tüm hak ve yükümlülükler MPL-2.0 ile belirlenir; yukarıdaki
+kısıtlamalar bu dosya için geçerli değildir.
+
+All rights and obligations regarding that file are governed by MPL-2.0; the
+restrictions stated above do not apply to it.
