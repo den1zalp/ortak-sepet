@@ -102,6 +102,12 @@ body {
   stroke-linejoin: round;
 }
 
+.compact-toggle-icon {
+  width: 32px;
+  height: 32px;
+  stroke-width: 1.85;
+}
+
 .action-label {
   min-width: 0;
 }
@@ -126,7 +132,7 @@ body {
 .icon-action-button {
   display: inline-grid;
   place-items: center;
-  padding: 0;
+  padding: 1px;
 }
 
 .action-icon {
@@ -139,12 +145,28 @@ body {
   stroke-linejoin: round;
 }
 
-.compact-action-icon {
-  width: 19px;
-  height: 19px;
-  background: currentColor;
-  -webkit-mask: url("icons/horizontal-merge.png") center / contain no-repeat;
-  mask: url("icons/horizontal-merge.png") center / contain no-repeat;
+.icon-action-button .action-icon {
+  width: 29px;
+  height: 29px;
+  stroke-width: 1.9;
+}
+
+.icon-action-button .compact-toggle-icon {
+  width: 32px;
+  height: 32px;
+  stroke-width: 1.85;
+}
+
+.compact-toggle-icon .compact-mode-exit-icon {
+  display: none;
+}
+
+.icon-action-button.is-active .compact-toggle-icon .compact-mode-enter-icon {
+  display: none;
+}
+
+.icon-action-button.is-active .compact-toggle-icon .compact-mode-exit-icon {
+  display: block;
 }
 
 .action-button:hover,

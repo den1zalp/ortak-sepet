@@ -95,11 +95,32 @@
 
         <div class="view-icon-group">
           <button id="compactViewBtn" class="icon-action-button" type="button">
-            <span class="compact-action-icon" aria-hidden="true"></span>
+            <svg class="action-icon compact-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <g class="compact-mode-enter-icon">
+                <path d="M4.25 4.25 10.5 10.5"></path>
+                <path d="M10.5 5.6v4.9H5.6"></path>
+                <path d="M19.75 4.25 13.5 10.5"></path>
+                <path d="M18.4 10.5h-4.9V5.6"></path>
+                <path d="M4.25 19.75 10.5 13.5"></path>
+                <path d="M5.6 13.5h4.9v4.9"></path>
+                <path d="M19.75 19.75 13.5 13.5"></path>
+                <path d="M13.5 18.4v-4.9h4.9"></path>
+              </g>
+              <g class="compact-mode-exit-icon">
+                <path d="M10.5 10.5 4.25 4.25"></path>
+                <path d="M4.25 9.15v-4.9h4.9"></path>
+                <path d="M13.5 10.5 19.75 4.25"></path>
+                <path d="M14.85 4.25h4.9v4.9"></path>
+                <path d="M10.5 13.5 4.25 19.75"></path>
+                <path d="M4.25 14.85v4.9h4.9"></path>
+                <path d="M13.5 13.5 19.75 19.75"></path>
+                <path d="M14.85 19.75h4.9v-4.9"></path>
+              </g>
+            </svg>
           </button>
 
           <button id="countryGroupingBtn" class="icon-action-button" type="button">
-            <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <svg class="action-icon country-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M2 12h20"></path>
               <path d="M12 2a15.3 15.3 0 0 1 0 20"></path>
