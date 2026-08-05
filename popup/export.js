@@ -1,9 +1,20 @@
 // Ortak Sepet popup module: export.js
 // This file was split from popup.js so popup logic can be maintained by responsibility.
 
+// Ürün adları rastgele sayfalardan geliyor. Tırnak içine almak Excel'in bir
+// hücreyi formül olarak yorumlamasını engellemez; = + - @ ile başlayan değerin
+// başına tek tırnak koyup metin olarak kalmasını garantiliyoruz.
 function escapeCsvValue(value) {
   const text = String(value ?? "");
-  return `"${text.replace(/"/g, '""')}"`;
+  const safeText = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+
+  return `"${safeText.replace(/"/g, '""')}"`;
+}
+
+// Excel ayracı yerel ayardan okur: Türkçe Excel noktalı virgül bekler, virgülle
+// ayrılmış dosyayı tek sütuna basar.
+function getCsvSeparator() {
+  return currentLanguage === "tr" ? ";" : ",";
 }
 
 function createExportFilename() {
@@ -48,11 +59,79 @@ function buildCsvContent(items) {
     ];
   });
 
+  const separator = getCsvSeparator();
+
   const csvLines = [headers, ...rows].map((row) => {
-    return row.map(escapeCsvValue).join(",");
+    return row.map(escapeCsvValue).join(separator);
   });
 
   return `\ufeff${csvLines.join("\n")}`;
+}
+
+// Sepeti mesajlaşma uygulamasına yapıştırılabilir düz metne çeviriyoruz:
+// paylaşmak isteyen kullanıcı için dosya indirmekten çok daha pratik.
+function buildCartText(items) {
+  const lines = [
+    translate("copyHeader", { count: calculateTotalItemCount(items) }),
+    "",
+  ];
+
+  for (const item of items) {
+    const quantity = getQuantity(item);
+    const price = getPriceDisplayText(item);
+    const quantityPart = quantity > 1 ? ` x ${quantity}` : "";
+    const sitePart = item.site ? ` (${item.site})` : "";
+
+    lines.push(`• ${item.title || translate("noProductTitle")} — ${price}${quantityPart}${sitePart}`);
+
+    if (item.url) {
+      lines.push(`  ${item.url}`);
+    }
+  }
+
+  lines.push("", translate("copyTotal", { total: calculateTotal(items) }));
+
+  return lines.join("\n");
+}
+
+async function writeToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Pano API'si engellenmişse eski yöntemle dene.
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  let copied = false;
+
+  try {
+    copied = document.execCommand("copy");
+  } catch {
+    copied = false;
+  }
+
+  textarea.remove();
+  return copied;
+}
+
+async function copyCartToClipboard() {
+  const items = await getCartItems();
+
+  if (items.length === 0) {
+    setStatus(translate("csvNoItems"));
+    return;
+  }
+
+  const copied = await writeToClipboard(buildCartText(items));
+  setStatus(translate(copied ? "cartCopied" : "copyFailed"));
 }
 
 async function exportCartAsCsv() {

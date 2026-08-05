@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "lint": "web-ext lint"
+  },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
   }

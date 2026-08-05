@@ -18,107 +18,131 @@
     };
   }
 
-  function hostIncludes(fragment) {
-    return (context) => context.host.includes(fragment);
+  // Alan adı üzerinden eşleşiyoruz. Parça araması yanlış siteyi seçebiliyor:
+  // "pazarama.com" içinde "zara" da geçiyor.
+  function hostIs(domain) {
+    return (context) => {
+      const host = String(context.host || "").replace(/^www\d*\./, "");
+      return host === domain || host.endsWith(`.${domain}`);
+    };
   }
 
   const parsers = [
     {
       id: "zara",
       label: "Zara TR",
-      matches: hostIncludes("zara"),
+      matches: hostIs("zara.com"),
       parse: () => parseZara(),
     },
     {
       id: "bershka",
       label: "Bershka TR",
-      matches: hostIncludes("bershka"),
+      matches: hostIs("bershka.com"),
       parse: () => parseBershka(),
     },
     {
       id: "hm",
       label: "H&M TR",
-      matches: hostIncludes("hm.com"),
+      matches: hostIs("hm.com"),
       parse: () => parseHm(),
     },
     {
       id: "jeanslab",
       label: "JeansLab",
-      matches: hostIncludes("jeanslab"),
+      matches: hostIs("jeanslab.com"),
       parse: () => parseJeansLab(),
       waitForPrice: true,
     },
     {
       id: "trendyol",
       label: "Trendyol",
-      matches: hostIncludes("trendyol"),
+      matches: hostIs("trendyol.com"),
       parse: () => parseTrendyol(),
     },
     {
       id: "hepsiburada",
       label: "Hepsiburada",
-      matches: hostIncludes("hepsiburada"),
+      matches: hostIs("hepsiburada.com"),
       parse: () => parseHepsiburada(),
     },
     {
       id: "n11",
       label: "N11",
-      matches: hostIncludes("n11"),
+      matches: hostIs("n11.com"),
       parse: () => parseN11(),
     },
     {
       id: "amazon-tr",
       label: "Amazon TR",
-      matches: hostIncludes("amazon"),
+      matches: hostIs("amazon.com.tr"),
       parse: () => parseAmazonTr(),
     },
     {
       id: "teknosa",
       label: "Teknosa",
-      matches: hostIncludes("teknosa"),
+      matches: hostIs("teknosa.com"),
       parse: () => parseTeknosa(),
     },
     {
       id: "vatan",
       label: "Vatan Bilgisayar",
-      matches: hostIncludes("vatanbilgisayar"),
+      matches: hostIs("vatanbilgisayar.com"),
       parse: () => parseVatan(),
     },
     {
       id: "mediamarkt",
       label: "MediaMarkt TR",
-      matches: hostIncludes("mediamarkt"),
+      matches: hostIs("mediamarkt.com.tr"),
       parse: () => parseMediaMarkt(),
     },
     {
       id: "idefix",
       label: "idefix",
-      matches: hostIncludes("idefix"),
+      matches: hostIs("idefix.com"),
       parse: () => parseIdefix(),
     },
     {
       id: "pazarama",
       label: "Pazarama",
-      matches: hostIncludes("pazarama"),
+      matches: hostIs("pazarama.com"),
       parse: () => parsePazarama(),
     },
     {
       id: "itopya",
       label: "İtopya",
-      matches: hostIncludes("itopya"),
+      matches: hostIs("itopya.com"),
       parse: () => parseItopya(),
     },
     {
       id: "incehesap",
       label: "İncehesap",
-      matches: hostIncludes("incehesap"),
+      matches: hostIs("incehesap.com"),
       parse: () => parseIncehesap(),
     },
     {
       id: "sephora-tr",
       label: "Sephora TR",
-      matches: hostIncludes("sephora"),
+      matches: hostIs("sephora.com.tr"),
       parse: () => parseSephora(),
+    },
+    {
+      id: "ciceksepeti",
+      label: "Çiçeksepeti",
+      matches: hostIs("ciceksepeti.com"),
+      parse: () => parseCiceksepeti(),
+    },
+    {
+      id: "dr",
+      label: "D&R",
+      matches: hostIs("dr.com.tr"),
+      parse: () => parseDr(),
+    },
+    {
+      id: "ikea-tr",
+      label: "IKEA TR",
+      matches: hostIs("ikea.com.tr"),
+      parse: () => parseIkeaTr(),
+      waitForPrice: true,
     },
   ];
 

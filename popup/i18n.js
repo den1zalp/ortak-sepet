@@ -164,14 +164,17 @@ function setActionButtonLabel(button, label) {
 function applyStaticTranslations() {
   document.documentElement.lang = currentLanguage;
   appSubtitleEl.textContent = translate("appSubtitle");
+  actionGridEl.setAttribute("aria-label", translate("cartActions"));
   setActionButtonLabel(addCurrentProductBtn, translate("addCurrentProduct"));
   setActionButtonLabel(updateAllPricesBtn, translate("updateAllPrices"));
   setActionButtonLabel(exportCsvBtn, translate("exportCsv"));
+  copyCartBtn.textContent = translate("copyCart");
   clearCartBtn.textContent = translate("clearCart");
+  markPurchasedBtn.textContent = translate("markSelectedPurchased");
+  undoBtn.textContent = translate("undo");
   itemCountLabelEl.textContent = translate("itemCount");
   totalPriceLabelEl.textContent = translate("total");
   selectedTotalPriceLabelEl.textContent = translate("selectedTotal");
-  cartTitleEl.textContent = translate("cart");
   applyLanguageToggle();
   applyTheme();
 }

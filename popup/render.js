@@ -31,6 +31,41 @@ function createDetailRow(labelText, valueText, shouldBoldValue = false) {
   return row;
 }
 
+// Görsel mağazadan sıcak bağlantıyla çekiliyor; engellenirse arka plan onu
+// indirip data URL olarak veriyor. Sepet ve alınanlar aynı yedeği kullansın
+// diye tek yerde üretiliyor.
+function createProductImage(imageUrl) {
+  const image = document.createElement("img");
+  image.className = "cart-image";
+  image.alt = "";
+  image.referrerPolicy = "no-referrer";
+
+  if (!imageUrl) return image;
+
+  let imageFallbackAttempted = false;
+
+  image.addEventListener("error", async () => {
+    if (imageFallbackAttempted) return;
+    imageFallbackAttempted = true;
+
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: "FETCH_IMAGE_AS_DATA_URL",
+        url: imageUrl,
+      });
+
+      if (response?.ok && response.dataUrl) {
+        image.src = response.dataUrl;
+      }
+    } catch {
+      // Görsel kullanılamıyorsa boş görsel alanı korunur.
+    }
+  });
+
+  image.src = imageUrl;
+  return image;
+}
+
 function getCategoryColor(categoryName) {
   const colors = {
     "Anne & Bebek": "#f9a8d4",
@@ -79,31 +114,7 @@ function createCartItemElement(item) {
     wrapper.classList.add("cart-item-with-category");
   }
 
-  const image = document.createElement("img");
-  image.className = "cart-image";
-  image.alt = "";
-  image.referrerPolicy = "no-referrer";
-
-  let imageFallbackAttempted = false;
-  image.addEventListener("error", async () => {
-    if (imageFallbackAttempted || !item.image) return;
-    imageFallbackAttempted = true;
-
-    try {
-      const response = await browser.runtime.sendMessage({
-        type: "FETCH_IMAGE_AS_DATA_URL",
-        url: item.image,
-      });
-
-      if (response?.ok && response.dataUrl) {
-        image.src = response.dataUrl;
-      }
-    } catch {
-      // Görsel kullanılamıyorsa boş görsel alanı korunur.
-    }
-  });
-
-  image.src = item.image || "";
+  const image = createProductImage(item.image);
 
   const info = document.createElement("div");
   info.className = "cart-info";
@@ -111,19 +122,23 @@ function createCartItemElement(item) {
   const titleRow = document.createElement("div");
   titleRow.className = "title-row";
 
+  const fullTitle = item.title || translate("noProductTitle");
+
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.className = "select-checkbox";
   checkbox.checked = isSelected(item);
   checkbox.dataset.toggleSelected = item.id;
   checkbox.title = translate("selectedTotalTitle");
+  // Sepette çok sayıda aynı görünen denetim var; ekran okuyucunun hangi ürüne
+  // ait olduğunu söyleyebilmesi için her biri ürün adıyla adlandırılıyor.
+  checkbox.setAttribute("aria-label", translate("selectItemLabel", { title: fullTitle }));
 
   const titleContainer = document.createElement("div");
   titleContainer.className = "title-container";
 
   const title = document.createElement("div");
   title.className = "cart-title";
-  const fullTitle = item.title || translate("noProductTitle");
   title.textContent = truncateProductTitle(fullTitle, 60);
   title.title = fullTitle;
 
@@ -200,6 +215,7 @@ function createCartItemElement(item) {
   decreaseButton.className = "small-button quantity-button";
   decreaseButton.textContent = "-";
   decreaseButton.dataset.decrease = item.id;
+  decreaseButton.setAttribute("aria-label", translate("decreaseQuantityLabel", { title: fullTitle }));
 
   const quantityText = document.createElement("span");
   quantityText.className = "quantity-text";
@@ -209,6 +225,7 @@ function createCartItemElement(item) {
   increaseButton.className = "small-button quantity-button";
   increaseButton.textContent = "+";
   increaseButton.dataset.increase = item.id;
+  increaseButton.setAttribute("aria-label", translate("increaseQuantityLabel", { title: fullTitle }));
 
   quantityRow.appendChild(decreaseButton);
   quantityRow.appendChild(quantityText);
@@ -217,21 +234,31 @@ function createCartItemElement(item) {
   const actions = document.createElement("div");
   actions.className = "cart-actions";
 
+  const purchaseButton = document.createElement("button");
+  purchaseButton.className = "small-button";
+  purchaseButton.textContent = translate("markPurchased");
+  purchaseButton.dataset.purchase = item.id;
+  purchaseButton.setAttribute("aria-label", translate("markPurchasedLabel", { title: fullTitle }));
+
   const openButton = document.createElement("button");
   openButton.className = "small-button";
   openButton.textContent = translate("goToLink");
   openButton.dataset.open = item.id;
+  openButton.setAttribute("aria-label", translate("openLinkLabel", { title: fullTitle }));
 
   const editPriceButton = document.createElement("button");
   editPriceButton.className = "small-button";
   editPriceButton.textContent = translate("manualPrice");
   editPriceButton.dataset.editPrice = item.id;
+  editPriceButton.setAttribute("aria-label", translate("manualPriceLabel", { title: fullTitle }));
 
   const removeButton = document.createElement("button");
   removeButton.className = "small-button";
   removeButton.textContent = translate("remove");
   removeButton.dataset.remove = item.id;
+  removeButton.setAttribute("aria-label", translate("removeLabel", { title: fullTitle }));
 
+  actions.appendChild(purchaseButton);
   actions.appendChild(openButton);
   actions.appendChild(editPriceButton);
   actions.appendChild(removeButton);
@@ -388,12 +415,250 @@ function renderCountryGroupedCart(items) {
   }
 }
 
+function getPurchaseMonthKey(record) {
+  const date = new Date(record.purchasedAt);
+
+  if (Number.isNaN(date.getTime())) return "0000-00";
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatMonthLabel(monthKey) {
+  const [year, month] = monthKey.split("-").map(Number);
+
+  if (!year || !month) return monthKey;
+
+  return new Date(year, month - 1, 1).toLocaleDateString(
+    currentLanguage === "en" ? "en-GB" : "tr-TR",
+    { year: "numeric", month: "long" },
+  );
+}
+
+function formatPurchaseDate(record) {
+  const date = new Date(record.purchasedAt);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString(
+    currentLanguage === "en" ? "en-GB" : "tr-TR",
+    { day: "2-digit", month: "2-digit", year: "numeric" },
+  );
+}
+
+function groupPurchasesByMonth(records) {
+  const grouped = new Map();
+
+  for (const record of records) {
+    const monthKey = getPurchaseMonthKey(record);
+
+    if (!grouped.has(monthKey)) {
+      grouped.set(monthKey, []);
+    }
+
+    grouped.get(monthKey).push(record);
+  }
+
+  // En yeni ay üstte, ay içinde de en son alınan üstte.
+  for (const monthRecords of grouped.values()) {
+    monthRecords.sort(
+      (a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt),
+    );
+  }
+
+  return Array.from(grouped.entries()).sort(([a], [b]) => b.localeCompare(a));
+}
+
+function createPurchaseElement(record) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "cart-item";
+
+  if (record.category) {
+    applyCategoryAccent(wrapper, record.category);
+    wrapper.classList.add("cart-item-with-category");
+  }
+
+  const image = createProductImage(record.image);
+
+  const info = document.createElement("div");
+  info.className = "cart-info";
+
+  const titleContainer = document.createElement("div");
+  titleContainer.className = "title-container";
+
+  const fullTitle = record.title || translate("noProductTitle");
+  const title = document.createElement("div");
+  title.className = "cart-title";
+  title.textContent = truncateProductTitle(fullTitle, 60);
+  title.title = fullTitle;
+  titleContainer.appendChild(title);
+
+  if (record.category) {
+    const categoryBadge = document.createElement("span");
+    categoryBadge.className = "category-badge";
+    categoryBadge.textContent = translateCategory(record.category);
+    applyCategoryAccent(categoryBadge, record.category);
+    titleContainer.appendChild(categoryBadge);
+  }
+
+  const details = document.createElement("div");
+  details.className = "product-details";
+  details.appendChild(
+    createDetailRow(translate("site"), record.site || translate("unknownSite"), true),
+  );
+  details.appendChild(
+    createDetailRow(translate("price"), getPriceDisplayText(record), Boolean(record.price)),
+  );
+  details.appendChild(
+    createDetailRow(translate("csvQuantity"), String(getQuantity(record)), false),
+  );
+
+  const lineTotal = document.createElement("div");
+  lineTotal.className = "line-total";
+  lineTotal.textContent = getItemLineTotal(record);
+
+  const purchaseDate = document.createElement("div");
+  purchaseDate.className = "purchase-date";
+  purchaseDate.textContent = `${translate("purchasedOn")}: ${formatPurchaseDate(record)}`;
+
+  const actions = document.createElement("div");
+  actions.className = "cart-actions";
+
+  const restoreButton = document.createElement("button");
+  restoreButton.className = "small-button";
+  restoreButton.textContent = translate("restoreToCart");
+  restoreButton.dataset.restorePurchase = record.id;
+  restoreButton.setAttribute("aria-label", translate("restoreToCartLabel", { title: fullTitle }));
+
+  const openButton = document.createElement("button");
+  openButton.className = "small-button";
+  openButton.textContent = translate("goToLink");
+  openButton.dataset.openPurchase = record.id;
+  openButton.setAttribute("aria-label", translate("openLinkLabel", { title: fullTitle }));
+
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "small-button";
+  deleteButton.textContent = translate("deletePurchase");
+  deleteButton.dataset.deletePurchase = record.id;
+  deleteButton.setAttribute("aria-label", translate("deletePurchaseLabel", { title: fullTitle }));
+
+  actions.appendChild(restoreButton);
+  actions.appendChild(openButton);
+  actions.appendChild(deleteButton);
+
+  info.appendChild(titleContainer);
+  info.appendChild(details);
+  info.appendChild(lineTotal);
+  info.appendChild(purchaseDate);
+  info.appendChild(actions);
+
+  wrapper.appendChild(image);
+  wrapper.appendChild(info);
+
+  return wrapper;
+}
+
+function createMonthGroupElement(monthKey, records) {
+  const group = document.createElement("section");
+  group.className = "category-group";
+
+  const header = document.createElement("div");
+  header.className = "category-header";
+
+  const title = document.createElement("h3");
+  title.className = "category-title";
+  title.textContent = formatMonthLabel(monthKey);
+
+  const meta = document.createElement("span");
+  meta.className = "category-meta";
+  meta.textContent = translate("productMeta", {
+    products: records.length,
+    quantity: calculateTotalItemCount(records),
+    total: calculateCategoryTotal(records),
+  });
+
+  header.appendChild(title);
+  header.appendChild(meta);
+  group.appendChild(header);
+
+  for (const record of records) {
+    group.appendChild(createPurchaseElement(record));
+  }
+
+  return group;
+}
+
+function renderPurchasedSummary(records) {
+  purchasedSummaryEl.innerHTML = "";
+
+  if (records.length === 0) return;
+
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const thisMonthRecords = records.filter(
+    (record) => getPurchaseMonthKey(record) === currentMonthKey,
+  );
+
+  const entries = [
+    [translate("purchasedThisMonth"), calculateCategoryTotal(thisMonthRecords)],
+    [translate("purchasedAllTime"), calculateCategoryTotal(records)],
+  ];
+
+  for (const [label, total] of entries) {
+    const entry = document.createElement("span");
+    const strong = document.createElement("strong");
+    strong.textContent = total;
+    entry.append(`${label}: `, strong);
+    purchasedSummaryEl.appendChild(entry);
+  }
+}
+
+async function renderPurchased() {
+  const records = await getPurchasedItems();
+
+  renderPurchasedSummary(records);
+  purchasedItemsEl.innerHTML = "";
+
+  if (records.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = translate("emptyPurchased");
+    purchasedItemsEl.appendChild(empty);
+    return;
+  }
+
+  for (const [monthKey, monthRecords] of groupPurchasesByMonth(records)) {
+    purchasedItemsEl.appendChild(createMonthGroupElement(monthKey, monthRecords));
+  }
+}
+
+async function refreshTabs() {
+  const [items, records] = await Promise.all([
+    getCartItems(),
+    getPurchasedItems(),
+  ]);
+
+  cartTabBtn.textContent = `${translate("cart")} (${items.length})`;
+  purchasedTabBtn.textContent = `${translate("tabPurchased")} (${records.length})`;
+
+  applyActiveTab();
+
+  if (isPurchasedTabActive()) {
+    await renderPurchased();
+  }
+}
+
+async function setActiveTab(tab) {
+  activeTab = tab === "purchased" ? "purchased" : "cart";
+  await refreshTabs();
+}
+
 async function renderCart() {
   const items = await getCartItems();
   const viewMode = await getViewMode();
   const compactMode = await getCompactMode();
 
   applyCompactMode(compactMode);
+  await refreshTabs();
 
   cartItemsEl.innerHTML = "";
   itemCountEl.textContent = String(calculateTotalItemCount(items));

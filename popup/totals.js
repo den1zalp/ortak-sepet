@@ -1,55 +1,13 @@
 // Ortak Sepet popup module: totals.js
 // This file was split from popup.js so popup logic can be maintained by responsibility.
 
+// Para birimi tespiti ve sayıya çevirme arka planla ortak: shared/cart.js.
 function detectCurrencyFromPrice(priceText) {
-  const text = String(priceText || "");
-
-  if (/£|\bGBP\b/i.test(text)) return "GBP";
-  if (/₺|\bTRY\b|\bTL\b/i.test(text)) return "TRY";
-  if (/€|\bEUR\b/i.test(text)) return "EUR";
-  if (/\$|\bUSD\b/i.test(text)) return "USD";
-  if (/₽|\bRUB\b/i.test(text)) return "RUB";
-  if (/₴|\bUAH\b/i.test(text)) return "UAH";
-  if (/₹|\bINR\b/i.test(text)) return "INR";
-  if (/₩|\bKRW\b/i.test(text)) return "KRW";
-  if (/¥|\bJPY\b|\bCNY\b/i.test(text)) return "JPY";
-
-  return "TRY";
+  return OrtakSepetCart.detectCurrencyFromPrice(priceText);
 }
 
 function extractNumberFromPrice(priceText) {
-  if (!priceText) return null;
-
-  let cleaned = String(priceText)
-    .replace(/[^\d.,]/g, "")
-    .trim();
-
-  if (!cleaned) return null;
-
-  const commaIndex = cleaned.lastIndexOf(",");
-  const dotIndex = cleaned.lastIndexOf(".");
-
-  if (commaIndex !== -1 && dotIndex !== -1) {
-    if (commaIndex > dotIndex) {
-      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
-    } else {
-      cleaned = cleaned.replace(/,/g, "");
-    }
-  } else if (commaIndex !== -1) {
-    cleaned = cleaned.replace(",", ".");
-  } else if (dotIndex !== -1) {
-    const parts = cleaned.split(".");
-
-    const allGroupsAfterFirstAreThreeDigits =
-      parts.length > 1 && parts.slice(1).every((part) => part.length === 3);
-
-    if (allGroupsAfterFirstAreThreeDigits) {
-      cleaned = cleaned.replace(/\./g, "");
-    }
-  }
-
-  const number = Number.parseFloat(cleaned);
-  return Number.isNaN(number) ? null : number;
+  return OrtakSepetCart.extractNumberFromPrice(priceText);
 }
 
 function formatPriceByCurrency(value, currency = "TRY") {
@@ -181,7 +139,8 @@ function getInstallmentDisplay(item) {
   if (
     installmentText.includes("bulunamadı") ||
     installmentText.includes("bulunamadi") ||
-    installmentText.includes("bilgisi")
+    installmentText.includes("bilgisi") ||
+    installmentText.includes("not found")
   ) {
     return {
       text: translate("unknown"),

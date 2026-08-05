@@ -54,7 +54,7 @@
         </div>
       </header>
 
-      <section class="action-grid" aria-label="Sepet işlemleri">
+      <section id="actionGrid" class="action-grid">
         <button id="addCurrentProductBtn" class="action-button action-button-primary">
           <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 5v14M5 12h14"></path>
@@ -130,9 +130,12 @@
         </div>
       </section>
 
-      <p id="status" class="status"></p>
+      <div class="status-row">
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <button id="undoBtn" class="undo-button" type="button" hidden></button>
+      </div>
 
-      <section class="summary">
+      <section id="summarySection" class="summary">
         <div>
           <span id="itemCountLabel" class="summary-label"></span>
           <strong id="itemCount">0</strong>
@@ -150,18 +153,48 @@
       </section>
 
       <section class="cart-section">
-        <h2 id="cartTitle"></h2>
-        <div id="cartItems"></div>
+        <div class="cart-tabs" role="tablist">
+          <button
+            id="cartTabBtn"
+            class="cart-tab is-active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="cartPanel"
+          ></button>
+          <button
+            id="purchasedTabBtn"
+            class="cart-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="purchasedPanel"
+          ></button>
+        </div>
+
+        <div id="cartPanel" role="tabpanel" aria-labelledby="cartTabBtn">
+          <button id="markPurchasedBtn" class="secondary-button mark-purchased-button" type="button"></button>
+          <div id="cartItems"></div>
+        </div>
+
+        <div id="purchasedPanel" role="tabpanel" aria-labelledby="purchasedTabBtn" hidden>
+          <div id="purchasedSummary" class="purchased-summary"></div>
+          <div id="purchasedItems"></div>
+        </div>
       </section>
 
-      <button id="clearCartBtn" class="secondary-button"></button>
+      <div id="footerActions" class="footer-actions">
+        <button id="copyCartBtn" class="secondary-button" type="button"></button>
+        <button id="clearCartBtn" class="secondary-button" type="button"></button>
+      </div>
     </main>
 
     <script src="browser-polyfill.js"></script>
+    <script src="shared/category.js"></script>
+    <script src="shared/cart.js"></script>
     <script src="popup/config.js"></script>
     <script src="popup/i18n.js"></script>
     <script src="popup/state.js"></script>
-    <script src="popup/category.js"></script>
     <script src="popup/totals.js"></script>
     <script src="popup/render.js"></script>
     <script src="popup/media.js"></script>

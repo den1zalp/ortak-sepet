@@ -48,11 +48,16 @@ body {
 
 .secondary-button {
   width: 100%;
-  margin-top: 12px;
   padding: 9px 10px;
   border-radius: 12px;
   background: #6b7280;
   color: white;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .compact-button {
@@ -185,11 +190,39 @@ button:disabled {
   opacity: 0.55;
 }
 
-.status {
-  min-height: 20px;
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 10px 0;
+}
+
+.status {
+  flex: 1;
+  min-height: 20px;
+  margin: 0;
   font-size: 13px;
   color: #374151;
+}
+
+.undo-button {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border: 1px solid #111827;
+  border-radius: 8px;
+  background: transparent;
+  color: #111827;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.undo-button:hover {
+  opacity: 0.85;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .summary {
@@ -221,6 +254,55 @@ button:disabled {
 .cart-section h2 {
   font-size: 16px;
   margin: 0 0 10px;
+}
+
+.cart-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cart-tab {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: transparent;
+  color: #374151;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cart-tab.is-active {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.mark-purchased-button {
+  margin-bottom: 10px;
+  background: #059669;
+}
+
+.purchased-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.purchased-summary strong {
+  color: #111827;
+}
+
+.purchase-date {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 8px;
 }
 
 .empty {
@@ -687,6 +769,31 @@ body.dark-mode .summary-label,
 body.dark-mode .detail-label,
 body.dark-mode .category-meta,
 body.dark-mode .status {
+  color: #94a3b8;
+}
+
+body.dark-mode .undo-button {
+  border-color: #e5e7eb;
+  color: #e5e7eb;
+}
+
+body.dark-mode .cart-tab {
+  border-color: #334155;
+  color: #e5e7eb;
+}
+
+body.dark-mode .cart-tab.is-active {
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  color: #111827;
+}
+
+body.dark-mode .purchased-summary strong {
+  color: #f8fafc;
+}
+
+body.dark-mode .purchased-summary,
+body.dark-mode .purchase-date {
   color: #94a3b8;
 }
 
