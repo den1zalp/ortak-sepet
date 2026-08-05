@@ -20,10 +20,20 @@ function normalizeProduct(product) {
   const financeInfo = findFinanceInfo();
   const shippingInfo = findShippingInfo();
 
+  const price =
+    product?.price ||
+    (product?.preventPriceFallback === true ? null : fallback.price) ||
+    null;
+
+  // The structured currency only applies when the price came from structured
+  // data too; a parser that read the price off the page owns its own currency.
+  const fallbackCurrency =
+    price && price === fallback.price ? fallback.currency : null;
+
   return {
     site: product?.site || fallback.site || getSiteName(),
     title: product?.title || fallback.title || cleanText(document.title),
-    price: product?.price || (product?.preventPriceFallback === true ? null : fallback.price) || null,
+    price,
     priceReadStatus: product?.priceReadStatus || fallback.priceReadStatus || null,
     priceUnavailableReason: product?.priceUnavailableReason || fallback.priceUnavailableReason || null,
     stockAvailable: product?.stockAvailable ?? fallback.stockAvailable ?? null,
@@ -31,9 +41,9 @@ function normalizeProduct(product) {
     image: product?.image || fallback.image || "",
     url: product?.url || window.location.href,
 
-    currency: product?.currency || null,
+    currency: product?.currency || fallbackCurrency || null,
     currencySymbol: product?.currencySymbol || null,
-    region: product?.region || null,
+    region: product?.region || "UK",
 
     installmentAvailable: financeInfo.installmentAvailable,
     installmentText: financeInfo.installmentText,
@@ -51,18 +61,19 @@ function getProductParserForCurrentPage() {
   return getOrtakSepetUkParserForUrl(window.location);
 }
 
-function getProductFromPage() {
+function getRawProductFromPage() {
   const parser = getProductParserForCurrentPage();
-  const product = parser ? parser.parse() : parseGenericProduct();
-
-  return normalizeProduct(product);
+  return parser ? parser.parse() : parseGenericProduct();
 }
 
+// Finance taraması body metnini, shadow root'ları ve iframe'leri geziyor.
+// Yoklama döngüsünde sadece parser'ı çalıştırıp bu taramayı ürün oturduktan
+// sonra bir kez yapıyoruz.
 async function waitForUkProductFromPage(maxWaitMs = 2200) {
   const parser = getProductParserForCurrentPage();
   const shouldWaitForPrice = Boolean(parser?.waitForPrice);
 
-  let latestProduct = getProductFromPage();
+  let latestProduct = getRawProductFromPage();
   const startedAt = Date.now();
 
   while (
@@ -72,10 +83,10 @@ async function waitForUkProductFromPage(maxWaitMs = 2200) {
     Date.now() - startedAt < maxWaitMs
   ) {
     await wait(300);
-    latestProduct = getProductFromPage();
+    latestProduct = getRawProductFromPage();
   }
 
-  return latestProduct;
+  return normalizeProduct(latestProduct);
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

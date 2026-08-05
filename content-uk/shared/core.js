@@ -69,6 +69,45 @@ function cleanPrice(rawPrice) {
   return cleaned.replace(/\s+/g, "");
 }
 
+// JSON-LD and meta tags give a machine-readable price ("149.00") plus an
+// explicit currency. cleanPrice cannot read that shape and would also force a
+// pound sign onto a euro or dollar price, so structured data is formatted here
+// with the currency the site actually reported.
+function parseStructuredPriceNumber(rawPrice) {
+  if (rawPrice === null || rawPrice === undefined) return null;
+
+  const text = String(rawPrice).trim();
+  if (!text) return null;
+
+  if (/^\d+(?:\.\d{1,2})?$/.test(text)) {
+    const number = Number.parseFloat(text);
+    return Number.isFinite(number) && number > 0 ? number : null;
+  }
+
+  return null;
+}
+
+function formatStructuredPrice(rawPrice, currency) {
+  const number = parseStructuredPriceNumber(rawPrice);
+  if (number === null) return null;
+
+  const code = String(currency || "").toUpperCase();
+  const format = (locale) =>
+    number.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  switch (code) {
+    case "GBP": return `£${format("en-GB")}`;
+    case "USD": return `$${format("en-US")}`;
+    case "EUR": return `€${format("de-DE")}`;
+    case "TRY": return `${format("tr-TR")} TL`;
+    case "": return `£${format("en-GB")}`;
+    default: return `${format("en-US")} ${code}`;
+  }
+}
+
 function looksLikeGbpPrice(text) {
   if (!text) return false;
   const clean = cleanText(text);
@@ -182,6 +221,7 @@ function getSiteName() {
   if (host.includes("aliexpress")) return "AliExpress";
   if (host.includes("sephora")) return "Sephora UK";
   if (host.includes("gymshark")) return "Gymshark";
+  if (host.includes("ikea")) return "IKEA UK";
 
   return host;
 }
@@ -247,10 +287,14 @@ function parseJsonLdProduct() {
         image = product.image.url;
       }
 
+      const rawPrice = offers?.price ?? offers?.lowPrice ?? offers?.highPrice;
+      const currency = String(offers?.priceCurrency || "").toUpperCase();
+
       return {
         site: getSiteName(),
         title: cleanText(product.name),
-        price: cleanPrice(offers?.price || offers?.lowPrice || offers?.highPrice),
+        price: formatStructuredPrice(rawPrice, currency) || cleanPrice(rawPrice),
+        currency: currency || null,
         image,
         url: window.location.href,
       };
@@ -277,12 +321,19 @@ function parseMetaProduct() {
     getAttr("meta[property='og:price:amount']", "content") ||
     getAttr("meta[name='price']", "content");
 
+  const currency = String(
+    getAttr("meta[property='product:price:currency']", "content") ||
+      getAttr("meta[property='og:price:currency']", "content") ||
+      "",
+  ).toUpperCase();
+
   if (!title && !price && !image) return null;
 
   return {
     site: getSiteName(),
     title: cleanText(title),
-    price: cleanPrice(price),
+    price: formatStructuredPrice(price, currency) || cleanPrice(price),
+    currency: currency || null,
     image,
     url: window.location.href,
   };
@@ -333,12 +384,13 @@ function findMainPrice() {
 
   const candidates = elements
     .filter((element) => {
-      if (!isVisibleElement(element)) return false;
-
+      // Metin filtresi önce: isVisibleElement layout'u zorluyor ve bu liste
+      // sayfadaki her span/div'i kapsıyor.
       const text = cleanText(element.textContent);
       if (!looksLikeGbpPrice(text)) return false;
-      if (hasChildWithPriceText(element)) return false;
       if (text.length > 90) return false;
+      if (hasChildWithPriceText(element)) return false;
+      if (!isVisibleElement(element)) return false;
 
       const rect = element.getBoundingClientRect();
 

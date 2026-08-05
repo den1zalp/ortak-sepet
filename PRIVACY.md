@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 24 July 2026
+Last updated: 5 August 2026
 
 Ortak Sepet is a browser extension for Firefox and Chrome that helps users create a local shopping cart from supported e-commerce product pages.
 
@@ -44,6 +44,13 @@ No product data, cart data, browsing data or personal data is sent to the develo
 Product images are fetched directly from the retailer's own servers so they can be shown in the cart. These requests are made without cookies or credentials and no identifying information is attached to them.
 
 On one supported site (Diesel), product images cannot be fetched this way. For that site only, and only while the user is adding a product, the extension captures the visible area of the active tab, crops the product image out of it and discards the rest. The capture is processed entirely on the user's device and is never transmitted anywhere.
+
+## Supported Websites
+
+The extension only runs on the product pages of the retailers it supports:
+
+- Turkey: Amazon Türkiye, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt Türkiye, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA Türkiye, Sephora Türkiye, Zara, Bershka, H&M, JeansLab
+- United Kingdom: Amazon UK, eBay UK, Vinted UK, Argos, Currys, Diesel UK, Temu, AliExpress, Sephora UK, Gymshark, IKEA UK
 
 ## Third-Party Websites
 

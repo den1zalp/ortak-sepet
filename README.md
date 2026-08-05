@@ -23,13 +23,17 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Genel toplam ve seçili ürün toplamı hesaplama
 * Ürün adedi artırma ve azaltma
 * Aynı ürün tekrar eklenirse adedi artırma
+* Satın alınan ürünü "Alındı" ile ayrı listeye taşıma
+* Alınan ürünleri ay ay gruplayıp aylık harcama toplamını gösterme
 * Ürünleri otomatik kategorize etme
 * Kategoriye göre gruplama ve renkli kategori ayrımı
 * Taksit / finance olan ürünleri filtreleme
 * Kategorileri tek butonla açma ve kapatma
-* Tek butonla tüm fiyatları güncelleme
+* Tek butonla tüm fiyatları güncelleme (paralel çalışır ve durdurulabilir)
 * Manuel fiyat girme
 * CSV / Excel dışa aktarma
+* Sepeti paylaşılabilir düz metin olarak panoya kopyalama
+* Sepeti temizlemede iki adımlı onay ve geri alma
 * Sağ tık menüsünden ürünü sepete ekleme
 * Tarayıcı ikonunda sepetteki ürün sayısını gösterme
 * Türkçe / İngilizce dil seçimi
@@ -58,6 +62,12 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * D&R
 * İtopya
 * İncehesap
+* IKEA Türkiye
+* Sephora Türkiye
+* Zara
+* Bershka
+* H&M
+* JeansLab
 
 ### İngiltere
 
@@ -71,6 +81,7 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * AliExpress
 * Sephora UK
 * Gymshark
+* IKEA UK
 
 ## Kullanım
 
@@ -137,14 +148,24 @@ ortak-sepet/
 - manifest.json          # tek manifest, iki tarayıcı
 - background.js          # Firefox event page / Chrome service worker
 - browser-polyfill.js
+- shared/                # background + popup ortak modülleri (cart, category)
 - content.js             # TR içerik script'i giriş noktası
 - content/               # TR: shared/core.js + parsers/
 - content-uk.js          # UK içerik script'i giriş noktası
 - content-uk/            # UK: shared/ + parsers/
 - popup.html / popup.css
 - popup/                 # popup modülleri (config, i18n, state, render, ...)
-- icons/ - assets/
+- icons/
 ```
+
+`shared/cart.js` sepete ekleme ve sepet yazma işlemlerinin tek kaynağıdır: hem
+popup'taki **Bu Ürünü Ekle** butonu hem de sağ tık menüsü aynı kod yolunu
+kullanır. Her yazım öncesi depo yeniden okunur, böylece dakikalarca sürebilen
+fiyat güncellemesi bu sırada yapılan değişiklikleri ezmez.
+
+`package.json` içindeki `webextension-polyfill` bağımlılığı çalışma zamanında
+kullanılmaz; depodaki `browser-polyfill.js` dosyası bu paketten kopyalanmıştır ve
+polyfill'i güncellemek için tutulur.
 
 ## Planlanan İyileştirmeler
 
@@ -154,11 +175,11 @@ ortak-sepet/
 * JSON export / import desteği
 * Stok durumu tespiti
 * Daha gelişmiş fiyat değişim takibi
-* Parser yapısını daha modüler hale getirme
+* Kategori kurallarını İngilizce ürün adları için genişletme
 
 ## Marka ve Bağlantı Bildirimi
 
-Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, eBay, Vinted, Argos, Currys, Diesel veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
+Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Sephora, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
 
 Listelenen tüm marka adları, yalnızca eklentinin hangi sitelerde çalışmayı hedeflediğini açıklamak amacıyla kullanılmıştır. Tüm marka adları ve ticari markalar ilgili sahiplerine aittir.
 

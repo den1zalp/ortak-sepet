@@ -32,89 +32,17 @@ async function addCurrentProduct() {
     }
     delete response.product.imageCaptureRect;
 
-    const items = await getCartItems();
-    const viewMode = await getViewMode();
-    const categoryModeActive = viewMode === "category";
+    // Ekleme mantığı sağ tık menüsüyle ortak: shared/cart.js.
+    const result = await OrtakSepetCart.addProduct(response.product);
 
-    const currentProductUrl = normalizeUrl(response.product.url);
-
-    const existingItem = items.find((item) => {
-      return normalizeUrl(item.url) === currentProductUrl;
-    });
-
-    if (existingItem) {
-      existingItem.quantity = getQuantity(existingItem) + 1;
-      existingItem.selected = true;
-      existingItem.title = response.product.title || existingItem.title;
-
-      if (existingItem.manualPrice === true) {
-        existingItem.detectedPrice =
-          response.product.price || existingItem.detectedPrice;
-      } else if (response.product.price) {
-        existingItem.price = response.product.price;
-      } else if (response.product.priceReadStatus === "unavailable") {
-        existingItem.previousPrice = existingItem.price || existingItem.previousPrice;
-        existingItem.price = null;
-      }
-
-      existingItem.priceReadStatus = response.product.priceReadStatus || existingItem.priceReadStatus || null;
-      existingItem.priceUnavailableReason = response.product.priceUnavailableReason || existingItem.priceUnavailableReason || null;
-      existingItem.stockAvailable = response.product.stockAvailable ?? existingItem.stockAvailable ?? null;
-      existingItem.stockText = response.product.stockText || existingItem.stockText || "";
-
-      existingItem.image = response.product.image || existingItem.image;
-      existingItem.currency = response.product.currency || detectCurrencyFromPrice(existingItem.price);
-      existingItem.currencySymbol = response.product.currencySymbol || (existingItem.currency === "GBP" ? "£" : "TL");
-      existingItem.region = response.product.region || existingItem.region || (existingItem.currency === "GBP" ? "UK" : "TR");
-
-      existingItem.installmentAvailable = response.product.installmentAvailable;
-      existingItem.installmentText = response.product.installmentText;
-
-      existingItem.shippingAvailable = response.product.shippingAvailable;
-      existingItem.freeShipping = response.product.freeShipping;
-      existingItem.shippingText = response.product.shippingText;
-      existingItem.shippingSource = response.product.shippingSource;
-      existingItem.shippingConfidence = response.product.shippingConfidence;
-
-      if (categoryModeActive) {
-        existingItem.category = categorizeProduct(existingItem);
-      }
-
-      existingItem.updatedAt = new Date().toISOString();
-
-      await saveCartItems(items);
-
-      setStatus(
-        response.product.price
-          ? translate("duplicateAdded")
-          : translate("productAddedWithoutPrice"),
-      );
-      await renderCart();
-      return;
+    if (!response.product.price) {
+      setStatus(translate("productAddedWithoutPrice"));
+    } else if (result.status === "increased") {
+      setStatus(translate("duplicateAdded"));
+    } else {
+      setStatus(translate("productAdded"));
     }
 
-    const productCurrency = response.product.currency || detectCurrencyFromPrice(response.product.price);
-
-    const newItem = {
-      id: createId(),
-      ...response.product,
-      currency: productCurrency,
-      currencySymbol: response.product.currencySymbol || (productCurrency === "GBP" ? "£" : "TL"),
-      region: response.product.region || (productCurrency === "GBP" ? "UK" : "TR"),
-      quantity: 1,
-      selected: true,
-      category: categoryModeActive ? categorizeProduct(response.product) : null,
-      addedAt: new Date().toISOString(),
-    };
-
-    items.push(newItem);
-    await saveCartItems(items);
-
-    setStatus(
-      response.product.price
-        ? translate("productAdded")
-        : translate("productAddedWithoutPrice"),
-    );
     await renderCart();
   } catch (error) {
     setStatus(translate("unsupportedPage"));
@@ -213,6 +141,50 @@ async function toggleCompactMode() {
   applyCompactMode(!isCompact);
 }
 
+let isUpdatingPrices = false;
+
+function setUpdateInProgress(inProgress) {
+  isUpdatingPrices = inProgress;
+
+  // Güncelleme butonu kapatılmıyor: sürerken "durdur" görevi görüyor.
+  addCurrentProductBtn.disabled = inProgress;
+  categorizeProductsBtn.disabled = inProgress;
+  installmentProductsBtn.disabled = inProgress;
+  clearCartBtn.disabled = inProgress;
+  exportCsvBtn.disabled = inProgress;
+  copyCartBtn.disabled = inProgress;
+  markPurchasedBtn.disabled = inProgress;
+  countryGroupingBtn.disabled = inProgress;
+  compactViewBtn.disabled = inProgress;
+
+  setActionButtonLabel(
+    updateAllPricesBtn,
+    inProgress ? translate("cancelUpdate") : translate("updateAllPrices"),
+  );
+}
+
+// Buton güncelleme sürerken iptal düğmesine dönüşüyor.
+async function onUpdatePricesClick() {
+  if (isUpdatingPrices) {
+    await cancelPriceUpdate();
+    return;
+  }
+
+  await updateAllPrices();
+}
+
+async function cancelPriceUpdate() {
+  updateAllPricesBtn.disabled = true;
+
+  try {
+    await browser.runtime.sendMessage({ type: "CANCEL_UPDATE_ALL_PRICES" });
+  } catch {
+    // Arka plan yanıt vermiyorsa güncelleme zaten bitmiş olabilir.
+  } finally {
+    updateAllPricesBtn.disabled = false;
+  }
+}
+
 async function updateAllPrices() {
   const items = await getCartItems();
 
@@ -221,16 +193,7 @@ async function updateAllPrices() {
     return;
   }
 
-  updateAllPricesBtn.disabled = true;
-  addCurrentProductBtn.disabled = true;
-  categorizeProductsBtn.disabled = true;
-  installmentProductsBtn.disabled = true;
-  clearCartBtn.disabled = true;
-  exportCsvBtn.disabled = true;
-  countryGroupingBtn.disabled = true;
-  compactViewBtn.disabled = true;
-
-  setActionButtonLabel(updateAllPricesBtn, translate("updating"));
+  setUpdateInProgress(true);
   setStatus(translate("pricesUpdating"));
 
   try {
@@ -245,20 +208,16 @@ async function updateAllPrices() {
       return;
     }
 
-    setStatus(translate("pricesUpdateDone", { changed: result.changed, failed: result.failed }));
+    setStatus(
+      translate(result.cancelled ? "pricesUpdateCancelled" : "pricesUpdateDone", {
+        changed: result.changed,
+        failed: result.failed,
+      }),
+    );
   } catch (error) {
     setStatus(translate("pricesUpdateError"));
   } finally {
-    updateAllPricesBtn.disabled = false;
-    addCurrentProductBtn.disabled = false;
-    categorizeProductsBtn.disabled = false;
-    installmentProductsBtn.disabled = false;
-    clearCartBtn.disabled = false;
-    exportCsvBtn.disabled = false;
-    countryGroupingBtn.disabled = false;
-    compactViewBtn.disabled = false;
-
-    setActionButtonLabel(updateAllPricesBtn, translate("updateAllPrices"));
+    setUpdateInProgress(false);
     await renderCart();
   }
 }
@@ -303,8 +262,188 @@ async function removeItem(id) {
   const items = await getCartItems();
   const updatedItems = items.filter((item) => item.id !== id);
 
+  if (updatedItems.length === items.length) return;
+
+  await saveUndoSnapshot();
   await saveCartItems(updatedItems);
+
   setStatus(translate("productRemoved"));
+  setUndoVisible(true);
+  await renderCart();
+}
+
+// Alınan ürünün fiyatı, adedi ve para birimi bu anda dondurulur. Sonraki
+// "Fiyatları Güncelle" çalıştırmaları geçmiş ayın harcamasını değiştirmemeli.
+function createPurchaseRecord(item) {
+  return {
+    id: OrtakSepetCart.createId(),
+    title: item.title || "",
+    site: item.site || "",
+    url: item.url || "",
+    image: item.image || "",
+    category: item.category || null,
+    price: item.price || null,
+    quantity: getQuantity(item),
+    currency: getItemCurrency(item),
+    currencySymbol: item.currencySymbol || null,
+    region: getItemRegion(item),
+    purchasedAt: new Date().toISOString(),
+  };
+}
+
+async function movePurchasedItems(itemsToMove) {
+  if (itemsToMove.length === 0) {
+    setStatus(translate("noSelectedItems"));
+    return;
+  }
+
+  await saveUndoSnapshot();
+
+  const [items, purchased] = await Promise.all([
+    getCartItems(),
+    getPurchasedItems(),
+  ]);
+
+  const movedIds = new Set(itemsToMove.map((item) => item.id));
+  const records = itemsToMove.map(createPurchaseRecord);
+
+  await savePurchasedItems([...purchased, ...records]);
+  await saveCartItems(items.filter((item) => !movedIds.has(item.id)));
+
+  setStatus(translate("purchasedMoved", { count: records.length }));
+  setUndoVisible(true);
+  await renderCart();
+}
+
+async function markItemPurchased(id) {
+  const items = await getCartItems();
+  const item = items.find((cartItem) => cartItem.id === id);
+
+  if (!item) return;
+
+  await movePurchasedItems([item]);
+}
+
+async function markSelectedPurchased() {
+  const items = await getCartItems();
+  await movePurchasedItems(items.filter((item) => isSelected(item)));
+}
+
+async function restorePurchase(id) {
+  const purchased = await getPurchasedItems();
+  const record = purchased.find((entry) => entry.id === id);
+
+  if (!record) return;
+
+  await saveUndoSnapshot();
+
+  const items = await getCartItems();
+
+  items.push({
+    id: OrtakSepetCart.createId(),
+    title: record.title,
+    site: record.site,
+    url: record.url,
+    image: record.image,
+    category: record.category || null,
+    price: record.price,
+    currency: record.currency,
+    currencySymbol: record.currencySymbol,
+    region: record.region,
+    quantity: getQuantity(record),
+    selected: true,
+    addedAt: new Date().toISOString(),
+  });
+
+  await saveCartItems(items);
+  await savePurchasedItems(purchased.filter((entry) => entry.id !== id));
+
+  setStatus(translate("purchaseRestored"));
+  setUndoVisible(true);
+  await renderCart();
+}
+
+async function deletePurchase(id) {
+  const purchased = await getPurchasedItems();
+
+  if (!purchased.some((entry) => entry.id === id)) return;
+
+  await saveUndoSnapshot();
+  await savePurchasedItems(purchased.filter((entry) => entry.id !== id));
+
+  setStatus(translate("purchaseDeleted"));
+  setUndoVisible(true);
+  await renderPurchased();
+  await refreshTabs();
+}
+
+async function openPurchase(id) {
+  const purchased = await getPurchasedItems();
+  const record = purchased.find((entry) => entry.id === id);
+
+  if (!record || !record.url) return;
+
+  await browser.tabs.create({ url: record.url });
+}
+
+let clearCartConfirmTimer = null;
+
+function disarmClearCartConfirm() {
+  if (clearCartConfirmTimer) {
+    clearTimeout(clearCartConfirmTimer);
+    clearCartConfirmTimer = null;
+  }
+
+  clearCartBtn.textContent = translate("clearCart");
+}
+
+// Tek tıkla tüm sepeti silmemek için iki adımlı onay; ayrıca geri alma
+// anlık görüntüsü kaydediliyor.
+async function clearCart() {
+  const items = await getCartItems();
+
+  if (items.length === 0) {
+    setStatus(translate("cartCleared"));
+    return;
+  }
+
+  if (!clearCartConfirmTimer) {
+    clearCartBtn.textContent = translate("clearCartConfirmButton");
+    setStatus(translate("clearCartConfirm"));
+    clearCartConfirmTimer = setTimeout(disarmClearCartConfirm, 5000);
+    return;
+  }
+
+  disarmClearCartConfirm();
+
+  await saveUndoSnapshot();
+  await saveCartItems([]);
+  await setViewMode("normal");
+
+  setStatus(translate("cartCleared"));
+  setUndoVisible(true);
+  await renderCart();
+}
+
+async function undoLastAction() {
+  const snapshot = await getUndoSnapshot();
+
+  if (!snapshot) {
+    setUndoVisible(false);
+    setStatus(translate("undoUnavailable"));
+    return;
+  }
+
+  await saveCartItems(snapshot.items);
+
+  if (Array.isArray(snapshot.purchased)) {
+    await savePurchasedItems(snapshot.purchased);
+  }
+
+  await clearUndoSnapshot();
+
+  setUndoVisible(false);
+  setStatus(translate("undoDone"));
   await renderCart();
 }
 

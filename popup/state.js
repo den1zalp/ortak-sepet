@@ -2,14 +2,63 @@
 // This file was split from popup.js so popup logic can be maintained by responsibility.
 
 async function getCartItems() {
-  const result = await browser.storage.local.get(CART_KEY);
-  return result[CART_KEY] || [];
+  return OrtakSepetCart.getItems();
 }
 
 async function saveCartItems(items) {
+  await OrtakSepetCart.setItems(items);
+}
+
+async function getPurchasedItems() {
+  const result = await browser.storage.local.get(PURCHASED_KEY);
+  return result[PURCHASED_KEY] || [];
+}
+
+async function savePurchasedItems(items) {
   await browser.storage.local.set({
-    [CART_KEY]: items,
+    [PURCHASED_KEY]: items,
   });
+}
+
+// Silme, alındı işaretleme gibi işlemlerden önce hem sepet hem alınanlar
+// listesi burada saklanıyor; geri alma popup kapanıp açılsa da çalışsın diye
+// bellekte değil depoda tutuluyor. Çağıran değişiklik yapmadan önce çağırır.
+async function saveUndoSnapshot() {
+  const [items, purchased] = await Promise.all([
+    getCartItems(),
+    getPurchasedItems(),
+  ]);
+
+  await browser.storage.local.set({
+    [UNDO_KEY]: {
+      items,
+      purchased,
+      at: Date.now(),
+    },
+  });
+}
+
+async function getUndoSnapshot() {
+  const result = await browser.storage.local.get(UNDO_KEY);
+  const snapshot = result[UNDO_KEY];
+
+  if (!snapshot || !Array.isArray(snapshot.items)) return null;
+  if (Date.now() - (snapshot.at || 0) > UNDO_WINDOW_MS) return null;
+
+  return snapshot;
+}
+
+async function clearUndoSnapshot() {
+  await browser.storage.local.remove(UNDO_KEY);
+}
+
+function setUndoVisible(isVisible) {
+  undoBtn.hidden = !isVisible;
+  undoBtn.textContent = translate("undo");
+}
+
+async function refreshUndoVisibility() {
+  setUndoVisible(Boolean(await getUndoSnapshot()));
 }
 
 async function getViewMode() {
@@ -46,12 +95,38 @@ function applyCompactMode(isCompact) {
   }
 }
 
+// Content script'ler ürüne hangi bölgeden okunduğunu yazar. Para birimine
+// bakmak yalnızca eski kayıtlar için geçerli bir tahmin; aksi hâlde euro veya
+// dolar fiyatlı bir AliExpress ürünü Türkiye grubuna düşerdi.
+let activeTab = "cart";
+
+function isPurchasedTabActive() {
+  return activeTab === "purchased";
+}
+
+// Üstteki işlem butonları, özet ve alt satır yalnızca sepetle ilgili; alınanlar
+// sekmesinde gizleniyor ki kullanıcı hangi listeye baktığını şaşırmasın.
+function applyActiveTab() {
+  const showPurchased = isPurchasedTabActive();
+
+  cartPanelEl.hidden = showPurchased;
+  purchasedPanelEl.hidden = !showPurchased;
+  actionGridEl.hidden = showPurchased;
+  summarySectionEl.hidden = showPurchased;
+  footerActionsEl.hidden = showPurchased;
+
+  cartTabBtn.classList.toggle("is-active", !showPurchased);
+  purchasedTabBtn.classList.toggle("is-active", showPurchased);
+  cartTabBtn.setAttribute("aria-selected", String(!showPurchased));
+  purchasedTabBtn.setAttribute("aria-selected", String(showPurchased));
+}
+
 function getItemRegion(item) {
-  if (item.region === "UK" || getItemCurrency(item) === "GBP") {
-    return "UK";
+  if (item.region === "UK" || item.region === "TR") {
+    return item.region;
   }
 
-  return "TR";
+  return getItemCurrency(item) === "GBP" ? "UK" : "TR";
 }
 
 function getRegionLabel(region) {
@@ -64,16 +139,8 @@ function setStatus(message) {
   statusEl.textContent = message;
 }
 
-function createId() {
-  if (crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
 function getQuantity(item) {
-  return item.quantity && item.quantity > 0 ? item.quantity : 1;
+  return OrtakSepetCart.getQuantity(item);
 }
 
 function isSelected(item) {

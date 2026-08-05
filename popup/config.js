@@ -1,8 +1,14 @@
 // Ortak Sepet popup module: config.js
 // This file was split from popup.js so popup logic can be maintained by responsibility.
 
-const CART_KEY = "ortakSepetItems";
+// Sepet anahtarı shared/cart.js içinde; popup depoya oradan erişir.
 const VIEW_MODE_KEY = "ortakSepetViewMode";
+// Alınan ürünler ayrı anahtarda: rozet sayısı, toplamlar ve fiyat güncellemesi
+// yalnızca sepeti okuduğu için alınanlar bu akışların hiçbirine karışmıyor.
+const PURCHASED_KEY = "ortakSepetPurchased";
+const UNDO_KEY = "ortakSepetUndo";
+// Geri alma teklifi bu süre boyunca geçerli; popup kapanıp açılsa da durur.
+const UNDO_WINDOW_MS = 5 * 60 * 1000;
 const COMPACT_MODE_KEY = "ortakSepetCompactMode";
 const LANGUAGE_KEY = "ortakSepetLanguage";
 const THEME_KEY = "ortakSepetTheme";
@@ -14,6 +20,8 @@ const installmentProductsBtn = document.getElementById(
 );
 const updateAllPricesBtn = document.getElementById("updateAllPricesBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
+const copyCartBtn = document.getElementById("copyCartBtn");
+const undoBtn = document.getElementById("undoBtn");
 const compactViewBtn = document.getElementById("compactViewBtn");
 const countryGroupingBtn = document.getElementById("countryGroupingBtn");
 const clearCartBtn = document.getElementById("clearCartBtn");
@@ -29,11 +37,21 @@ const appSubtitleEl = document.getElementById("appSubtitle");
 const itemCountLabelEl = document.getElementById("itemCountLabel");
 const totalPriceLabelEl = document.getElementById("totalPriceLabel");
 const selectedTotalPriceLabelEl = document.getElementById("selectedTotalPriceLabel");
-const cartTitleEl = document.getElementById("cartTitle");
+const actionGridEl = document.getElementById("actionGrid");
+const summarySectionEl = document.getElementById("summarySection");
+const footerActionsEl = document.getElementById("footerActions");
+const cartTabBtn = document.getElementById("cartTabBtn");
+const purchasedTabBtn = document.getElementById("purchasedTabBtn");
+const cartPanelEl = document.getElementById("cartPanel");
+const purchasedPanelEl = document.getElementById("purchasedPanel");
+const purchasedItemsEl = document.getElementById("purchasedItems");
+const purchasedSummaryEl = document.getElementById("purchasedSummary");
+const markPurchasedBtn = document.getElementById("markPurchasedBtn");
 
 const I18N = {
   tr: {
     appSubtitle: "Alışverişte ortak sepetiniz",
+    cartActions: "Sepet işlemleri",
     language: "Dil",
     switchToEnglish: "İngilizceye Geç",
     switchToTurkish: "Türkçeye Geç",
@@ -46,7 +64,41 @@ const I18N = {
     removeInstallmentGrouping: "Taksit Grubunu Kaldır",
     updateAllPrices: "Fiyatları Güncelle",
     updating: "Güncelleniyor...",
+    cancelUpdate: "Güncellemeyi Durdur",
+    pricesUpdateCancelled: "Güncelleme durduruldu. {changed} ürünün fiyatı değişti, {failed} ürün güncellenemedi.",
     exportCsv: "CSV / Excel",
+    tabPurchased: "Aldıklarım",
+    markPurchased: "Alındı",
+    markSelectedPurchased: "Seçilenleri Alındı İşaretle",
+    markPurchasedLabel: "Alındı olarak işaretle: {title}",
+    purchasedMoved: "{count} ürün alınanlara taşındı.",
+    noSelectedItems: "Seçili ürün yok.",
+    restoreToCart: "Sepete Geri Al",
+    restoreToCartLabel: "Sepete geri al: {title}",
+    deletePurchase: "Kaydı Sil",
+    deletePurchaseLabel: "Kaydı sil: {title}",
+    purchaseRestored: "Ürün sepete geri alındı.",
+    purchaseDeleted: "Kayıt silindi.",
+    emptyPurchased: "Henüz alınmış ürün yok. Sepetteki bir üründe “Alındı” butonuna bastığında burada ay ay listelenir.",
+    purchasedThisMonth: "Bu ay",
+    purchasedAllTime: "Tümü",
+    purchasedOn: "Alınma",
+    copyCart: "Sepeti Kopyala",
+    cartCopied: "Sepet panoya kopyalandı.",
+    copyFailed: "Sepet kopyalanamadı.",
+    copyHeader: "Ortak Sepet — {count} ürün",
+    copyTotal: "Toplam: {total}",
+    selectItemLabel: "Seçili toplama dahil et: {title}",
+    decreaseQuantityLabel: "Adet azalt: {title}",
+    increaseQuantityLabel: "Adet artır: {title}",
+    openLinkLabel: "Ürün sayfasını aç: {title}",
+    manualPriceLabel: "Manuel fiyat gir: {title}",
+    removeLabel: "Ürünü sil: {title}",
+    clearCartConfirm: "Sepetin tamamı silinecek. Onaylamak için tekrar tıkla.",
+    clearCartConfirmButton: "Emin misin?",
+    undo: "Geri Al",
+    undoDone: "Son işlem geri alındı.",
+    undoUnavailable: "Geri alınacak işlem yok.",
     compactView: "Kompakt Görünüm",
     normalView: "Normal Görünüm",
     countryGrouping: "Ülkeye Göre Grupla",
@@ -141,6 +193,7 @@ const I18N = {
   },
   en: {
     appSubtitle: "Your shared shopping basket",
+    cartActions: "Basket actions",
     language: "Language",
     switchToEnglish: "Switch to English",
     switchToTurkish: "Switch to Turkish",
@@ -153,7 +206,41 @@ const I18N = {
     removeInstallmentGrouping: "Remove Finance Group",
     updateAllPrices: "Refresh Prices",
     updating: "Updating...",
+    cancelUpdate: "Stop Refreshing",
+    pricesUpdateCancelled: "Refresh stopped. {changed} product prices changed, {failed} products could not be refreshed.",
     exportCsv: "CSV / Excel",
+    tabPurchased: "Purchased",
+    markPurchased: "Bought",
+    markSelectedPurchased: "Mark Selected as Bought",
+    markPurchasedLabel: "Mark as bought: {title}",
+    purchasedMoved: "{count} products moved to purchased.",
+    noSelectedItems: "No products are selected.",
+    restoreToCart: "Move to Basket",
+    restoreToCartLabel: "Move back to basket: {title}",
+    deletePurchase: "Delete Record",
+    deletePurchaseLabel: "Delete record: {title}",
+    purchaseRestored: "Product moved back to the basket.",
+    purchaseDeleted: "Record deleted.",
+    emptyPurchased: "Nothing purchased yet. Press “Bought” on a basket item and it will be listed here month by month.",
+    purchasedThisMonth: "This month",
+    purchasedAllTime: "All time",
+    purchasedOn: "Bought on",
+    copyCart: "Copy Basket",
+    cartCopied: "Basket copied to the clipboard.",
+    copyFailed: "The basket could not be copied.",
+    copyHeader: "Ortak Sepet — {count} products",
+    copyTotal: "Total: {total}",
+    selectItemLabel: "Include in selected total: {title}",
+    decreaseQuantityLabel: "Decrease quantity: {title}",
+    increaseQuantityLabel: "Increase quantity: {title}",
+    openLinkLabel: "Open product page: {title}",
+    manualPriceLabel: "Enter manual price: {title}",
+    removeLabel: "Remove product: {title}",
+    clearCartConfirm: "This will remove every product. Click again to confirm.",
+    clearCartConfirmButton: "Are you sure?",
+    undo: "Undo",
+    undoDone: "Last action undone.",
+    undoUnavailable: "There is nothing to undo.",
     compactView: "Compact View",
     normalView: "Normal View",
     countryGrouping: "Group by Country",

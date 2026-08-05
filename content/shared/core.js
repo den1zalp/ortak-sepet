@@ -78,7 +78,11 @@ function extractTryPriceCandidates(rawPrice) {
     const value = parseTryPriceNumber(raw);
     if (value === null || value <= 0) continue;
 
-    const formatted = /TL|₺/i.test(raw) ? raw.replace(/₺\s*/, "") : `${raw} TL`;
+    // Siteler tutarı "₺1.299", "1.299₺", "1.299 TL" gibi farklı biçimlerde
+    // basıyor. Hepsini tek biçime indiriyoruz; sembol sonda olduğunda eskiden
+    // para birimi tamamen düşüyordu.
+    const numberText = cleanText(raw.replace(/₺/g, "").replace(/TL/gi, ""));
+    const formatted = `${numberText} TL`;
 
     candidates.push({
       text: cleanText(formatted),
@@ -115,30 +119,76 @@ function cleanPrice(rawPrice) {
   return candidates[0].text;
 }
 
+// JSON-LD ve meta etiketleri fiyatı makine biçiminde verir ("1299.90") ve para
+// birimini ayrı bir alanda söyler. Bu biçim görünür fiyat düzenimize uymadığı
+// için cleanPrice onu okuyamıyordu; burada sayıyı doğrudan çevirip para
+// birimini tahmin etmek yerine bildirilen değeri kullanıyoruz.
+function parseStructuredPriceNumber(rawPrice) {
+  if (rawPrice === null || rawPrice === undefined) return null;
+
+  const text = String(rawPrice).trim();
+  if (!text) return null;
+
+  if (/^\d+(?:\.\d{1,2})?$/.test(text)) {
+    const number = Number.parseFloat(text);
+    return Number.isFinite(number) && number > 0 ? number : null;
+  }
+
+  return null;
+}
+
+function formatStructuredPrice(rawPrice, currency) {
+  const number = parseStructuredPriceNumber(rawPrice);
+  if (number === null) return null;
+
+  const code = String(currency || "").toUpperCase();
+  const format = (locale) =>
+    number.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  switch (code) {
+    case "TRY": return `${format("tr-TR")} TL`;
+    case "GBP": return `£${format("en-GB")}`;
+    case "USD": return `$${format("en-US")}`;
+    case "EUR": return `€${format("de-DE")}`;
+    case "": return `${format("tr-TR")} TL`;
+    default: return `${format("en-US")} ${code}`;
+  }
+}
+
+
+// Alan adı eşleşmesi parça aramasıyla yapılmamalı: "pazarama.com" içinde
+// "zara" da geçiyor ve site adından fiyat/kargo kurallarına kadar her şey bu
+// tespite bağlı.
+function isSiteHost(domain) {
+  const host = window.location.hostname.replace(/^www\d*\./, "");
+  return host === domain || host.endsWith(`.${domain}`);
+}
 
 function getSiteName() {
-  const host = window.location.hostname.replace("www.", "");
+  if (isSiteHost("zara.com")) return "Zara";
+  if (isSiteHost("bershka.com")) return "Bershka";
+  if (isSiteHost("hm.com")) return "H&M";
+  if (isSiteHost("jeanslab.com")) return "JeansLab";
+  if (isSiteHost("trendyol.com")) return "Trendyol";
+  if (isSiteHost("hepsiburada.com")) return "Hepsiburada";
+  if (isSiteHost("n11.com")) return "n11";
+  if (isSiteHost("amazon.com.tr")) return "Amazon TR";
+  if (isSiteHost("teknosa.com")) return "Teknosa";
+  if (isSiteHost("vatanbilgisayar.com")) return "Vatan Bilgisayar";
+  if (isSiteHost("mediamarkt.com.tr")) return "MediaMarkt";
+  if (isSiteHost("pazarama.com")) return "Pazarama";
+  if (isSiteHost("ciceksepeti.com")) return "Çiçeksepeti";
+  if (isSiteHost("idefix.com")) return "idefix";
+  if (isSiteHost("itopya.com")) return "İtopya";
+  if (isSiteHost("incehesap.com")) return "İncehesap";
+  if (isSiteHost("dr.com.tr")) return "D&R";
+  if (isSiteHost("sephora.com.tr")) return "Sephora";
+  if (isSiteHost("ikea.com.tr")) return "IKEA";
 
-  if (host.includes("zara")) return "Zara";
-  if (host.includes("bershka")) return "Bershka";
-  if (host.includes("hm.com")) return "H&M";
-  if (host.includes("jeanslab")) return "JeansLab";
-  if (host.includes("trendyol")) return "Trendyol";
-  if (host.includes("hepsiburada")) return "Hepsiburada";
-  if (host.includes("n11")) return "n11";
-  if (host.includes("amazon")) return "Amazon TR";
-  if (host.includes("teknosa")) return "Teknosa";
-  if (host.includes("vatanbilgisayar")) return "Vatan Bilgisayar";
-  if (host.includes("mediamarkt")) return "MediaMarkt";
-  if (host.includes("pazarama")) return "Pazarama";
-  if (host.includes("ciceksepeti")) return "Çiçeksepeti";
-  if (host.includes("idefix")) return "idefix";
-  if (host.includes("itopya")) return "İtopya";
-  if (host.includes("incehesap")) return "İncehesap";
-  if (host.includes("dr.com.tr")) return "D&R";
-  if (host.includes("sephora")) return "Sephora";
-
-  return host;
+  return window.location.hostname.replace(/^www\d*\./, "");
 }
 
 function isVisibleElement(element) {
@@ -344,8 +394,8 @@ function findTrendyolInstallmentInfo() {
 
   const candidates = elements
     .filter((element) => {
-      if (!isVisibleElement(element)) return false;
-
+      // Metin filtresi önce çalışır: getBoundingClientRect ve
+      // getComputedStyle layout'u zorluyor, binlerce elemanda pahalı.
       const text = cleanText(element.textContent);
       if (!text || text.length > 320) return false;
 
@@ -353,6 +403,8 @@ function findTrendyolInstallmentInfo() {
       if (!/taksit|aylik|pesin fiyatina|peşin fiyatına|kredi karti|kartlara|\d+\s*x\s*[\d.,]+\s*tl/i.test(normalized)) {
         return false;
       }
+
+      if (!isVisibleElement(element)) return false;
 
       const rect = element.getBoundingClientRect();
 
@@ -460,22 +512,21 @@ function findJeansLabInstallmentInfo() {
 }
 
 function findInstallmentInfo() {
-  const host = window.location.hostname;
 
-  if (host.includes("jeanslab")) {
+  if (isSiteHost("jeanslab.com")) {
     return findJeansLabInstallmentInfo();
   }
 
-  if (host.includes("trendyol")) {
+  if (isSiteHost("trendyol.com")) {
     const trendyolInstallmentInfo = findTrendyolInstallmentInfo();
     if (trendyolInstallmentInfo) return trendyolInstallmentInfo;
   }
 
-  if (host.includes("n11")) {
+  if (isSiteHost("n11.com")) {
     return findN11InstallmentInfo();
   }
 
-  if (host.includes("hepsiburada")) {
+  if (isSiteHost("hepsiburada.com")) {
     const hepsiburadaInstallmentInfo = findHepsiburadaInstallmentInfo();
     if (hepsiburadaInstallmentInfo) return hepsiburadaInstallmentInfo;
   }
@@ -559,8 +610,7 @@ function findInstallmentInfo() {
 
   const candidates = elements
     .filter((element) => {
-      if (!isVisibleElement(element)) return false;
-
+      // Önce ucuz metin filtresi, sonra layout okuyan görünürlük kontrolü.
       const text = cleanText(element.textContent);
 
       if (!text) return false;
@@ -574,6 +624,8 @@ function findInstallmentInfo() {
         );
 
       if (!hasInstallmentKeyword) return false;
+
+      if (!isVisibleElement(element)) return false;
 
       const rect = element.getBoundingClientRect();
 
@@ -627,9 +679,8 @@ function findInstallmentInfo() {
 }
 
 function getDefaultShippingInfoForSite() {
-  const host = window.location.hostname;
 
-  if (host.includes("amazon")) {
+  if (isSiteHost("amazon.com.tr")) {
     return {
       shippingAvailable: false,
       freeShipping: false,
@@ -640,13 +691,13 @@ function getDefaultShippingInfoForSite() {
   }
 
   if (
-    host.includes("trendyol") ||
-    host.includes("hepsiburada") ||
-    host.includes("n11") ||
-    host.includes("zara") ||
-    host.includes("bershka") ||
-    host.includes("hm.com") ||
-    host.includes("jeanslab")
+    isSiteHost("trendyol.com") ||
+    isSiteHost("hepsiburada.com") ||
+    isSiteHost("n11.com") ||
+    isSiteHost("zara.com") ||
+    isSiteHost("bershka.com") ||
+    isSiteHost("hm.com") ||
+    isSiteHost("jeanslab.com")
   ) {
     return {
       shippingAvailable: false,
@@ -667,7 +718,6 @@ function getDefaultShippingInfoForSite() {
 }
 
 function findShippingInfo() {
-  const host = window.location.hostname;
 
   function normalizeForSearch(text) {
     return cleanText(text)
@@ -696,7 +746,7 @@ function findShippingInfo() {
       return {
         shippingAvailable: true,
         freeShipping: true,
-        shippingText: host.includes("amazon")
+        shippingText: isSiteHost("amazon.com.tr")
           ? "Ücretsiz teslimat"
           : "Ücretsiz kargo",
         shippingSource: "product-page",
@@ -718,7 +768,7 @@ function findShippingInfo() {
       return {
         shippingAvailable: true,
         freeShipping: false,
-        shippingText: host.includes("amazon")
+        shippingText: isSiteHost("amazon.com.tr")
           ? "Teslimat bilgisi var"
           : "Kargo/teslimat bilgisi var",
         shippingSource: "product-page",
@@ -734,10 +784,10 @@ function findShippingInfo() {
 
     if (
       result.shippingConfidence === "generic" &&
-      (host.includes("zara") ||
-        host.includes("bershka") ||
-        host.includes("hm.com") ||
-        host.includes("jeanslab"))
+      (isSiteHost("zara.com") ||
+        isSiteHost("bershka.com") ||
+        isSiteHost("hm.com") ||
+        isSiteHost("jeanslab.com"))
     ) {
       return false;
     }
@@ -746,9 +796,9 @@ function findShippingInfo() {
     if (result.shippingText === "Kargo ücretli olabilir") return true;
 
     if (
-      host.includes("trendyol") ||
-      host.includes("hepsiburada") ||
-      host.includes("n11")
+      isSiteHost("trendyol.com") ||
+      isSiteHost("hepsiburada.com") ||
+      isSiteHost("n11.com")
     ) {
       return false;
     }
@@ -865,8 +915,7 @@ function findShippingInfo() {
 
   const candidates = elements
     .filter((element) => {
-      if (!isVisibleElement(element)) return false;
-
+      // Önce ucuz metin filtresi, sonra layout okuyan görünürlük kontrolü.
       const text = cleanText(element.textContent);
 
       if (!text) return false;
@@ -874,6 +923,8 @@ function findShippingInfo() {
 
       const result = analyzeShippingText(text);
       if (!result) return false;
+
+      if (!isVisibleElement(element)) return false;
 
       const rect = element.getBoundingClientRect();
 
@@ -901,12 +952,12 @@ function findShippingInfo() {
         score += Math.max(0, 300 - distanceFromTitle);
       }
 
-      if (host.includes("amazon") && rect.left > window.innerWidth * 0.55) {
+      if (isSiteHost("amazon.com.tr") && rect.left > window.innerWidth * 0.55) {
         score += 200;
       }
 
       if (
-        !host.includes("amazon") &&
+        !isSiteHost("amazon.com.tr") &&
         rect.left > window.innerWidth * 0.25 &&
         rect.left < window.innerWidth * 0.9
       ) {
@@ -937,7 +988,7 @@ function findShippingInfo() {
     return usableCandidate.result;
   }
 
-  if (host.includes("amazon")) {
+  if (isSiteHost("amazon.com.tr")) {
     const bodyText = cleanText(document.body.innerText || "");
     const bodyResult = analyzeShippingText(bodyText);
 
@@ -1011,12 +1062,14 @@ function parseJsonLdProduct() {
         image = product.image.url;
       }
 
+      const rawPrice = offers?.price ?? offers?.lowPrice ?? offers?.highPrice;
+      const currency = String(offers?.priceCurrency || "").toUpperCase();
+
       return {
         site: getSiteName(),
         title: cleanText(product.name),
-        price: cleanPrice(
-          offers?.price || offers?.lowPrice || offers?.highPrice,
-        ),
+        price: formatStructuredPrice(rawPrice, currency) || cleanPrice(rawPrice),
+        currency: currency || null,
         image,
         url: window.location.href,
       };
@@ -1043,16 +1096,92 @@ function parseMetaProduct() {
     getAttr("meta[property='og:price:amount']", "content") ||
     getAttr("meta[name='price']", "content");
 
+  const currency = String(
+    getAttr("meta[property='product:price:currency']", "content") ||
+      getAttr("meta[property='og:price:currency']", "content") ||
+      "",
+  ).toUpperCase();
+
   if (!title && !price && !image) return null;
 
   return {
     site: getSiteName(),
     title: cleanText(title),
-    price: cleanPrice(price),
+    price: formatStructuredPrice(price, currency) || cleanPrice(price),
+    currency: currency || null,
     image,
     url: window.location.href,
   };
 }
+// Kendi parser'ı olmayan TR siteleri için genel fiyat tespiti. Ürün başlığına
+// yakın, büyük ve kalın yazılmış TL tutarını seçer; taksit, kargo ve kampanya
+// metinlerini eler.
+function findMainPrice() {
+  const titleElement =
+    document.querySelector("h1") ||
+    document.querySelector("[class*='product-name']") ||
+    document.querySelector("[class*='ProductName']");
+
+  const titleRect = titleElement ? titleElement.getBoundingClientRect() : null;
+
+  const elements = Array.from(
+    document.querySelectorAll("span, div, p, strong, ins, b"),
+  );
+
+  const candidates = elements
+    .map((element) => {
+      const text = cleanText(element.textContent);
+
+      if (!looksLikeTryPrice(text)) return null;
+      if (text.length > 90) return null;
+      if (hasChildWithPriceText(element)) return null;
+      if (!isVisibleElement(element)) return null;
+
+      const priceCandidate = extractTryPriceCandidates(text)[0];
+      if (!priceCandidate) return null;
+
+      const rect = element.getBoundingClientRect();
+
+      if (titleRect) {
+        if (rect.top < titleRect.bottom - 160) return null;
+        if (rect.top > titleRect.bottom + 700) return null;
+      }
+
+      const style = window.getComputedStyle(element);
+      const fontSize = Number.parseFloat(style.fontSize) || 0;
+      const fontWeight = Number.parseInt(style.fontWeight, 10) || 400;
+
+      let score = 0;
+
+      score += fontSize * 14;
+      score += fontWeight / 60;
+
+      if (titleRect) {
+        const distanceFromTitle = Math.abs(rect.top - titleRect.bottom);
+        score += Math.max(0, 300 - distanceFromTitle);
+      }
+
+      if (/sepette|indirimli|fiyat/i.test(text)) score += 60;
+
+      if (
+        /taksit|kargo|teslimat|kupon|kampanya|puan|favori|degerlendirme|değerlendirme|satici|satıcı|uye|üye|kredi|aylik|aylık|baslayan|başlayan/i.test(
+          text,
+        )
+      ) {
+        score -= 350;
+      }
+
+      return {
+        text: priceCandidate.text,
+        score,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score);
+
+  return candidates[0]?.text || "";
+}
+
 function findTrendyolMainPrice() {
   const titleElement =
     document.querySelector("h1") ||
@@ -1078,11 +1207,11 @@ function findTrendyolMainPrice() {
     const selectedElements = Array.from(document.querySelectorAll(selector));
 
     for (const element of selectedElements) {
-      if (!isVisibleElement(element)) continue;
-
       const text = cleanText(element.textContent);
       const bestPrice = getBestTrendyolPriceFromText(text);
       if (!bestPrice) continue;
+
+      if (!isVisibleElement(element)) continue;
 
       const rect = element.getBoundingClientRect();
 
@@ -1130,14 +1259,17 @@ function findTrendyolMainPrice() {
 
   const candidates = elements
     .map((element) => {
-      if (!isVisibleElement(element)) return null;
-
+      // Ucuz elemeler önce: layout okuyan kontroller en sona kalıyor.
       const text = cleanText(element.textContent);
+
+      if (!text || text.length > 140) return null;
+      if (!/\d/.test(text)) return null;
+
       const bestPrice = getBestTrendyolPriceFromText(text);
 
       if (!bestPrice) return null;
       if (hasChildWithPriceText(element)) return null;
-      if (text.length > 140) return null;
+      if (!isVisibleElement(element)) return null;
 
       const rect = element.getBoundingClientRect();
 

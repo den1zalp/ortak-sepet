@@ -1,38 +1,6 @@
 // Ortak Sepet popup module: media.js
 // This file was split from popup.js so popup logic can be maintained by responsibility.
 
-function normalizeUrl(url) {
-  if (!url) return "";
-
-  try {
-    const parsedUrl = new URL(url);
-
-    parsedUrl.hash = "";
-
-    const removableParams = [
-      "utm_source",
-      "utm_medium",
-      "utm_campaign",
-      "utm_term",
-      "utm_content",
-      "trackingId",
-      "gclid",
-      "fbclid",
-      "yclid",
-      "ttclid",
-      "msclkid",
-    ];
-
-    for (const param of removableParams) {
-      parsedUrl.searchParams.delete(param);
-    }
-
-    return parsedUrl.toString();
-  } catch {
-    return url;
-  }
-}
-
 function loadDataUrlImage(dataUrl) {
   return new Promise((resolve, reject) => {
     const image = new Image();

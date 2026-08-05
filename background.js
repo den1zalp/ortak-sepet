@@ -1,14 +1,20 @@
-// Chrome arka planı service worker olarak çalıştırır ve polyfill'i buradan
-// yüklemek gerekir. Firefox ise event page kullanır: orada importScripts
-// tanımsızdır ve polyfill zaten manifest'teki background.scripts ile gelir
-// (Firefox'ta browser API'si yerleşik olduğu için polyfill no-op çalışır).
+// Chrome arka planı service worker olarak çalıştırır ve polyfill ile ortak
+// modülleri buradan yüklemek gerekir. Firefox ise event page kullanır: orada
+// importScripts tanımsızdır ve aynı dosyalar zaten manifest'teki
+// background.scripts ile gelir (Firefox'ta browser API'si yerleşik olduğu için
+// polyfill no-op çalışır).
 if (typeof importScripts === "function") {
-  importScripts("browser-polyfill.js");
+  importScripts("browser-polyfill.js", "shared/category.js", "shared/cart.js");
 }
 
-const CART_KEY = "ortakSepetItems";
+const CART_KEY = OrtakSepetCart.CART_STORAGE_KEY;
 const LANGUAGE_KEY = "ortakSepetLanguage";
+const IMAGE_CACHE_LIMIT = 40;
+const UPDATE_CONCURRENCY = 3;
 const imageDataCache = new Map();
+
+// Süren fiyat güncellemesi; popup buradan iptal edebiliyor.
+let activePriceUpdate = null;
 
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -19,6 +25,15 @@ function arrayBufferToBase64(buffer) {
   }
 
   return btoa(binary);
+}
+
+function rememberImageDataUrl(imageUrl, dataUrl) {
+  if (imageDataCache.size >= IMAGE_CACHE_LIMIT) {
+    const oldestKey = imageDataCache.keys().next().value;
+    imageDataCache.delete(oldestKey);
+  }
+
+  imageDataCache.set(imageUrl, dataUrl);
 }
 
 async function fetchImageAsDataUrl(imageUrl) {
@@ -44,165 +59,8 @@ async function fetchImageAsDataUrl(imageUrl) {
   const contentType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
   const dataUrl = `data:${contentType};base64,${arrayBufferToBase64(buffer)}`;
 
-  imageDataCache.set(imageUrl, dataUrl);
+  rememberImageDataUrl(imageUrl, dataUrl);
   return dataUrl;
-}
-
-async function getCartItems() {
-  const result = await browser.storage.local.get(CART_KEY);
-  return result[CART_KEY] || [];
-}
-
-async function saveCartItems(items) {
-  await browser.storage.local.set({
-    [CART_KEY]: items,
-  });
-}
-
-function getQuantity(item) {
-  return item.quantity && item.quantity > 0 ? item.quantity : 1;
-}
-
-function normalizeUrl(url) {
-  if (!url) return "";
-
-  try {
-    const parsedUrl = new URL(url);
-    parsedUrl.hash = "";
-
-    const removableParams = [
-      "utm_source",
-      "utm_medium",
-      "utm_campaign",
-      "utm_term",
-      "utm_content",
-      "trackingId",
-      "gclid",
-      "fbclid",
-      "yclid",
-      "ttclid",
-      "msclkid",
-    ];
-
-    for (const param of removableParams) {
-      parsedUrl.searchParams.delete(param);
-    }
-
-    return parsedUrl.toString();
-  } catch {
-    return url;
-  }
-}
-
-function currencySymbolForCurrency(currency) {
-  switch (currency) {
-    case "GBP": return "£";
-    case "USD": return "$";
-    case "EUR": return "€";
-    case "TRY": return "TL";
-    case "RUB": return "₽";
-    case "UAH": return "₴";
-    case "INR": return "₹";
-    case "KRW": return "₩";
-    case "JPY":
-    case "CNY": return "¥";
-    default: return currency || "TL";
-  }
-}
-
-function regionForCurrency(currency) {
-  return ["TRY", "RUB", "UAH"].includes(currency) ? "TR" : "UK";
-}
-
-function detectCurrencyFromPrice(priceText) {
-  const text = String(priceText || "");
-
-  if (/£|\bGBP\b/i.test(text)) return "GBP";
-  if (/₺|\bTRY\b|\bTL\b/i.test(text)) return "TRY";
-  if (/€|\bEUR\b/i.test(text)) return "EUR";
-  if (/\$|\bUSD\b/i.test(text)) return "USD";
-  if (/₽|\bRUB\b/i.test(text)) return "RUB";
-  if (/₴|\bUAH\b/i.test(text)) return "UAH";
-  if (/₹|\bINR\b/i.test(text)) return "INR";
-  if (/₩|\bKRW\b/i.test(text)) return "KRW";
-  if (/¥|\bJPY\b|\bCNY\b/i.test(text)) return "JPY";
-
-  return "TRY";
-}
-
-function hasUnavailableMainPrice(product) {
-  return (
-    product?.priceReadStatus === "unavailable" ||
-    product?.priceUnavailableReason === "noActiveOffer" ||
-    product?.stockAvailable === false
-  );
-}
-
-async function addProductToCart(product) {
-  if (!product || !product.title || (!product.price && !hasUnavailableMainPrice(product))) {
-    throw new Error("Ürün bilgisi okunamadı.");
-  }
-
-  const items = await getCartItems();
-  const productUrl = normalizeUrl(product.url);
-
-  const existingItem = items.find((item) => {
-    return normalizeUrl(item.url) === productUrl;
-  });
-
-  if (existingItem) {
-    existingItem.quantity = getQuantity(existingItem) + 1;
-    existingItem.selected = true;
-    existingItem.title = product.title || existingItem.title;
-
-    if (existingItem.manualPrice === true) {
-      existingItem.detectedPrice = product.price || existingItem.detectedPrice;
-    } else if (product.price) {
-      existingItem.price = product.price;
-    } else if (hasUnavailableMainPrice(product)) {
-      existingItem.previousPrice = existingItem.price || existingItem.previousPrice;
-      existingItem.price = null;
-    }
-
-    existingItem.priceReadStatus = product.priceReadStatus || existingItem.priceReadStatus || null;
-    existingItem.priceUnavailableReason = product.priceUnavailableReason || existingItem.priceUnavailableReason || null;
-    existingItem.stockAvailable = product.stockAvailable ?? existingItem.stockAvailable ?? null;
-    existingItem.stockText = product.stockText || existingItem.stockText || "";
-
-    existingItem.image = product.image || existingItem.image;
-    existingItem.currency = product.currency || detectCurrencyFromPrice(existingItem.price);
-    existingItem.currencySymbol = product.currencySymbol || currencySymbolForCurrency(existingItem.currency);
-    existingItem.region = product.region || existingItem.region || regionForCurrency(existingItem.currency);
-    existingItem.installmentAvailable = product.installmentAvailable;
-    existingItem.installmentText = product.installmentText;
-    existingItem.shippingAvailable = product.shippingAvailable;
-    existingItem.freeShipping = product.freeShipping;
-    existingItem.shippingText = product.shippingText;
-    existingItem.shippingSource = product.shippingSource;
-    existingItem.shippingConfidence = product.shippingConfidence;
-    existingItem.updatedAt = new Date().toISOString();
-
-    await saveCartItems(items);
-    await updateBadge();
-    return;
-  }
-
-  const productCurrency = product.currency || detectCurrencyFromPrice(product.price);
-
-  items.push({
-    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    ...product,
-    currency: productCurrency,
-    currencySymbol: product.currencySymbol || currencySymbolForCurrency(productCurrency),
-    region: product.region || regionForCurrency(productCurrency),
-    quantity: 1,
-    selected: true,
-    category: null,
-    addedAt: new Date().toISOString(),
-  });
-
-  await saveCartItems(items);
-  await updateBadge();
 }
 
 async function addCurrentTabProduct(tabId) {
@@ -216,7 +74,7 @@ async function addCurrentTabProduct(tabId) {
     throw new Error(response?.error || "Bu sayfadan ürün okunamadı.");
   }
 
-  await addProductToCart(response.product);
+  await OrtakSepetCart.addProduct(response.product);
 }
 
 async function getLanguage() {
@@ -249,11 +107,10 @@ async function updateContextMenuLanguage() {
 }
 
 async function updateBadge() {
-  const items = await getCartItems();
+  const items = await OrtakSepetCart.getItems();
 
   const totalCount = items.reduce((sum, item) => {
-    const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
-    return sum + quantity;
+    return sum + OrtakSepetCart.getQuantity(item);
   }, 0);
 
   await browser.action.setBadgeText({
@@ -267,57 +124,6 @@ async function updateBadge() {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function cleanText(text) {
-  if (!text) return "";
-  return String(text).replace(/\s+/g, " ").trim();
-}
-
-function extractNumberFromPrice(priceText) {
-  if (!priceText) return null;
-
-  let cleaned = String(priceText)
-    .replace(/TL|TRY|GBP/gi, "")
-    .replace(/[₺£]/g, "")
-    .replace(/\s/g, "")
-    .trim();
-
-  const commaIndex = cleaned.lastIndexOf(",");
-  const dotIndex = cleaned.lastIndexOf(".");
-
-  if (commaIndex !== -1 && dotIndex !== -1) {
-    if (commaIndex > dotIndex) {
-      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
-    } else {
-      cleaned = cleaned.replace(/,/g, "");
-    }
-  } else if (commaIndex !== -1) {
-    cleaned = cleaned.replace(",", ".");
-  } else if (dotIndex !== -1) {
-    const parts = cleaned.split(".");
-
-    const allGroupsAfterFirstAreThreeDigits =
-      parts.length > 1 && parts.slice(1).every((part) => part.length === 3);
-
-    if (allGroupsAfterFirstAreThreeDigits) {
-      cleaned = cleaned.replace(/\./g, "");
-    }
-  }
-
-  const number = Number.parseFloat(cleaned);
-  return Number.isNaN(number) ? null : number;
-}
-
-function arePricesEqual(oldPrice, newPrice) {
-  const oldNumber = extractNumberFromPrice(oldPrice);
-  const newNumber = extractNumberFromPrice(newPrice);
-
-  if (oldNumber !== null && newNumber !== null) {
-    return Math.abs(oldNumber - newNumber) < 0.01;
-  }
-
-  return cleanText(oldPrice) === cleanText(newPrice);
 }
 
 async function notifyProgress(payload) {
@@ -393,7 +199,8 @@ async function readProductFromTabWithRetry(tabId, options = {}) {
         response.ok &&
         response.product &&
         response.product.title &&
-        (response.product.price || hasUnavailableMainPrice(response.product))
+        (response.product.price ||
+          OrtakSepetCart.hasUnavailableMainPrice(response.product))
       ) {
         return response.product;
       }
@@ -423,36 +230,22 @@ async function readProductFromTabWithRetry(tabId, options = {}) {
   throw new Error("Ürün bilgisi veya fiyat okunamadı.");
 }
 
-function isUnknownInstallmentInfo(product) {
-  if (!product) return true;
+// Ürünün alan adına bakıyoruz; site adı üzerinden parça araması yanıltıyor
+// ("Pazarama" içinde "zara" da geçiyor).
+function itemHostMatches(item, domains) {
+  let host = "";
 
-  const text = cleanText(product.installmentText || "").toLocaleLowerCase("tr-TR");
+  try {
+    host = new URL(item?.url || "").hostname.replace(/^www\d*\./, "").toLowerCase();
+  } catch {
+    return false;
+  }
 
-  return (
-    product.installmentAvailable === null ||
-    product.installmentAvailable === undefined ||
-    text.includes("bilgisi bulunamadı") ||
-    text.includes("bilinmiyor") ||
-    text.includes("unknown")
-  );
-}
-
-function mergeInstallmentAvailable(freshProduct, currentItem) {
-  return isUnknownInstallmentInfo(freshProduct)
-    ? currentItem.installmentAvailable
-    : freshProduct.installmentAvailable;
-}
-
-function mergeInstallmentText(freshProduct, currentItem) {
-  return isUnknownInstallmentInfo(freshProduct)
-    ? currentItem.installmentText
-    : freshProduct.installmentText;
+  return domains.some((domain) => host === domain || host.endsWith(`.${domain}`));
 }
 
 function getUpdateProfile(item) {
-  const source = `${item?.site || ""} ${item?.url || ""}`.toLocaleLowerCase("tr-TR");
-
-  if (source.includes("jeanslab")) {
+  if (itemHostMatches(item, ["jeanslab.com"])) {
     return {
       tabTimeoutMs: 15000,
       initialDelayMs: 400,
@@ -462,7 +255,7 @@ function getUpdateProfile(item) {
     };
   }
 
-  if (source.includes("diesel")) {
+  if (itemHostMatches(item, ["diesel.com"])) {
     return {
       tabTimeoutMs: 15000,
       initialDelayMs: 500,
@@ -473,10 +266,13 @@ function getUpdateProfile(item) {
   }
 
   if (
-    source.includes("zara") ||
-    source.includes("bershka") ||
-    source.includes("hm.com") ||
-    source.includes("h&m")
+    itemHostMatches(item, [
+      "zara.com",
+      "bershka.com",
+      "hm.com",
+      "ikea.com",
+      "ikea.com.tr",
+    ])
   ) {
     return {
       tabTimeoutMs: 15000,
@@ -487,7 +283,7 @@ function getUpdateProfile(item) {
     };
   }
 
-  if (source.includes("amazon")) {
+  if (itemHostMatches(item, ["amazon.com.tr", "amazon.co.uk"])) {
     return {
       tabTimeoutMs: 18000,
       initialDelayMs: 800,
@@ -540,14 +336,17 @@ async function updateSingleItem(item) {
 
     const oldPrice = item.price || null;
     const keepManualPrice = item.manualPrice === true;
-    const productUnavailable = hasUnavailableMainPrice(freshProduct) && !freshProduct.price;
+    const productUnavailable =
+      OrtakSepetCart.hasUnavailableMainPrice(freshProduct) && !freshProduct.price;
     const detectedPrice = productUnavailable
       ? null
       : freshProduct.price || item.detectedPrice || item.price || null;
     const newPrice = keepManualPrice ? item.price : detectedPrice;
     const priceChanged = keepManualPrice || productUnavailable
       ? false
-      : !arePricesEqual(oldPrice, newPrice);
+      : !OrtakSepetCart.arePricesEqual(oldPrice, newPrice);
+
+    const currency = freshProduct.currency || item.currency || OrtakSepetCart.detectCurrencyFromPrice(newPrice);
 
     return {
       ok: true,
@@ -569,8 +368,12 @@ async function updateSingleItem(item) {
         site: freshProduct.site || item.site,
         url: item.url,
 
-        installmentAvailable: mergeInstallmentAvailable(freshProduct, item),
-        installmentText: mergeInstallmentText(freshProduct, item),
+        currency,
+        currencySymbol: freshProduct.currencySymbol || item.currencySymbol || OrtakSepetCart.currencySymbolForCurrency(currency),
+        region: OrtakSepetCart.resolveRegion(freshProduct, currency) || item.region,
+
+        installmentAvailable: OrtakSepetCart.mergeInstallmentAvailable(freshProduct, item),
+        installmentText: OrtakSepetCart.mergeInstallmentText(freshProduct, item),
 
         shippingAvailable: freshProduct.shippingAvailable,
         freeShipping: freshProduct.freeShipping,
@@ -606,67 +409,113 @@ async function updateSingleItem(item) {
 }
 
 async function updateAllPrices() {
-  const items = await getCartItems();
+  const initialItems = await OrtakSepetCart.getItems();
 
-  if (items.length === 0) {
+  if (initialItems.length === 0) {
     return {
       ok: true,
       total: 0,
       updated: 0,
       changed: 0,
       failed: 0,
+      skipped: 0,
+      cancelled: false,
     };
   }
 
-  const updatedItems = [...items];
+  // Sadece id listesini sabitliyoruz. Her tur sepeti yeniden okuduğumuz için
+  // güncelleme sürerken kullanıcının eklediği/sildiği ürünler ezilmiyor.
+  const targetIds = initialItems.map((item) => item.id);
+  const total = targetIds.length;
+
+  const run = { cancelled: false };
+  activePriceUpdate = run;
 
   let updated = 0;
   let changed = 0;
   let failed = 0;
+  let skipped = 0;
+  let completed = 0;
+  let nextIndex = 0;
 
-  for (let index = 0; index < updatedItems.length; index++) {
-    const currentItem = updatedItems[index];
+  // Ürünler sırayla değil, sınırlı sayıda paralel sekmede güncelleniyor.
+  // Sekme açıp yüklenmesini beklemek işin neredeyse tamamı, bu yüzden
+  // eşzamanlılık süreyi doğrudan kısaltıyor.
+  async function runWorker() {
+    while (!run.cancelled) {
+      const index = nextIndex;
+      nextIndex += 1;
 
-    await notifyProgress({
-      type: "UPDATE_PRICES_PROGRESS",
-      current: index + 1,
-      total: updatedItems.length,
-      title: currentItem.title || "Ürün",
-    });
+      if (index >= targetIds.length) return;
 
-    const result = await updateSingleItem(currentItem);
+      const items = await OrtakSepetCart.getItems();
+      const currentItem = items.find((item) => item.id === targetIds[index]);
 
-    updatedItems[index] = result.item;
-
-    if (result.ok) {
-      updated += 1;
-
-      if (result.priceChanged) {
-        changed += 1;
+      if (!currentItem) {
+        skipped += 1;
+        completed += 1;
+        continue;
       }
-    } else {
-      failed += 1;
-    }
 
-    await saveCartItems(updatedItems);
-    await delay(250);
+      completed += 1;
+
+      await notifyProgress({
+        type: "UPDATE_PRICES_PROGRESS",
+        current: completed,
+        total,
+        title: currentItem.title || "Ürün",
+      });
+
+      const result = await updateSingleItem(currentItem);
+
+      // İptal edilse bile okunan veri geçerli; yazıp öyle çıkıyoruz.
+      const saved = await OrtakSepetCart.saveRefreshedItem(result.item);
+
+      if (!saved) {
+        // Ürün güncelleme sırasında sepetten çıkarılmış.
+        skipped += 1;
+      } else if (result.ok) {
+        updated += 1;
+
+        if (result.priceChanged) {
+          changed += 1;
+        }
+      } else {
+        failed += 1;
+      }
+
+      await delay(150);
+    }
   }
+
+  const workerCount = Math.min(UPDATE_CONCURRENCY, total);
+
+  try {
+    await Promise.all(
+      Array.from({ length: workerCount }, () => runWorker()),
+    );
+  } finally {
+    if (activePriceUpdate === run) {
+      activePriceUpdate = null;
+    }
+  }
+
+  const summary = {
+    ok: true,
+    total,
+    updated,
+    changed,
+    failed,
+    skipped,
+    cancelled: run.cancelled,
+  };
 
   await notifyProgress({
     type: "UPDATE_PRICES_DONE",
-    total: updatedItems.length,
-    updated,
-    changed,
-    failed,
+    ...summary,
   });
 
-  return {
-    ok: true,
-    total: updatedItems.length,
-    updated,
-    changed,
-    failed,
-  };
+  return summary;
 }
 
 
@@ -683,6 +532,16 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 browser.runtime.onMessage.addListener((message) => {
   if (message && message.type === "UPDATE_ALL_PRICES") {
     return updateAllPrices();
+  }
+
+  if (message && message.type === "CANCEL_UPDATE_ALL_PRICES") {
+    const wasRunning = Boolean(activePriceUpdate);
+
+    if (activePriceUpdate) {
+      activePriceUpdate.cancelled = true;
+    }
+
+    return Promise.resolve({ ok: true, wasRunning });
   }
 
   if (message && message.type === "FETCH_IMAGE_AS_DATA_URL") {

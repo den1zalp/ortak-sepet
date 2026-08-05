@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Ortak Sepet",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Türkiye ve Birleşik Krallık alışveriş siteleri için ortak alışveriş sepeti.",
   "permissions": [
     "storage",
     "activeTab",
-    "contextMenus"
+    "contextMenus",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "*://*.zara.com/*",
@@ -26,6 +27,7 @@
     "*://*.dr.com.tr/*",
     "*://*.itopya.com/*",
     "*://*.incehesap.com/*",
+    "*://*.ikea.com.tr/*",
     "*://*.amazon.co.uk/*",
     "*://*.ebay.co.uk/*",
     "*://*.vinted.co.uk/*",
@@ -36,7 +38,8 @@
     "*://*.aliexpress.com/*",
     "*://*.sephora.com.tr/*",
     "*://*.sephora.co.uk/*",
-    "*://*.gymshark.com/*"
+    "*://*.gymshark.com/*",
+    "*://*.ikea.com/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -47,6 +50,8 @@
   "background": {
     "scripts": [
       "browser-polyfill.js",
+      "shared/category.js",
+      "shared/cart.js",
       "background.js"
     ],
     "service_worker": "background.js"
@@ -81,7 +86,8 @@
         "*://*.dr.com.tr/*",
         "*://*.itopya.com/*",
         "*://*.incehesap.com/*",
-        "*://*.sephora.com.tr/*"
+        "*://*.sephora.com.tr/*",
+        "*://*.ikea.com.tr/*"
       ],
       "js": [
         "browser-polyfill.js",
@@ -95,6 +101,8 @@
         "content/parsers/mediamarkt.js",
         "content/parsers/pazarama.js",
         "content/parsers/idefix.js",
+        "content/parsers/dr.js",
+        "content/parsers/ciceksepeti.js",
         "content/parsers/fashion-shared.js",
         "content/parsers/zara.js",
         "content/parsers/bershka.js",
@@ -103,6 +111,7 @@
         "content/parsers/itopya.js",
         "content/parsers/incehesap.js",
         "content/parsers/sephora-tr.js",
+        "content/parsers/ikea-tr.js",
         "content/parsers/registry.js",
         "content.js"
       ],
@@ -119,7 +128,8 @@
         "*://*.temu.com/*",
         "*://*.aliexpress.com/*",
         "*://*.sephora.co.uk/*",
-        "*://*.gymshark.com/*"
+        "*://*.gymshark.com/*",
+        "*://*.ikea.com/*"
       ],
       "js": [
         "content-uk/shared/core.js",
@@ -134,6 +144,7 @@
         "content-uk/shared/marketplace.js",
         "content-uk/parsers/sephora-uk.js",
         "content-uk/parsers/gymshark-uk.js",
+        "content-uk/parsers/ikea-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],
