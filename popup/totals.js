@@ -125,6 +125,10 @@ function calculateCategoryTotal(items) {
 }
 
 function getInstallmentDisplay(item) {
+  // Taksit okunamadığında "Bilinmiyor" göstermiyoruz: kullanıcı için taksit
+  // yoksa yoktur. Bilinmiyor/yok ayrımı yalnızca depoda tutuluyor; fiyat
+  // güncellemesi sırasında bilinen bilgiyi ezmemek için gerekiyor
+  // (bkz. shared/cart.js → isUnknownInstallmentInfo).
   if (item.installmentAvailable === true) {
     return {
       text: translate("available"),
@@ -132,35 +136,8 @@ function getInstallmentDisplay(item) {
     };
   }
 
-  const installmentText = String(item.installmentText || "").toLocaleLowerCase(
-    "tr-TR",
-  );
-
-  if (
-    installmentText.includes("bulunamadı") ||
-    installmentText.includes("bulunamadi") ||
-    installmentText.includes("bilgisi") ||
-    installmentText.includes("not found")
-  ) {
-    return {
-      text: translate("unknown"),
-      bold: false,
-    };
-  }
-
-  if (
-    installmentText.includes("yok") ||
-    installmentText.includes("not available") ||
-    installmentText.includes("unavailable")
-  ) {
-    return {
-      text: translate("unavailable"),
-      bold: false,
-    };
-  }
-
   return {
-    text: translate("unknown"),
+    text: translate("unavailable"),
     bold: false,
   };
 }
