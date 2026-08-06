@@ -99,6 +99,12 @@
       parse: () => parseIkeaUk(),
       waitForPrice: true,
     },
+    {
+      id: "samsonite-uk",
+      label: "Samsonite UK",
+      matches: hostIs("samsonite.co.uk"),
+      parse: () => parseSamsoniteUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

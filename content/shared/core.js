@@ -187,6 +187,7 @@ function getSiteName() {
   if (isSiteHost("dr.com.tr")) return "D&R";
   if (isSiteHost("sephora.com.tr")) return "Sephora";
   if (isSiteHost("ikea.com.tr")) return "IKEA";
+  if (isSiteHost("samsonite.com.tr")) return "Samsonite";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }
@@ -511,7 +512,40 @@ function findJeansLabInstallmentInfo() {
   };
 }
 
+// samsonite.com.tr'de taksit tablosu "Ödeme Seçenekleri" akordiyonunun içinde
+// ve akordiyon kapalı açılıyor: tablo DOM'da tam olarak duruyor ama kapsayıcının
+// yüksekliği 0 olduğu için genel taramanın görünürlük kontrolüne takılıyor.
+// Bu yüzden kutuyu doğrudan okuyoruz.
+function findSamsoniteTrInstallmentInfo() {
+  const container = document.querySelector("#divTaksitContainer, .taksitMain");
+
+  if (!container) return null;
+
+  const normalized = normalizeInstallmentText(container.textContent);
+
+  if (!normalized) return null;
+
+  // "Tek Çekim" satırı her üründe var; taksit gerçekten yapılabiliyorsa
+  // tabloda "2 Taksit", "3 Taksit" gibi satırlar da bulunur.
+  if (/\d+\s*taksit/i.test(normalized)) {
+    return {
+      installmentAvailable: true,
+      installmentText: "Taksit var",
+    };
+  }
+
+  return {
+    installmentAvailable: false,
+    installmentText: "Taksit yok",
+  };
+}
+
 function findInstallmentInfo() {
+
+  if (isSiteHost("samsonite.com.tr")) {
+    const samsoniteInstallmentInfo = findSamsoniteTrInstallmentInfo();
+    if (samsoniteInstallmentInfo) return samsoniteInstallmentInfo;
+  }
 
   if (isSiteHost("jeanslab.com")) {
     return findJeansLabInstallmentInfo();
