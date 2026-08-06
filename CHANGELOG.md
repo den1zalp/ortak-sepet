@@ -2,7 +2,23 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.6.0 — yayımlanmadı
+## 1.7.0 — yayımlanmadı
+
+### Eklenenler
+
+* **Yeni siteler:** Samsonite Türkiye, Samsonite UK.
+
+### Geliştirme
+
+* Test seti depoya taşındı ve `npm test`e bağlandı (`test/` altında birim,
+  uçtan uca ve canlı sayfa testleri).
+* İki içerik script'inde birebir kopya duran JSON-LD/meta okuma
+  `shared/structured-data.js`'e çıkarıldı.
+* Ürün görseli taraması tek bir `findProductImage()` fonksiyonunda toplandı;
+  yedi parser aynı döngüyü kopyalamıştı.
+* Kullanılmayan fonksiyonlar ve çeviri anahtarları silindi.
+
+## 1.6.0 — 6 Ağustos 2026
 
 ### Eklenenler
 
@@ -14,8 +30,7 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 * **Geri alma.** Silme, sepeti temizleme ve alındı işaretleme geri alınabilir
   (5 dakika geçerli).
 * **Sepeti temizlemede iki adımlı onay.**
-* **Yeni siteler:** IKEA Türkiye, IKEA UK, Çiçeksepeti, D&R, Samsonite Türkiye,
-  Samsonite UK.
+* **Yeni siteler:** IKEA Türkiye, IKEA UK, Çiçeksepeti, D&R.
 * **Erişilebilirlik.** Sepetteki her denetim ürün adıyla etiketlendi; durum satırı
   ekran okuyucuya bildirim veriyor.
 
