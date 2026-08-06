@@ -133,6 +133,17 @@ AMO doğrulaması için:
 npx --yes web-ext lint
 ```
 
+## Testler
+
+```bash
+npm install
+npm run test:setup   # Chrome for Testing (bir kez)
+npm test             # birim + uçtan uca testler
+npm run test:live    # canlı ürün sayfalarında parser doğrulaması
+```
+
+Ayrıntılar ve yeni test yazma rehberi: [`test/README.md`](test/README.md).
+
 ## Tek Kaynaktan İki Tarayıcı
 
 Aynı klasör her iki tarayıcıya da yüklenir. Farklılıklar manifest içinde çözülür:
@@ -158,6 +169,8 @@ ortak-sepet/
 - popup.html / popup.css
 - popup/                 # popup modülleri (config, i18n, state, render, ...)
 - icons/
+- test/                  # unit / e2e / live testleri (pakete girmez)
+- tools/                 # mağaza paketleyici (pakete girmez)
 ```
 
 `shared/cart.js` sepete ekleme ve sepet yazma işlemlerinin tek kaynağıdır: hem

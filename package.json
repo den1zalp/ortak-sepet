@@ -1,8 +1,16 @@
 {
   "scripts": {
-    "lint": "web-ext lint"
+    "lint": "web-ext lint",
+    "test": "node test/run.mjs",
+    "test:unit": "node test/run.mjs unit",
+    "test:e2e": "node test/run.mjs e2e",
+    "test:live": "node test/run.mjs live",
+    "test:setup": "npx --yes @puppeteer/browsers install chrome@stable --path test/.browsers"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.5.0"
   }
 }

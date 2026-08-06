@@ -1,6 +1,8 @@
 node_modules/
 web-ext-artifacts/
 dist/
+test/.browsers/
+test/screenshots/
 *.zip
 *.log
 .DS_Store
