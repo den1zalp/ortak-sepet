@@ -49,8 +49,8 @@ On one supported site (Diesel), product images cannot be fetched this way. For t
 
 The extension only runs on the product pages of the retailers it supports:
 
-- Turkey: Amazon Türkiye, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt Türkiye, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA Türkiye, Sephora Türkiye, Zara, Bershka, H&M, JeansLab
-- United Kingdom: Amazon UK, eBay UK, Vinted UK, Argos, Currys, Diesel UK, Temu, AliExpress, Sephora UK, Gymshark, IKEA UK
+- Turkey: Amazon Türkiye, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt Türkiye, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA Türkiye, Samsonite Türkiye, Sephora Türkiye, Zara, Bershka, H&M, JeansLab
+- United Kingdom: Amazon UK, eBay UK, Vinted UK, Argos, Currys, Diesel UK, Temu, AliExpress, Sephora UK, Gymshark, IKEA UK, Samsonite UK
 
 ## Third-Party Websites
 

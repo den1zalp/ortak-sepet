@@ -39,7 +39,9 @@
     "*://*.sephora.com.tr/*",
     "*://*.sephora.co.uk/*",
     "*://*.gymshark.com/*",
-    "*://*.ikea.com/*"
+    "*://*.ikea.com/*",
+    "*://*.samsonite.com.tr/*",
+    "*://*.samsonite.co.uk/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -87,7 +89,8 @@
         "*://*.itopya.com/*",
         "*://*.incehesap.com/*",
         "*://*.sephora.com.tr/*",
-        "*://*.ikea.com.tr/*"
+        "*://*.ikea.com.tr/*",
+        "*://*.samsonite.com.tr/*"
       ],
       "js": [
         "browser-polyfill.js",
@@ -112,6 +115,7 @@
         "content/parsers/incehesap.js",
         "content/parsers/sephora-tr.js",
         "content/parsers/ikea-tr.js",
+        "content/parsers/samsonite-tr.js",
         "content/parsers/registry.js",
         "content.js"
       ],
@@ -129,7 +133,8 @@
         "*://*.aliexpress.com/*",
         "*://*.sephora.co.uk/*",
         "*://*.gymshark.com/*",
-        "*://*.ikea.com/*"
+        "*://*.ikea.com/*",
+        "*://*.samsonite.co.uk/*"
       ],
       "js": [
         "content-uk/shared/core.js",
@@ -145,6 +150,7 @@
         "content-uk/parsers/sephora-uk.js",
         "content-uk/parsers/gymshark-uk.js",
         "content-uk/parsers/ikea-uk.js",
+        "content-uk/parsers/samsonite-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

@@ -144,6 +144,12 @@
       parse: () => parseIkeaTr(),
       waitForPrice: true,
     },
+    {
+      id: "samsonite-tr",
+      label: "Samsonite TR",
+      matches: hostIs("samsonite.com.tr"),
+      parse: () => parseSamsoniteTr(),
+    },
   ];
 
   function getOrtakSepetParserForUrl(input) {
