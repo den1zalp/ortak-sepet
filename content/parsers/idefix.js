@@ -72,62 +72,13 @@ function findIdefixMainPrice() {
 }
 
 function findIdefixMainImage() {
-  const title =
-    cleanText(getText("h1")) ||
-    cleanText(getAttr("meta[property='og:title']", "content"));
-
-  const normalizedTitle = normalizeForBasicSearch(title);
-  const images = Array.from(document.querySelectorAll("img"));
-
-  const scoredImages = images
-    .filter((img) => {
-      if (!isVisibleElement(img)) return false;
-
-      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
-      const alt = img.getAttribute("alt") || "";
-
-      if (!src) return false;
-      if (/placeholder|logo|icon|sprite|badge/i.test(src)) return false;
-      if (/placeholder|logo|icon|sprite|badge/i.test(alt)) return false;
-
-      const rect = img.getBoundingClientRect();
-
-      if (rect.width < 80 || rect.height < 80) return false;
-
-      return true;
-    })
-    .map((img) => {
-      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
-      const alt = cleanText(img.getAttribute("alt") || "");
-      const normalizedAlt = normalizeForBasicSearch(alt);
-      const rect = img.getBoundingClientRect();
-
-      let score = 0;
-
-      score += rect.width + rect.height;
-
-      if (
-        normalizedTitle &&
-        normalizedAlt &&
-        (normalizedTitle.includes(normalizedAlt.slice(0, 25)) ||
-          normalizedAlt.includes(normalizedTitle.slice(0, 25)))
-      ) {
-        score += 300;
-      }
-
-      if (/image|product|urun|ürün|catalog|media/i.test(src)) score += 120;
-      if (rect.left < window.innerWidth * 0.5) score += 160;
-      if (rect.top < window.innerHeight * 0.8) score += 100;
-
-      return {
-        src,
-        score,
-      };
-    })
-    .sort((a, b) => b.score - a.score);
-
   return (
-    scoredImages[0]?.src ||
+    // Kitap kapakları küçük basılıyor, varsayılan 120 eşiği ana görseli eler.
+    findProductImage({
+      minWidth: 80,
+      minHeight: 80,
+      cdnRegex: /idefix|image|product|urun|ürün|catalog|media/i,
+    }) ||
     getAttr("meta[property='og:image']", "content") ||
     getAttr("meta[name='twitter:image']", "content")
   );

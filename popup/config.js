@@ -52,7 +52,6 @@ const I18N = {
   tr: {
     appSubtitle: "Alışverişte ortak sepetiniz",
     cartActions: "Sepet işlemleri",
-    language: "Dil",
     switchToEnglish: "İngilizceye Geç",
     switchToTurkish: "Türkçeye Geç",
     enableDarkMode: "Karanlık Mod",
@@ -63,7 +62,6 @@ const I18N = {
     installmentProducts: "Taksit / Finance",
     removeInstallmentGrouping: "Taksit Grubunu Kaldır",
     updateAllPrices: "Fiyatları Güncelle",
-    updating: "Güncelleniyor...",
     cancelUpdate: "Güncellemeyi Durdur",
     pricesUpdateCancelled: "Güncelleme durduruldu. {changed} ürünün fiyatı değişti, {failed} ürün güncellenemedi.",
     exportCsv: "CSV / Excel",
@@ -193,7 +191,6 @@ const I18N = {
   en: {
     appSubtitle: "Your shared shopping basket",
     cartActions: "Basket actions",
-    language: "Language",
     switchToEnglish: "Switch to English",
     switchToTurkish: "Switch to Turkish",
     enableDarkMode: "Dark Mode",
@@ -204,7 +201,6 @@ const I18N = {
     installmentProducts: "Instalments / Finance",
     removeInstallmentGrouping: "Remove Finance Group",
     updateAllPrices: "Refresh Prices",
-    updating: "Updating...",
     cancelUpdate: "Stop Refreshing",
     pricesUpdateCancelled: "Refresh stopped. {changed} product prices changed, {failed} products could not be refreshed.",
     exportCsv: "CSV / Excel",

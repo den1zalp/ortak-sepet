@@ -25,7 +25,7 @@ function parseHm() {
       cleanPrice(getAttr("meta[property='og:price:amount']", "content")) ||
       cleanPrice(getFirstText(["[class*='price']", "[class*='Price']"])),
     image:
-      findSiteMainImage({
+      findProductImage({
         preferLeftSide: true,
         minWidth: 170,
         minHeight: 220,

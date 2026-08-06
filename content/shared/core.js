@@ -1,14 +1,3 @@
-// Ortak Sepet - generated from content.js. Keep site-specific logic in this file.
-function getText(selector) {
-  const element = document.querySelector(selector);
-  return element ? element.textContent.trim() : "";
-}
-
-function getAttr(selector, attr) {
-  const element = document.querySelector(selector);
-  return element ? element.getAttribute(attr) || "" : "";
-}
-
 function cleanText(text) {
   if (!text) return "";
   return String(text).replace(/\s+/g, " ").trim();
@@ -119,24 +108,6 @@ function cleanPrice(rawPrice) {
   return candidates[0].text;
 }
 
-// JSON-LD ve meta etiketleri fiyatı makine biçiminde verir ("1299.90") ve para
-// birimini ayrı bir alanda söyler. Bu biçim görünür fiyat düzenimize uymadığı
-// için cleanPrice onu okuyamıyordu; burada sayıyı doğrudan çevirip para
-// birimini tahmin etmek yerine bildirilen değeri kullanıyoruz.
-function parseStructuredPriceNumber(rawPrice) {
-  if (rawPrice === null || rawPrice === undefined) return null;
-
-  const text = String(rawPrice).trim();
-  if (!text) return null;
-
-  if (/^\d+(?:\.\d{1,2})?$/.test(text)) {
-    const number = Number.parseFloat(text);
-    return Number.isFinite(number) && number > 0 ? number : null;
-  }
-
-  return null;
-}
-
 function formatStructuredPrice(rawPrice, currency) {
   const number = parseStructuredPriceNumber(rawPrice);
   if (number === null) return null;
@@ -192,21 +163,6 @@ function getSiteName() {
   return window.location.hostname.replace(/^www\d*\./, "");
 }
 
-function isVisibleElement(element) {
-  if (!element) return false;
-
-  const rect = element.getBoundingClientRect();
-  const style = window.getComputedStyle(element);
-
-  return (
-    rect.width > 0 &&
-    rect.height > 0 &&
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.opacity !== "0"
-  );
-}
-
 function looksLikeTryPrice(text) {
   if (!text) return false;
 
@@ -218,6 +174,84 @@ function looksLikeTryPrice(text) {
 function hasChildWithPriceText(element) {
   return Array.from(element.children || []).some((child) =>
     looksLikeTryPrice(child.textContent),
+  );
+}
+
+// Ürün görselini sayfadan seçer: yeterince büyük, görünür, logo/ikon olmayan ve
+// alt metni ürün adına benzeyen görsel kazanır. Neredeyse her parser aynı
+// taramaya ihtiyaç duyuyor; siteye göre değişen tek şey eşik boyutu ve CDN
+// adresinin nasıl göründüğü, ikisi de parametre.
+//
+// Kendi kuralı olan siteler bunu kullanmaz: JeansLab'de asıl görsel dosya adının
+// "-0" ile bitmesinden anlaşılıyor, IKEA ve Samsonite'de og:image zaten doğru.
+function findProductImage(options = {}) {
+  const {
+    preferLeftSide = true,
+    minWidth = 120,
+    minHeight = 120,
+    cdnRegex = /product|urun|ürün|images|image|media|catalog|cdn|resize/i,
+    // Ürün adı görselin alt metniyle karşılaştırılıyor; h1 ürün adını vermeyen
+    // sitelerde doğru başlığı gösteren seçici buradan verilir.
+    titleSelectors = ["h1"],
+  } = options;
+
+  const title =
+    titleSelectors.map((selector) => cleanText(getText(selector))).find(Boolean) ||
+    cleanText(getAttr("meta[property='og:title']", "content"));
+
+  const normalizedTitle = normalizeForBasicSearch(title);
+
+  const scoredImages = Array.from(document.querySelectorAll("img"))
+    .filter((img) => {
+      if (!isVisibleElement(img)) return false;
+
+      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
+      const alt = img.getAttribute("alt") || "";
+
+      if (!src) return false;
+      if (/logo|icon|sprite|placeholder|loading|badge|banner|avatar/i.test(src)) return false;
+      if (/logo|icon|sprite|placeholder|loading|badge|banner|avatar/i.test(alt)) return false;
+
+      const rect = img.getBoundingClientRect();
+
+      if (rect.width < minWidth || rect.height < minHeight) return false;
+
+      return true;
+    })
+    .map((img) => {
+      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
+      const alt = cleanText(img.getAttribute("alt") || "");
+      const normalizedAlt = normalizeForBasicSearch(alt);
+      const rect = img.getBoundingClientRect();
+
+      let score = 0;
+
+      score += rect.width + rect.height;
+
+      if (preferLeftSide && rect.left < window.innerWidth * 0.55) score += 250;
+      if (rect.top < window.innerHeight * 0.9) score += 120;
+      if (cdnRegex.test(src)) score += 140;
+
+      if (
+        normalizedTitle &&
+        normalizedAlt &&
+        (normalizedTitle.includes(normalizedAlt.slice(0, 25)) ||
+          normalizedAlt.includes(normalizedTitle.slice(0, 25)))
+      ) {
+        score += 300;
+      }
+
+      return {
+        src,
+        score,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  return (
+    scoredImages[0]?.src ||
+    getAttr("meta[property='og:image']", "content") ||
+    getAttr("meta[name='twitter:image']", "content")
   );
 }
 
@@ -234,7 +268,9 @@ function normalizeForBasicSearch(text) {
     .trim();
 }
 
-function normalizeInstallmentText(text) {
+// Turkce metni arama icin sadeleştirir: kucuk harf + aksansiz. Taksit ve kargo
+// taramalarinin ikisi de bunu kullaniyor.
+function normalizeTurkishText(text) {
   return cleanText(text)
     .toLocaleLowerCase("tr-TR")
     .replace(/ı/g, "i")
@@ -291,7 +327,7 @@ function findN11InstallmentInfo() {
   const rawBodyText =
     document.body?.textContent || document.documentElement?.textContent || "";
 
-  const normalized = normalizeInstallmentText(rawBodyText);
+  const normalized = normalizeTurkishText(rawBodyText);
 
   const paymentTabTexts = Array.from(
     document.querySelectorAll("div, section, li, span, p, button, a"),
@@ -299,13 +335,13 @@ function findN11InstallmentInfo() {
     .map((el) => cleanText(el.textContent))
     .filter(Boolean)
     .filter((text) => {
-      const normalizedText = normalizeInstallmentText(text);
+      const normalizedText = normalizeTurkishText(text);
       return /odeme kolayliklari|taksit secenekleri|aya varan taksit|baslayan taksit|alisveris kredisi/i.test(
         normalizedText,
       );
     });
 
-  const joinedText = normalizeInstallmentText(
+  const joinedText = normalizeTurkishText(
     [rawBodyText, ...paymentTabTexts].join(" \n "),
   );
 
@@ -384,12 +420,12 @@ function findTrendyolInstallmentInfo() {
   ];
 
   function hasPositiveInstallmentText(text) {
-    const normalized = normalizeInstallmentText(text);
+    const normalized = normalizeTurkishText(text);
     return positivePatterns.some((pattern) => pattern.test(normalized));
   }
 
   function hasNegativeInstallmentText(text) {
-    const normalized = normalizeInstallmentText(text);
+    const normalized = normalizeTurkishText(text);
     return negativePatterns.some((pattern) => pattern.test(normalized));
   }
 
@@ -400,7 +436,7 @@ function findTrendyolInstallmentInfo() {
       const text = cleanText(element.textContent);
       if (!text || text.length > 320) return false;
 
-      const normalized = normalizeInstallmentText(text);
+      const normalized = normalizeTurkishText(text);
       if (!/taksit|aylik|pesin fiyatina|peşin fiyatına|kredi karti|kartlara|\d+\s*x\s*[\d.,]+\s*tl/i.test(normalized)) {
         return false;
       }
@@ -487,7 +523,7 @@ function findJeansLabInstallmentInfo() {
       .join(" "),
   );
 
-  const normalized = normalizeInstallmentText(rawText);
+  const normalized = normalizeTurkishText(rawText);
 
   const hasInstallmentSection =
     /taksit secenekleri/i.test(normalized) ||
@@ -521,7 +557,7 @@ function findSamsoniteTrInstallmentInfo() {
 
   if (!container) return null;
 
-  const normalized = normalizeInstallmentText(container.textContent);
+  const normalized = normalizeTurkishText(container.textContent);
 
   if (!normalized) return null;
 
@@ -577,7 +613,7 @@ function findInstallmentInfo() {
   );
 
   function isCardlessInstallmentText(text) {
-    const normalized = normalizeInstallmentText(text);
+    const normalized = normalizeTurkishText(text);
 
     return /kartsiz taksit|kartsiz taksitle|kartsiz|alisveris kredisi|krediyle al|finansman|alisveris finansmani|hepsifinans|hepsi finans|kredili odeme|hepsipay/i.test(
       normalized,
@@ -585,7 +621,7 @@ function findInstallmentInfo() {
   }
 
   function isNegativeInstallmentText(text) {
-    const normalized = normalizeInstallmentText(text);
+    const normalized = normalizeTurkishText(text);
 
     return /bu urune taksit uygulanmiyor|taksit uygulanmiyor|taksit yok|taksit yapilamaz|taksit uygulanmaz|taksit secenegi bulunmamaktadir|taksit bulunmamaktadir|kredi kartina taksit yok|kredi karti taksiti yok/i.test(
       normalized,
@@ -593,7 +629,7 @@ function findInstallmentInfo() {
   }
 
   function hasBankOrCardKeyword(text) {
-    const normalized = normalizeInstallmentText(text);
+    const normalized = normalizeTurkishText(text);
 
     return /bonus|world|worldcard|axess|maximum|paraf|cardfinans|advantage|bankkart|kuveytturk|kuveyt turk|ziraat|is bankasi|iş bankasi|garanti|yapi kredi|yapikredi|akbank|vakifbank|halkbank|denizbank|qnb|enpara|teb|ing/i.test(
       normalized,
@@ -601,7 +637,7 @@ function findInstallmentInfo() {
   }
 
   function isExplicitRegularInstallmentText(text) {
-    const normalized = normalizeInstallmentText(text);
+    const normalized = normalizeTurkishText(text);
 
     if (isCardlessInstallmentText(normalized)) {
       return false;
@@ -630,8 +666,8 @@ function findInstallmentInfo() {
   }
 
   function isWeakInstallmentText(text, contextText) {
-    const normalized = normalizeInstallmentText(text);
-    const normalizedContext = normalizeInstallmentText(contextText);
+    const normalized = normalizeTurkishText(text);
+    const normalizedContext = normalizeTurkishText(contextText);
 
     if (isCardlessInstallmentText(normalizedContext)) {
       return false;
@@ -650,7 +686,7 @@ function findInstallmentInfo() {
       if (!text) return false;
       if (text.length > 320) return false;
 
-      const normalized = normalizeInstallmentText(text);
+      const normalized = normalizeTurkishText(text);
 
       const hasInstallmentKeyword =
         /taksit|vade|pesin fiyatina|kredi karti|kartlara|kartina|bonus|world|worldcard|axess|maximum|paraf|cardfinans|advantage|bankkart|kuveytturk|finansman|alisveris kredisi|kartsiz|hepsifinans|hepsipay|\d+\s*x\s*[\d.,]+\s*tl/i.test(
@@ -753,19 +789,8 @@ function getDefaultShippingInfoForSite() {
 
 function findShippingInfo() {
 
-  function normalizeForSearch(text) {
-    return cleanText(text)
-      .toLocaleLowerCase("tr-TR")
-      .replace(/ı/g, "i")
-      .replace(/ğ/g, "g")
-      .replace(/ü/g, "u")
-      .replace(/ş/g, "s")
-      .replace(/ö/g, "o")
-      .replace(/ç/g, "c");
-  }
-
   function analyzeShippingText(text) {
-    const normalized = normalizeForSearch(text);
+    const normalized = normalizeTurkishText(text);
 
     const freeShippingRegex =
       /ucretsiz kargo|kargo bedava|bedava kargo|ucretsiz teslimat|teslimat ucretsiz|ucretsiz gonderim|kargo ucretsiz|kargosu bedava/i;
@@ -1034,119 +1059,6 @@ function findShippingInfo() {
   return getDefaultShippingInfoForSite();
 }
 
-function findProductInJsonLd(data) {
-  if (!data) return null;
-
-  if (Array.isArray(data)) {
-    for (const item of data) {
-      const found = findProductInJsonLd(item);
-      if (found) return found;
-    }
-  }
-
-  if (typeof data === "object") {
-    const type = data["@type"];
-
-    const isProduct =
-      type === "Product" || (Array.isArray(type) && type.includes("Product"));
-
-    if (isProduct) {
-      return data;
-    }
-
-    if (data["@graph"]) {
-      const foundInGraph = findProductInJsonLd(data["@graph"]);
-      if (foundInGraph) return foundInGraph;
-    }
-
-    for (const key of Object.keys(data)) {
-      if (typeof data[key] === "object") {
-        const found = findProductInJsonLd(data[key]);
-        if (found) return found;
-      }
-    }
-  }
-
-  return null;
-}
-
-function parseJsonLdProduct() {
-  const scripts = document.querySelectorAll(
-    "script[type='application/ld+json']",
-  );
-
-  for (const script of scripts) {
-    try {
-      const json = JSON.parse(script.textContent);
-      const product = findProductInJsonLd(json);
-
-      if (!product) continue;
-
-      const offers = Array.isArray(product.offers)
-        ? product.offers[0]
-        : product.offers;
-
-      let image = "";
-
-      if (Array.isArray(product.image)) {
-        image = product.image[0];
-      } else if (typeof product.image === "string") {
-        image = product.image;
-      } else if (product.image && product.image.url) {
-        image = product.image.url;
-      }
-
-      const rawPrice = offers?.price ?? offers?.lowPrice ?? offers?.highPrice;
-      const currency = String(offers?.priceCurrency || "").toUpperCase();
-
-      return {
-        site: getSiteName(),
-        title: cleanText(product.name),
-        price: formatStructuredPrice(rawPrice, currency) || cleanPrice(rawPrice),
-        currency: currency || null,
-        image,
-        url: window.location.href,
-      };
-    } catch {
-      continue;
-    }
-  }
-
-  return null;
-}
-
-function parseMetaProduct() {
-  const title =
-    getAttr("meta[property='og:title']", "content") ||
-    getAttr("meta[name='twitter:title']", "content") ||
-    document.title;
-
-  const image =
-    getAttr("meta[property='og:image']", "content") ||
-    getAttr("meta[name='twitter:image']", "content");
-
-  const price =
-    getAttr("meta[property='product:price:amount']", "content") ||
-    getAttr("meta[property='og:price:amount']", "content") ||
-    getAttr("meta[name='price']", "content");
-
-  const currency = String(
-    getAttr("meta[property='product:price:currency']", "content") ||
-      getAttr("meta[property='og:price:currency']", "content") ||
-      "",
-  ).toUpperCase();
-
-  if (!title && !price && !image) return null;
-
-  return {
-    site: getSiteName(),
-    title: cleanText(title),
-    price: formatStructuredPrice(price, currency) || cleanPrice(price),
-    currency: currency || null,
-    image,
-    url: window.location.href,
-  };
-}
 // Kendi parser'ı olmayan TR siteleri için genel fiyat tespiti. Ürün başlığına
 // yakın, büyük ve kalın yazılmış TL tutarını seçer; taksit, kargo ve kampanya
 // metinlerini eler.
@@ -1351,64 +1263,14 @@ function findTrendyolMainPrice() {
 }
 
 function findTrendyolMainImage() {
-  const title =
-    cleanText(getText(".pr-new-br")) ||
-    cleanText(getText("h1")) ||
-    cleanText(getAttr("meta[property='og:title']", "content"));
-
-  const normalizedTitle = normalizeForBasicSearch(title);
-  const images = Array.from(document.querySelectorAll("img"));
-
-  const scoredImages = images
-    .filter((img) => {
-      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
-      const alt = img.getAttribute("alt") || "";
-
-      if (!src) return false;
-      if (/logo|icon|sprite|placeholder|loading|badge/i.test(src)) return false;
-      if (/logo|icon|sprite|placeholder|loading|badge/i.test(alt)) return false;
-
-      const rect = img.getBoundingClientRect();
-
-      if (rect.width < 100 || rect.height < 100) return false;
-
-      return true;
-    })
-    .map((img) => {
-      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
-      const alt = cleanText(img.getAttribute("alt") || "");
-      const normalizedAlt = normalizeForBasicSearch(alt);
-      const rect = img.getBoundingClientRect();
-
-      let score = 0;
-
-      score += rect.width + rect.height;
-
-      if (rect.left < window.innerWidth * 0.55) score += 200;
-      if (rect.top < window.innerHeight * 0.9) score += 120;
-
-      if (/cdn\.dsmcdn\.com|ty\d+|product|urun|ürün|images|media/i.test(src)) {
-        score += 160;
-      }
-
-      if (
-        normalizedTitle &&
-        normalizedAlt &&
-        (normalizedTitle.includes(normalizedAlt.slice(0, 25)) ||
-          normalizedAlt.includes(normalizedTitle.slice(0, 25)))
-      ) {
-        score += 250;
-      }
-
-      return {
-        src,
-        score,
-      };
-    })
-    .sort((a, b) => b.score - a.score);
-
   return (
-    scoredImages[0]?.src ||
+    findProductImage({
+      // Trendyol'da h1 yerine ".pr-new-br" marka + ürün adını veriyor.
+      titleSelectors: [".pr-new-br", "h1"],
+      minWidth: 100,
+      minHeight: 100,
+      cdnRegex: /cdn\.dsmcdn\.com|ty\d+|product|urun|ürün|images|media/i,
+    }) ||
     getAttr("meta[property='og:image']", "content") ||
     getAttr("meta[name='twitter:image']", "content")
   );

@@ -120,7 +120,7 @@ function findJeansLabPriceFromPriceNodes() {
 
       if (!text || text.length > 220) return null;
 
-      const normalized = normalizeInstallmentText(text);
+      const normalized = normalizeTurkishText(text);
       if (/taksit|kargo|teslimat|beden|renk|stok/i.test(normalized)) return null;
 
       const style = window.getComputedStyle(element);

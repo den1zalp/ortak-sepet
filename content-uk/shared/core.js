@@ -1,14 +1,3 @@
-// Ortak Sepet - generated from content-uk.js. Keep site-specific logic in this file.
-function getText(selector) {
-  const element = document.querySelector(selector);
-  return element ? element.textContent.trim() : "";
-}
-
-function getAttr(selector, attr) {
-  const element = document.querySelector(selector);
-  return element ? element.getAttribute(attr) || "" : "";
-}
-
 function normalizeCurrencySymbols(text) {
   return String(text || "")
     .replace(/\uFFE1/g, "£")
@@ -27,21 +16,6 @@ function normalizeForSearch(text) {
     .toLowerCase()
     .replace(/[^a-z0-9£$.,]+/g, " ")
     .trim();
-}
-
-function isVisibleElement(element) {
-  if (!element) return false;
-
-  const rect = element.getBoundingClientRect();
-  const style = window.getComputedStyle(element);
-
-  return (
-    rect.width > 0 &&
-    rect.height > 0 &&
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    style.opacity !== "0"
-  );
 }
 
 function cleanPrice(rawPrice) {
@@ -67,24 +41,6 @@ function cleanPrice(rawPrice) {
   }
 
   return cleaned.replace(/\s+/g, "");
-}
-
-// JSON-LD and meta tags give a machine-readable price ("149.00") plus an
-// explicit currency. cleanPrice cannot read that shape and would also force a
-// pound sign onto a euro or dollar price, so structured data is formatted here
-// with the currency the site actually reported.
-function parseStructuredPriceNumber(rawPrice) {
-  if (rawPrice === null || rawPrice === undefined) return null;
-
-  const text = String(rawPrice).trim();
-  if (!text) return null;
-
-  if (/^\d+(?:\.\d{1,2})?$/.test(text)) {
-    const number = Number.parseFloat(text);
-    return Number.isFinite(number) && number > 0 ? number : null;
-  }
-
-  return null;
 }
 
 function formatStructuredPrice(rawPrice, currency) {
@@ -225,119 +181,6 @@ function getSiteName() {
   if (host.includes("samsonite.co.uk")) return "Samsonite UK";
 
   return host;
-}
-
-function findProductInJsonLd(data) {
-  if (!data) return null;
-
-  if (Array.isArray(data)) {
-    for (const item of data) {
-      const found = findProductInJsonLd(item);
-      if (found) return found;
-    }
-  }
-
-  if (typeof data === "object") {
-    const type = data["@type"];
-
-    const isProduct =
-      type === "Product" ||
-      (Array.isArray(type) && type.includes("Product"));
-
-    if (isProduct) {
-      return data;
-    }
-
-    if (data["@graph"]) {
-      const foundInGraph = findProductInJsonLd(data["@graph"]);
-      if (foundInGraph) return foundInGraph;
-    }
-
-    for (const key of Object.keys(data)) {
-      if (typeof data[key] === "object") {
-        const found = findProductInJsonLd(data[key]);
-        if (found) return found;
-      }
-    }
-  }
-
-  return null;
-}
-
-function parseJsonLdProduct() {
-  const scripts = document.querySelectorAll("script[type='application/ld+json']");
-
-  for (const script of scripts) {
-    try {
-      const json = JSON.parse(script.textContent);
-      const product = findProductInJsonLd(json);
-
-      if (!product) continue;
-
-      const offers = Array.isArray(product.offers)
-        ? product.offers[0]
-        : product.offers;
-
-      let image = "";
-
-      if (Array.isArray(product.image)) {
-        image = product.image[0];
-      } else if (typeof product.image === "string") {
-        image = product.image;
-      } else if (product.image && product.image.url) {
-        image = product.image.url;
-      }
-
-      const rawPrice = offers?.price ?? offers?.lowPrice ?? offers?.highPrice;
-      const currency = String(offers?.priceCurrency || "").toUpperCase();
-
-      return {
-        site: getSiteName(),
-        title: cleanText(product.name),
-        price: formatStructuredPrice(rawPrice, currency) || cleanPrice(rawPrice),
-        currency: currency || null,
-        image,
-        url: window.location.href,
-      };
-    } catch {
-      continue;
-    }
-  }
-
-  return null;
-}
-
-function parseMetaProduct() {
-  const title =
-    getAttr("meta[property='og:title']", "content") ||
-    getAttr("meta[name='twitter:title']", "content") ||
-    document.title;
-
-  const image =
-    getAttr("meta[property='og:image']", "content") ||
-    getAttr("meta[name='twitter:image']", "content");
-
-  const price =
-    getAttr("meta[property='product:price:amount']", "content") ||
-    getAttr("meta[property='og:price:amount']", "content") ||
-    getAttr("meta[name='price']", "content");
-
-  const currency = String(
-    getAttr("meta[property='product:price:currency']", "content") ||
-      getAttr("meta[property='og:price:currency']", "content") ||
-      "",
-  ).toUpperCase();
-
-  if (!title && !price && !image) return null;
-
-  return {
-    site: getSiteName(),
-    title: cleanText(title),
-    price: formatStructuredPrice(price, currency) || cleanPrice(price),
-    currency: currency || null,
-    image,
-    url: window.location.href,
-  };
 }
 
 function scoreMainPriceCandidate(element, titleRect) {
@@ -721,8 +564,6 @@ function findShippingInfo() {
 
   return getDefaultShippingInfoForSite();
 }
-
-
 
 
 function findImageBySelectors(selectors) {

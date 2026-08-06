@@ -1,46 +1,14 @@
 // Ortak Sepet - generated from content.js. Keep site-specific logic in this file.
 function findCiceksepetiMainImage() {
-  const metaImage =
+  return (
     getAttr("meta[property='og:image']", "content") ||
-    getAttr("meta[name='twitter:image']", "content");
-
-  if (metaImage) return metaImage;
-
-  const selectors = [
-    "[class*='product-detail'] img",
-    "[class*='ProductDetail'] img",
-    "[class*='gallery'] img",
-    "[class*='Gallery'] img",
-    "img[src*='ciceksepeti']",
-  ];
-
-  const images = selectors.flatMap((selector) =>
-    Array.from(document.querySelectorAll(selector)),
-  );
-
-  const scoredImages = Array.from(new Set(images))
-    .map((img) => {
-      const src = img.currentSrc || img.src || img.getAttribute("src") || "";
-
-      if (!src) return null;
-      if (/logo|icon|sprite|placeholder|loading|badge/i.test(src)) return null;
-      if (!isVisibleElement(img)) return null;
-
-      const rect = img.getBoundingClientRect();
-
-      if (rect.width < 100 || rect.height < 100) return null;
-
-      let score = rect.width + rect.height;
-
-      if (rect.left < window.innerWidth * 0.55) score += 180;
-      if (rect.top < window.innerHeight * 0.9) score += 120;
-
-      return { src, score };
+    getAttr("meta[name='twitter:image']", "content") ||
+    findProductImage({
+      minWidth: 100,
+      minHeight: 100,
+      cdnRegex: /ciceksepeti|product|urun|ürün|images|media|cdn/i,
     })
-    .filter(Boolean)
-    .sort((a, b) => b.score - a.score);
-
-  return scoredImages[0]?.src || "";
+  );
 }
 
 function parseCiceksepeti() {

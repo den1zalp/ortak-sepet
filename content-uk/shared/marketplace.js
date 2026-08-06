@@ -13,17 +13,6 @@ function normalizeSplitAnyPriceText(text) {
     .replace(/(\d{1,4})\s+(\d{2})\s*\b(GBP|USD|EUR|TRY|TL|RUB|UAH|INR|JPY|CNY|KRW)\b/gi, "$1.$2 $3");
 }
 
-function looksLikeAnyPrice(text) {
-  if (!text) return false;
-
-  const clean = normalizeSplitAnyPriceText(text);
-
-  if (!/\d/.test(clean)) return false;
-  if (clean.length > 320) return false;
-
-  return MULTI_CURRENCY_SYMBOL_RE.test(clean) || MULTI_CURRENCY_CODE_RE.test(clean);
-}
-
 function parseAnyPriceNumber(priceText) {
   if (!priceText) return null;
 
@@ -203,17 +192,6 @@ function extractAnyPriceCandidates(raw) {
   });
 }
 
-function extractAnyPriceText(raw) {
-  const candidates = extractAnyPriceCandidates(raw);
-  return candidates[0]?.text || null;
-}
-
-function hasChildWithAnyPriceText(element) {
-  return Array.from(element.children || []).some((child) =>
-    extractAnyPriceCandidates(child.textContent).length > 0,
-  );
-}
-
 function getPriceElementSignal(element) {
   const signal = {
     oldPrice: false,
@@ -389,37 +367,6 @@ function scoreMultiCurrencyCandidate(candidate, rawText = "", element = null, so
   }
 
   return score;
-}
-
-function scoreAnyPriceCandidate(element, titleRect) {
-  const rect = element.getBoundingClientRect();
-  const style = window.getComputedStyle(element);
-  const fontSize = Number.parseFloat(style.fontSize) || 0;
-  const fontWeight = Number.parseInt(style.fontWeight, 10) || 400;
-  const text = cleanText(element.textContent);
-  const candidates = extractAnyPriceCandidates(text);
-  const bestCandidate = candidates
-    .map((candidate) => ({
-      text: candidate.text,
-      score: scoreMultiCurrencyCandidate(candidate, text, element, 0),
-    }))
-    .sort((a, b) => b.score - a.score)[0];
-
-  let score = bestCandidate?.score || 0;
-
-  score += fontSize * 14;
-  score += fontWeight / 60;
-
-  if (titleRect) {
-    const distanceFromTitle = Math.abs(rect.top - titleRect.bottom);
-    score += Math.max(0, 320 - distanceFromTitle);
-  }
-
-  if (/off|save|was|rrp|delivery|shipping|coupon|voucher|points|orders over|extra|code|per /i.test(text)) {
-    score -= 120;
-  }
-
-  return { text: bestCandidate?.text || candidates[0]?.text || text, score };
 }
 
 function findAnyCurrencyMainPrice() {
