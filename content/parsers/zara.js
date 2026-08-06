@@ -31,7 +31,7 @@ function parseZara() {
       cleanPrice(getAttr("meta[property='og:price:amount']", "content")) ||
       cleanPrice(getFirstText(["[class*='price']", "[class*='Price']"])),
     image:
-      findSiteMainImage({
+      findProductImage({
         preferLeftSide: true,
         minWidth: 180,
         minHeight: 220,

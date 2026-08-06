@@ -135,7 +135,7 @@ function findSephoraMainImage() {
 
   return (
     candidates[0]?.src ||
-    findSiteMainImage({
+    findProductImage({
       cdnRegex: /product|media|sephora|image|images|cdn|resize/i,
     }) ||
     ""

@@ -94,6 +94,7 @@
       ],
       "js": [
         "browser-polyfill.js",
+        "shared/structured-data.js",
         "content/shared/core.js",
         "content/parsers/trendyol.js",
         "content/parsers/hepsiburada.js",
@@ -137,6 +138,7 @@
         "*://*.samsonite.co.uk/*"
       ],
       "js": [
+        "shared/structured-data.js",
         "content-uk/shared/core.js",
         "content-uk/parsers/amazon-uk.js",
         "content-uk/parsers/ebay-uk.js",

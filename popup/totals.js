@@ -31,10 +31,6 @@ function formatPriceByCurrency(value, currency = "TRY") {
   }
 }
 
-function formatTRY(value) {
-  return formatPriceByCurrency(value, "TRY");
-}
-
 function getItemCurrency(item) {
   return item.currency || detectCurrencyFromPrice(item.price || item.detectedPrice || "");
 }

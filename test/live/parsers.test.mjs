@@ -1,13 +1,29 @@
 // Kendi parser'ı olan TR/UK sitelerinde canlı ürün sayfası doğrulaması.
 import { launchExtension, screenshotPath } from "../helpers/extension.mjs";
 
-// Ürün URL'lerini tahmin etmek yerine ana sayfadan ilk ürün linkini buluyoruz.
+// Ürün URL'leri sabit yazılmıyor; stoktan kalkan tek bir ürün bütün testi
+// kırardı. Bunun yerine listeleme sayfasından ilk ürün linki bulunuyor.
+//
+// Buradaki sitelerin hepsi ortak findProductImage() taramasını kullanıyor;
+// kendi görsel kuralı olanlar (IKEA, Samsonite) ayrı dosyalarda.
 const SITES = [
   { name: "IKEA TR", home: "https://www.ikea.com.tr/", linkPattern: /\/urun\// },
   { name: "IKEA UK", home: "https://www.ikea.com/gb/en/", linkPattern: /\/p\/[a-z0-9-]+-\d{8}/ },
   { name: "Çiçeksepeti", home: "https://www.ciceksepeti.com/", linkPattern: /-p-\d+|\/p\// },
   { name: "D&R", home: "https://www.dr.com.tr/", linkPattern: /\/kitap\/|\/urun\/|-p\d+/ },
   { name: "Pazarama", home: "https://www.pazarama.com/", linkPattern: /-p-[a-z0-9]/i },
+  { name: "Trendyol", home: "https://www.trendyol.com/", linkPattern: /-p-\d{6,}/ },
+  { name: "n11", home: "https://www.n11.com/arama?q=kulaklik", linkPattern: /n11\.com\/urun\// },
+  {
+    name: "Vatan Bilgisayar",
+    home: "https://www.vatanbilgisayar.com/",
+    linkPattern: /vatanbilgisayar\.com\/[a-z0-9-]+\.html$/,
+  },
+  {
+    name: "idefix",
+    home: "https://www.idefix.com/cep-telefonu-c-2313571270",
+    linkPattern: /idefix\.com\/[a-z0-9-]+-p-\d+/,
+  },
 ];
 
 const { browser, sw, workerTarget, extensionId } = await launchExtension({
