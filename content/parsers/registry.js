@@ -150,6 +150,13 @@
       matches: hostIs("samsonite.com.tr"),
       parse: () => parseSamsoniteTr(),
     },
+    {
+      id: "decathlon-tr",
+      label: "Decathlon TR",
+      matches: hostIs("decathlon.com.tr"),
+      parse: () => parseDecathlonTr(),
+      waitForPrice: true,
+    },
   ];
 
   function getOrtakSepetParserForUrl(input) {

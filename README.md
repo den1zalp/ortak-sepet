@@ -64,6 +64,7 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * İncehesap
 * IKEA Türkiye
 * Samsonite Türkiye
+* Decathlon Türkiye
 * Sephora Türkiye
 * Zara
 * Bershka
@@ -84,6 +85,7 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Gymshark
 * IKEA UK
 * Samsonite UK
+* Decathlon UK
 
 ## Kullanım
 

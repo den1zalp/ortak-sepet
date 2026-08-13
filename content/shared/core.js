@@ -159,6 +159,7 @@ function getSiteName() {
   if (isSiteHost("sephora.com.tr")) return "Sephora";
   if (isSiteHost("ikea.com.tr")) return "IKEA";
   if (isSiteHost("samsonite.com.tr")) return "Samsonite";
+  if (isSiteHost("decathlon.com.tr")) return "Decathlon";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }

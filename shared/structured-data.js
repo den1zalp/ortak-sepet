@@ -131,6 +131,43 @@ function parseJsonLdProduct() {
   return null;
 }
 
+// parseJsonLdProduct() offers'ı tek katmanlı ve fiyatı doğrudan offers.price
+// altında bekliyor. Bazı siteler ikisini de farklı yazıyor: Decathlon offers'ı
+// iç içe dizi olarak ([[{...}]]), fiyatı da priceSpecification altında veriyor.
+// Sadece teklifi döndürüyoruz; biçimlendirmeyi çağıran core'un
+// formatStructuredPrice()'ı yapar.
+function findStructuredOffer() {
+  const scripts = document.querySelectorAll("script[type='application/ld+json']");
+
+  for (const script of scripts) {
+    try {
+      const product = findProductInJsonLd(JSON.parse(script.textContent));
+
+      if (!product) continue;
+
+      const offers = [product.offers].flat(Infinity).filter(Boolean);
+
+      for (const offer of offers) {
+        const specification = offer.priceSpecification || {};
+        const price = offer.price ?? specification.price;
+
+        if (price === null || price === undefined) continue;
+
+        return {
+          price,
+          currency: String(
+            offer.priceCurrency || specification.priceCurrency || "",
+          ).toUpperCase(),
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 function parseMetaProduct() {
   const title =
     getAttr("meta[property='og:title']", "content") ||
