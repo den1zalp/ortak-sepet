@@ -2,11 +2,18 @@
 // mağazaya giden manifest kaynaktakinden farklı (Chrome'da background.scripts
 // ve browser_specific_settings silinir), o yüzden paket ayrıca sınanıyor.
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { REPO_ROOT, launchExtension, createChecker, screenshotPath } from "../helpers/extension.mjs";
 
 const { check, summary } = createChecker();
+
+// Sürüm kaynaktan okunuyor; testin içine yazılırsa her sürüm yükseltmesinde
+// alakasız bir kırmızı veriyor.
+const expectedVersion = JSON.parse(
+  readFileSync(join(REPO_ROOT, "manifest.json"), "utf8"),
+).version;
 
 // Test kendi paketini üretiyor; elle build etmeyi unutmak sessizce eski paketi
 // sınamak demek olurdu.
@@ -35,7 +42,11 @@ const swState = await sw.evaluate(() => ({
 check("importScripts ile shared/cart yüklendi", swState.cart === "object", swState.cart);
 check("shared/category yüklendi", swState.category !== "undefined", swState.category);
 check("polyfill çalışıyor", swState.polyfill === "function", swState.polyfill);
-check("sürüm 1.6.0", swState.version === "1.6.0", swState.version);
+check(
+  `sürüm ${expectedVersion}`,
+  swState.version === expectedVersion,
+  swState.version,
+);
 check("chrome manifest'inde background.scripts yok", swState.hasScriptsKey === false);
 check("chrome manifest'inde gecko anahtarı yok", swState.hasGecko === false);
 check("contextMenus API erişilebilir", swState.contextMenus === "object");
