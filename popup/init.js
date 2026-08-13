@@ -42,10 +42,42 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
+// İzin isteği kullanıcı tıklamasına bağlı ve Firefox bu hakkı işleyicideki ilk
+// `await`'te düşürüyor. Bu yüzden istek hiçbir şey beklemeden, doğrudan
+// tıklamanın içinden çıkıyor; sonuç `then` ile işleniyor.
+function requestPermissionFromClick(event) {
+  const origins = (event.target?.dataset?.grantPermission || "").split(" ").filter(Boolean);
+
+  if (origins.length === 0) return false;
+
+  browser.permissions
+    .request({ origins })
+    .then((granted) => (granted ? renderCart() : null))
+    .catch(() => setStatus(translate("permissionRequestHint")));
+
+  return true;
+}
+
+// Verilen izin popup kapanmadan da gelebilir; liste kendini tazelesin.
+if (browser.permissions?.onAdded) {
+  browser.permissions.onAdded.addListener(() => {
+    renderCart();
+  });
+}
+
+permissionNoticeEl.addEventListener("click", (event) => {
+  requestPermissionFromClick(event);
+});
+
 cartItemsEl.addEventListener("click", async (event) => {
   const target = event.target;
 
   if (!target || !target.dataset) return;
+
+  if (target.dataset.grantPermission) {
+    requestPermissionFromClick(event);
+    return;
+  }
 
   if (target.dataset.toggleSelected) {
     await toggleSelected(target.dataset.toggleSelected);

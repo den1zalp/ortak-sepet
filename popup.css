@@ -333,6 +333,39 @@ button:disabled {
   background: #fff7f7;
 }
 
+/* Eksik izin hata değil, kullanıcının tek tıkla düzeltebileceği bir durum;
+   başarısız güncellemenin kırmızısından ayrı dursun diye uyarı sarısı. */
+.cart-item-needs-permission {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.permission-notice {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  background: #fffbeb;
+}
+
+.permission-notice-text {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.permission-notice-hint {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #a16207;
+}
+
+.grant-permission-button {
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
 .cart-image {
   width: 58px;
   height: 58px;
@@ -811,6 +844,25 @@ body.dark-mode .empty {
 body.dark-mode .cart-item-update-failed {
   background: #2a1218;
   border-color: #7f1d1d;
+}
+
+body.dark-mode .cart-item-needs-permission,
+body.dark-mode .permission-notice {
+  background: #2a2113;
+  border-color: #92400e;
+}
+
+body.dark-mode .permission-notice-text {
+  color: #fcd34d;
+}
+
+body.dark-mode .permission-notice-hint {
+  color: #d1a34a;
+}
+
+body.dark-mode .grant-permission-button {
+  border-color: #b45309;
+  color: #fcd34d;
 }
 
 body.dark-mode .cart-image {

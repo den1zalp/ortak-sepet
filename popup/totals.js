@@ -215,6 +215,10 @@ function getLastUpdateText(item) {
     return translate("lastManualKept");
   }
 
+  if (item.lastUpdateStatus === "permission") {
+    return translate("lastPermission");
+  }
+
   if (item.lastUpdateStatus === "unavailable") {
     return translate("lastUnavailable");
   }

@@ -45,6 +45,69 @@ var OrtakSepetCart = (function () {
     }
   }
 
+  // Firefox MV3'te manifest'teki host izinleri isteğe bağlı sayılıyor: kurulumda
+  // onaylananlar veriliyor, ama güncellemeyle eklenen yeni bir site kullanıcıya
+  // hiç sorulmadan izinsiz kalıyor (Firefox bug 1893232). İzin yoksa content
+  // script o sayfada hiç çalışmaz; ürün eklenemez, fiyat güncellenemez ve
+  // kullanıcı yalnızca "başarısız" görür. Sebebi ayırt edebilmek için ürünün
+  // alan adını manifest'te ilan ettiğimiz origin kalıbıyla eşleştiriyoruz.
+  //
+  // Eşleşme alan adı bazında; "*://*.zara.com/*" kalıbını parça araması yapıp
+  // "pazarama.com" ile eşleştirmemek için host'un tamamına bakılıyor.
+  function originToDomain(origin) {
+    return String(origin || "")
+      .replace(/^\*:\/\/(\*\.)?/, "")
+      .replace(/\/\*$/, "");
+  }
+
+  function itemMatchesDomain(item, domain) {
+    if (!domain) return false;
+
+    let host = "";
+
+    try {
+      host = new URL(item?.url || "").hostname.replace(/^www\d*\./, "").toLowerCase();
+    } catch {
+      return false;
+    }
+
+    return host === domain || host.endsWith(`.${domain}`);
+  }
+
+  function getDeclaredOriginForItem(item) {
+    const declared = globalThis.browser?.runtime?.getManifest?.().host_permissions || [];
+
+    return (
+      declared.find((origin) => itemMatchesDomain(item, originToDomain(origin))) || null
+    );
+  }
+
+  // Verilmemiş izinleri tekilleştirip döndürür. Tarayıcı izin API'sini
+  // vermiyorsa boş liste dönüyor: kullanıcıya düzeltemeyeceği bir uyarı
+  // göstermektense hiç göstermemek doğru.
+  async function findMissingOrigins(items) {
+    let grantedOrigins = [];
+
+    try {
+      grantedOrigins = (await globalThis.browser.permissions.getAll()).origins || [];
+    } catch {
+      return [];
+    }
+
+    const granted = new Set(grantedOrigins);
+    const missing = new Set();
+
+    for (const item of items || []) {
+      const origin = getDeclaredOriginForItem(item);
+
+      if (origin && !granted.has(origin)) {
+        missing.add(origin);
+      }
+    }
+
+    return Array.from(missing);
+  }
+
   function detectCurrencyFromPrice(priceText) {
     const text = String(priceText || "");
 
@@ -342,6 +405,8 @@ var OrtakSepetCart = (function () {
     currencySymbolForCurrency,
     detectCurrencyFromPrice,
     extractNumberFromPrice,
+    findMissingOrigins,
+    getDeclaredOriginForItem,
     getItems,
     getQuantity,
     getViewMode,

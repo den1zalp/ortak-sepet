@@ -47,6 +47,7 @@ const purchasedPanelEl = document.getElementById("purchasedPanel");
 const purchasedItemsEl = document.getElementById("purchasedItems");
 const purchasedSummaryEl = document.getElementById("purchasedSummary");
 const markPurchasedBtn = document.getElementById("markPurchasedBtn");
+const permissionNoticeEl = document.getElementById("permissionNotice");
 
 const I18N = {
   tr: {
@@ -135,8 +136,17 @@ const I18N = {
     lastFailed: "Başarısız",
     lastManual: "Manuel",
     lastManualKept: "Manuel korundu",
+    lastPermission: "Site izni gerekiyor",
     lastUnavailable: "Ana fiyat yok",
     lastSuccess: "Başarılı",
+    grantPermission: "İzin Ver",
+    grantPermissionLabel: "{title} için site iznini ver",
+    permissionNotice:
+      "{count} sitenin erişim izni verilmemiş; o sitelerdeki ürünler güncellenemiyor.",
+    permissionNoticeAll: "İzin Ver",
+    permissionNoticeAllLabel: "Eksik site izinlerinin tümünü ver",
+    permissionRequestHint:
+      "Tarayıcı izni sorarken bu pencere kapanabilir; onayladıktan sonra tekrar açın.",
     quantity: "Adet: {quantity}",
     goToLink: "Linke Git",
     manualPrice: "Manuel Fiyat Gir",
@@ -274,8 +284,17 @@ const I18N = {
     lastFailed: "Failed",
     lastManual: "Manual",
     lastManualKept: "Manual kept",
+    lastPermission: "Site access needed",
     lastUnavailable: "No main price",
     lastSuccess: "Successful",
+    grantPermission: "Grant Access",
+    grantPermissionLabel: "Grant site access for {title}",
+    permissionNotice:
+      "Access to {count} site(s) has not been granted, so those products cannot be refreshed.",
+    permissionNoticeAll: "Grant Access",
+    permissionNoticeAllLabel: "Grant all missing site permissions",
+    permissionRequestHint:
+      "This window may close while the browser asks for permission; reopen it once you have confirmed.",
     quantity: "Qty: {quantity}",
     goToLink: "Open Link",
     manualPrice: "Enter Manual Price",
