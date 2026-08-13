@@ -244,6 +244,18 @@ function itemHostMatches(item, domains) {
   return domains.some((domain) => host === domain || host.endsWith(`.${domain}`));
 }
 
+async function findMissingOriginForItem(item) {
+  const origin = OrtakSepetCart.getDeclaredOriginForItem(item);
+
+  if (!origin) return null;
+
+  try {
+    return (await browser.permissions.contains({ origins: [origin] })) ? null : origin;
+  } catch {
+    return null;
+  }
+}
+
 function getUpdateProfile(item) {
   if (itemHostMatches(item, ["jeanslab.com"])) {
     return {
@@ -311,6 +323,25 @@ async function updateSingleItem(item) {
         lastUpdateStatus: "failed",
         lastUpdateError: "Ürün linki yok.",
         lastCheckedAt: new Date().toISOString(),
+      },
+    };
+  }
+
+  // İzin verilmemişse content script o sayfada çalışmaz; sekmeyi açıp altı kez
+  // boşuna mesaj atmak yerine sebebi söyleyip çıkıyoruz. Popup bu durumu
+  // "İzin ver" düğmesine çeviriyor — izin isteme kullanıcı tıklaması gerektirdiği
+  // için arka plandan yapılamıyor.
+  const missingOrigin = await findMissingOriginForItem(item);
+
+  if (missingOrigin) {
+    return {
+      ok: false,
+      needsPermission: true,
+      item: {
+        ...item,
+        lastCheckedAt: new Date().toISOString(),
+        lastUpdateStatus: "permission",
+        lastUpdateError: `Site izni verilmemiş: ${missingOrigin}`,
       },
     };
   }
@@ -418,6 +449,7 @@ async function updateAllPrices() {
       updated: 0,
       changed: 0,
       failed: 0,
+      needsPermission: 0,
       skipped: 0,
       cancelled: false,
     };
@@ -434,6 +466,7 @@ async function updateAllPrices() {
   let updated = 0;
   let changed = 0;
   let failed = 0;
+  let needsPermission = 0;
   let skipped = 0;
   let completed = 0;
   let nextIndex = 0;
@@ -480,6 +513,9 @@ async function updateAllPrices() {
         if (result.priceChanged) {
           changed += 1;
         }
+      } else if (result.needsPermission) {
+        // Hata değil, eksik izin: kullanıcının düzeltebileceği ayrı bir durum.
+        needsPermission += 1;
       } else {
         failed += 1;
       }
@@ -506,6 +542,7 @@ async function updateAllPrices() {
     updated,
     changed,
     failed,
+    needsPermission,
     skipped,
     cancelled: run.cancelled,
   };

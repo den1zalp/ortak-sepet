@@ -16,6 +16,13 @@ async function addCurrentProduct() {
     return;
   }
 
+  // İzin verilmemiş bir sitede content script hiç çalışmadığı için mesaj
+  // karşılıksız kalır ve kullanıcı "ürün okunamadı" görür. Sepet boşsa uyarı
+  // satırının çıkacağı bir ürün de yok; bu yüzden izni buradan gösteriyoruz.
+  if (await showPermissionNoticeForTab(activeTab)) {
+    return;
+  }
+
   try {
     const response = await browser.tabs.sendMessage(activeTab.id, {
       type: "GET_PRODUCT",

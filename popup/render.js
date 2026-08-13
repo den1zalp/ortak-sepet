@@ -1,6 +1,72 @@
 // Ortak Sepet popup module: render.js
 // This file was split from popup.js so popup logic can be maintained by responsibility.
 
+// İzin isteme kullanıcı tıklamasından çağrılmak zorunda ve tıklama işleyicisi
+// ilk `await`'te bu hakkı kaybediyor. Bu yüzden eksik izinler render sırasında
+// bir kez hesaplanıp burada tutuluyor; işleyici hiçbir şey beklemeden okuyor.
+let missingPermissionOrigins = [];
+
+function itemNeedsPermission(item) {
+  if (missingPermissionOrigins.length === 0) return false;
+
+  const origin = OrtakSepetCart.getDeclaredOriginForItem(item);
+
+  return Boolean(origin) && missingPermissionOrigins.includes(origin);
+}
+
+function createGrantPermissionButton(origins, text, accessibleLabel) {
+  const button = document.createElement("button");
+  button.className = "small-button grant-permission-button";
+  button.textContent = text;
+  // İşleyici bu listeyi senkron okuyabilsin diye origin'ler düğmenin üstünde.
+  button.dataset.grantPermission = origins.join(" ");
+  button.setAttribute("aria-label", accessibleLabel);
+
+  return button;
+}
+
+function renderPermissionNotice() {
+  permissionNoticeEl.textContent = "";
+  permissionNoticeEl.hidden = missingPermissionOrigins.length === 0;
+
+  if (missingPermissionOrigins.length === 0) return;
+
+  const message = document.createElement("p");
+  message.className = "permission-notice-text";
+  message.textContent = translate("permissionNotice", {
+    count: missingPermissionOrigins.length,
+  });
+
+  const hint = document.createElement("p");
+  hint.className = "permission-notice-hint";
+  hint.textContent = translate("permissionRequestHint");
+
+  permissionNoticeEl.appendChild(message);
+  permissionNoticeEl.appendChild(hint);
+  permissionNoticeEl.appendChild(
+    createGrantPermissionButton(
+      missingPermissionOrigins,
+      translate("permissionNoticeAll"),
+      translate("permissionNoticeAllLabel"),
+    ),
+  );
+}
+
+// Açık sekmenin sitesine izin verilmemişse uyarıyı sepetten bağımsız göster.
+// İzin isteği yine kullanıcının uyarıdaki düğmeye basmasıyla gidiyor: buraya
+// gelene kadar birkaç `await` geçildiği için tıklama hakkı çoktan düşmüş olur.
+async function showPermissionNoticeForTab(tab) {
+  const missing = await OrtakSepetCart.findMissingOrigins([{ url: tab?.url }]);
+
+  if (missing.length === 0) return false;
+
+  missingPermissionOrigins = missing;
+  renderPermissionNotice();
+  setStatus(translate("permissionNotice", { count: missing.length }));
+
+  return true;
+}
+
 function truncateProductTitle(titleText, maxLength = 60) {
   const cleanedTitle = String(titleText || "").replace(/\s+/g, " ").trim();
 
@@ -107,6 +173,10 @@ function createCartItemElement(item) {
 
   if (item.lastUpdateStatus === "failed") {
     wrapper.classList.add("cart-item-update-failed");
+  }
+
+  if (itemNeedsPermission(item)) {
+    wrapper.classList.add("cart-item-needs-permission");
   }
 
   if (item.category) {
@@ -262,6 +332,16 @@ function createCartItemElement(item) {
   actions.appendChild(openButton);
   actions.appendChild(editPriceButton);
   actions.appendChild(removeButton);
+
+  if (itemNeedsPermission(item)) {
+    actions.appendChild(
+      createGrantPermissionButton(
+        [OrtakSepetCart.getDeclaredOriginForItem(item)],
+        translate("grantPermission"),
+        translate("grantPermissionLabel", { title: fullTitle }),
+      ),
+    );
+  }
 
   info.appendChild(titleRow);
   info.appendChild(details);
@@ -659,6 +739,9 @@ async function renderCart() {
 
   applyCompactMode(compactMode);
   await refreshTabs();
+
+  missingPermissionOrigins = await OrtakSepetCart.findMissingOrigins(items);
+  renderPermissionNotice();
 
   cartItemsEl.innerHTML = "";
   itemCountEl.textContent = String(calculateTotalItemCount(items));

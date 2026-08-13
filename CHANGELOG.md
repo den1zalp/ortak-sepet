@@ -2,7 +2,32 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.7.0 — yayımlanmadı
+## 1.8.0 — yayımlanmadı
+
+### Eklenenler
+
+* **Yeni siteler:** Decathlon Türkiye, Decathlon UK.
+* **Eksik site izni artık görünür.** Firefox, güncellemeyle eklenen yeni bir
+  sitenin iznini kullanıcıya sormadan vermiyor; o sitede eklenti hiç
+  çalışmadığı hâlde kullanıcı yalnızca "Başarısız" görüyordu. Artık sepetin
+  üstünde sebebi söyleyen bir satır ve tek tıkla izni veren bir düğme çıkıyor.
+  İzin verilmemiş bir ürün sayfasında "Bu Ürünü Ekle"ye basıldığında da aynı
+  uyarı geliyor.
+
+### Değişenler
+
+* Fiyat güncellemesi izni olmayan sitede artık sekme açmıyor; "Başarısız"
+  yerine "Site izni gerekiyor" yazıyor ve bu ürünler hata sayılmıyor.
+
+### Geliştirme
+
+* JSON-LD'de iç içe dizi olarak gelen ve fiyatı `priceSpecification` altında
+  tutan `offers` biçimi için `findStructuredOffer()` eklendi; iki içerik
+  script'i de aynı yardımcıyı kullanıyor.
+* Paket testi sürüm numarasını `manifest.json`'dan okuyor; sabit yazılmıştı ve
+  her sürüm yükseltmesinde alakasız bir hata veriyordu.
+
+## 1.7.0 — 13 Ağustos 2026
 
 ### Eklenenler
 
