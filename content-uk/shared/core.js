@@ -179,6 +179,7 @@ function getSiteName() {
   if (host.includes("gymshark")) return "Gymshark";
   if (host.includes("ikea")) return "IKEA UK";
   if (host.includes("samsonite.co.uk")) return "Samsonite UK";
+  if (host.includes("decathlon.co.uk")) return "Decathlon UK";
 
   return host;
 }

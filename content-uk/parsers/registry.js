@@ -105,6 +105,13 @@
       matches: hostIs("samsonite.co.uk"),
       parse: () => parseSamsoniteUk(),
     },
+    {
+      id: "decathlon-uk",
+      label: "Decathlon UK",
+      matches: hostIs("decathlon.co.uk"),
+      parse: () => parseDecathlonUk(),
+      waitForPrice: true,
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {
