@@ -157,6 +157,12 @@
       parse: () => parseDecathlonTr(),
       waitForPrice: true,
     },
+    {
+      id: "zippo-tr",
+      label: "Zippo TR",
+      matches: hostIs("zippo.com.tr"),
+      parse: () => parseZippoTr(),
+    },
   ];
 
   function getOrtakSepetParserForUrl(input) {
