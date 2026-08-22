@@ -509,6 +509,40 @@ function getDefaultShippingInfoForSite() {
 }
 
 
+// "Free delivery" tek başına ürünün kargosunun ücretsiz olduğunu söylemiyor:
+// siteler bunu çoğunlukla bir sepet eşiğine bağlıyor ("on orders over £70",
+// "starting from £100"). Eşiği yok saymak £7'lik üründe "Ücretsiz kargo"
+// yazdırıyordu — yanlış kargo bilgisi, bilgisiz kalmaktan kötü.
+//
+// Eşik ifadeleri ya bir sipariş sözcüğüne ("orders over") ya da bir £ tutarına
+// bağlanıyor; çıplak "over 500 reviews" gibi metinlere takılmasın diye
+// sipariş sözcüğü yoksa £ zorunlu.
+const FREE_SHIPPING_CLAIM_PATTERN =
+  "free\\s+(?:standard\\s+|next\\s+day\\s+|express\\s+|uk\\s+)?(?:delivery|shipping)|(?:delivery|shipping)\\s+free";
+
+const SHIPPING_THRESHOLD_RE =
+  /\b(?:orders?|purchases?|baskets?|carts?)\s+(?:over|above|of|from)\b|\bstarting\s+from\s*£\s*\d|\bfrom\s*£\s*\d|\bover\s*£\s*\d|\b(?:when|if)\s+you\s+spend\b|\bspend(?:ing)?\s*(?:over|above)?\s*£\s*\d|£\s*[\d.,]+\s*(?:or\s+more|and\s+over)|\bminimum\s+(?:order|spend)\b/i;
+
+// "unconditional" | "conditional" | null döner. Sayfada birden fazla ifade
+// olabiliyor (üst bant koşullu, ürün rozeti koşulsuz); bir tanesi bile
+// koşulsuzsa ürün gerçekten ücretsiz kargolu sayılır.
+function analyzeFreeShippingClaim(normalized) {
+  const claimRegex = new RegExp(FREE_SHIPPING_CLAIM_PATTERN, "gi");
+  let match;
+  let sawClaim = false;
+
+  while ((match = claimRegex.exec(normalized)) !== null) {
+    sawClaim = true;
+
+    const claimEnd = match.index + match[0].length;
+    const afterClaim = normalized.slice(claimEnd, claimEnd + 80);
+
+    if (!SHIPPING_THRESHOLD_RE.test(afterClaim)) return "unconditional";
+  }
+
+  return sawClaim ? "conditional" : null;
+}
+
 function findShippingInfo() {
   const bodyText = cleanText(document.body?.innerText || document.body?.textContent || "");
   const normalized = normalizeForSearch(bodyText);
@@ -531,7 +565,9 @@ function findShippingInfo() {
     }
   }
 
-  if (/free delivery|free shipping|delivery free|shipping free|free standard delivery|free next day delivery/i.test(normalized)) {
+  const freeShippingClaim = analyzeFreeShippingClaim(normalized);
+
+  if (freeShippingClaim === "unconditional") {
     return {
       shippingAvailable: true,
       freeShipping: true,
@@ -540,6 +576,19 @@ function findShippingInfo() {
         : "Free delivery",
       shippingSource: "product-page",
       shippingConfidence: "explicit",
+    };
+  }
+
+  // Ücretsiz kargo var ama bir eşiğe bağlı: bu üründe geçerli mi bilemiyoruz.
+  // Metin, popup'ın i18n eşlemesi olan ifadeyle aynı tutuluyor
+  // (bkz. popup/i18n.js → normalizeDeliveryText); nüans shippingConfidence'ta.
+  if (freeShippingClaim === "conditional") {
+    return {
+      shippingAvailable: false,
+      freeShipping: false,
+      shippingText: "Delivery calculated at checkout",
+      shippingSource: "checkout",
+      shippingConfidence: "conditional",
     };
   }
 
