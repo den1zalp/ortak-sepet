@@ -6,7 +6,7 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Eklenenler
 
-* **Yeni siteler:** Decathlon Türkiye, Decathlon UK.
+* **Yeni siteler:** Decathlon Türkiye, Decathlon UK, Zippo Türkiye, Zippo UK.
 * **Eksik site izni artık görünür.** Firefox, güncellemeyle eklenen yeni bir
   sitenin iznini kullanıcıya sormadan vermiyor; o sitede eklenti hiç
   çalışmadığı hâlde kullanıcı yalnızca "Başarısız" görüyordu. Artık sepetin
@@ -19,6 +19,17 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 * Fiyat güncellemesi izni olmayan sitede artık sekme açmıyor; "Başarısız"
   yerine "Site izni gerekiyor" yazıyor ve bu ürünler hata sayılmıyor.
 
+### Düzeltilenler
+
+* **Eşiğe bağlı ücretsiz kargo, koşulsuz ücretsiz kargo sanılıyordu.** İngiltere
+  sitelerinin çoğu ücretsiz kargoyu bir sepet tutarına bağlıyor ve bunu her
+  sayfada bant olarak basıyor ("FREE SHIPPING ON ORDERS OVER £70"). Tarama
+  yalnızca "free delivery" ifadesini aradığı için eşik okunmuyor, ürünün fiyatı
+  ne olursa olsun kargo ücretsiz işaretleniyordu — £7,20'lik üründe bile. İfade
+  artık kendisinden sonraki metinle birlikte okunuyor; yanında eşik varsa ürün
+  "Sepette hesaplanır" oluyor. Zippo UK'in yanı sıra Samsonite UK ve Gymshark da
+  eklendiklerinden beri yanlış okunuyordu; onlar da düzeldi.
+
 ### Geliştirme
 
 * JSON-LD'de iç içe dizi olarak gelen ve fiyatı `priceSpecification` altında
@@ -26,6 +37,8 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   script'i de aynı yardımcıyı kullanıyor.
 * Paket testi sürüm numarasını `manifest.json`'dan okuyor; sabit yazılmıştı ve
   her sürüm yükseltmesinde alakasız bir hata veriyordu.
+* Kargo ifadesinin eşiğe bağlı olup olmadığı `test/unit/shipping.test.mjs` ile
+  ağ gerektirmeden sınanıyor; örnekler gerçek mağaza sayfalarından alındı.
 
 ## 1.7.0 — 13 Ağustos 2026
 
