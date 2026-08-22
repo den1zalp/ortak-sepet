@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Ortak Sepet",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Türkiye ve Birleşik Krallık alışveriş siteleri için ortak alışveriş sepeti.",
   "permissions": [
     "storage",
@@ -43,7 +43,9 @@
     "*://*.samsonite.com.tr/*",
     "*://*.samsonite.co.uk/*",
     "*://*.decathlon.com.tr/*",
-    "*://*.decathlon.co.uk/*"
+    "*://*.decathlon.co.uk/*",
+    "*://*.zippo.com.tr/*",
+    "*://*.zippo.co.uk/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -93,7 +95,8 @@
         "*://*.sephora.com.tr/*",
         "*://*.ikea.com.tr/*",
         "*://*.samsonite.com.tr/*",
-        "*://*.decathlon.com.tr/*"
+        "*://*.decathlon.com.tr/*",
+        "*://*.zippo.com.tr/*"
       ],
       "js": [
         "browser-polyfill.js",
@@ -121,6 +124,7 @@
         "content/parsers/ikea-tr.js",
         "content/parsers/samsonite-tr.js",
         "content/parsers/decathlon-tr.js",
+        "content/parsers/zippo-tr.js",
         "content/parsers/registry.js",
         "content.js"
       ],
@@ -140,7 +144,8 @@
         "*://*.gymshark.com/*",
         "*://*.ikea.com/*",
         "*://*.samsonite.co.uk/*",
-        "*://*.decathlon.co.uk/*"
+        "*://*.decathlon.co.uk/*",
+        "*://*.zippo.co.uk/*"
       ],
       "js": [
         "shared/structured-data.js",
@@ -159,6 +164,7 @@
         "content-uk/parsers/ikea-uk.js",
         "content-uk/parsers/samsonite-uk.js",
         "content-uk/parsers/decathlon-uk.js",
+        "content-uk/parsers/zippo-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

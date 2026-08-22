@@ -112,6 +112,12 @@
       parse: () => parseDecathlonUk(),
       waitForPrice: true,
     },
+    {
+      id: "zippo-uk",
+      label: "Zippo UK",
+      matches: hostIs("zippo.co.uk"),
+      parse: () => parseZippoUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

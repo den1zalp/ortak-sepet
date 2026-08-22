@@ -180,6 +180,7 @@ function getSiteName() {
   if (host.includes("ikea")) return "IKEA UK";
   if (host.includes("samsonite.co.uk")) return "Samsonite UK";
   if (host.includes("decathlon.co.uk")) return "Decathlon UK";
+  if (host.includes("zippo.co.uk")) return "Zippo UK";
 
   return host;
 }
