@@ -2,7 +2,25 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.9.0 — yayımlanmadı
+## 1.9.1 — yayımlanmadı
+
+### Düzeltilenler
+
+* **Zippo Türkiye ürünlerinde sepetteki görsel boş çıkıyordu.** Sitenin galeri
+  görselinin adresi sonunda bir boyut eki taşıyor ("...HQ.jpg;width=1946") ve
+  bu adres açılmıyor. Sayfada fark edilmiyor, çünkü tarayıcı görseli aynı
+  etiketin `srcset` listesinden yüklüyor; sepete ise açılmayan adres
+  kaydediliyordu. Artık çalışan adres alınıyor.
+
+### Geliştirme
+
+* Canlı parser testleri ürün görselinin adresini yalnızca biçim olarak
+  denetlemiyor, gerçekten indiriyor: doğru görünüp açılmayan bir adres artık
+  testten geçemiyor.
+* Zippo TR görsel adresi `test/unit/zippo-image.test.mjs` ile ağ gerekmeden de
+  sınanıyor.
+
+## 1.9.0 — 23 Ağustos 2026
 
 ### Eklenenler
 

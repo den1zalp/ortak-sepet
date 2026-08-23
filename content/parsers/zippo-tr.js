@@ -13,6 +13,32 @@ function findZippoTrPriceText() {
   );
 }
 
+// Galerideki <img src> Shopify'ın boyutlandırma ekiyle yazılıyor
+// ("...1_13749_HQ.jpg;width=1946") ama sitenin görsel sunucusu bu biçimi
+// tanımıyor: adres 404 dönüyor. Sayfada göze çarpmıyor, çünkü tarayıcı
+// görseli srcset'ten seçiyor ve src'ye hiç dokunmuyor; sepete src gittiği
+// için ürünün görseli boş kalıyordu.
+//
+// srcset'teki adaylar eksiz ve hepsi aynı dosyayı gösteriyor (site farklı
+// boyut üretmiyor, yalnızca genişlik tanımlarını çoğaltıyor), o yüzden ilk
+// adayı almak yeterli.
+function findZippoTrImageUrl() {
+  const image = document.querySelector(".product__media-wrapper img");
+
+  if (!image) return "";
+
+  const fromSrcset = String(image.getAttribute("srcset") || "")
+    .split(",")
+    .map((candidate) => candidate.trim().split(/\s+/)[0])
+    .find(Boolean);
+
+  const url =
+    fromSrcset || image.currentSrc || image.getAttribute("src") || "";
+
+  // Yine de eke sahip bir adrese düşersek dosya adından sonrasını kırpıyoruz.
+  return String(url).replace(/;[^/;]*$/, "");
+}
+
 function parseZippoTr() {
   return {
     site: "Zippo",
@@ -29,7 +55,7 @@ function parseZippoTr() {
     // og:image sabit bir tanıtım görseli, ürüne özel değil; galerideki ilk
     // görsel ürünün kendisi.
     image:
-      getAttr(".product__media-wrapper img", "src") ||
+      findZippoTrImageUrl() ||
       findProductImage({
         minWidth: 150,
         minHeight: 150,
