@@ -26,6 +26,21 @@ const LISTINGS = [
   },
 ];
 
+// Görsel adresini gerçekten indirmeyi dener; sunucu resim döndürmüyorsa
+// sepette boş kare çıkar.
+async function imageLoads(url, label) {
+  if (!url) return [label, false, "adres yok"];
+
+  try {
+    const response = await fetch(url, { redirect: "follow" });
+    const type = response.headers.get("content-type") || "";
+
+    return [label, response.ok && /^image\//i.test(type), `${response.status} ${type}`];
+  } catch (error) {
+    return [label, false, error.message.split("\n")[0]];
+  }
+}
+
 for (const listing of LISTINGS) {
   console.log(`\n===== ${listing.name} =====`);
 
@@ -91,6 +106,11 @@ for (const listing of LISTINGS) {
       check(`${listing.name} başlık`, Boolean(product.title), product.title);
       check(`${listing.name} fiyat`, listing.priceRe.test(product.price || ""), product.price);
       check(`${listing.name} görsel`, listing.imageRe.test(product.image || ""), (product.image || "").slice(0, 70));
+
+      // Adresin doğru görünmesi yetmiyor: zippo.com.tr galeri <img src>'sini
+      // ";width=1946" ekiyle yazıyor ve o adres 404 dönüyor. Sayfada fark
+      // edilmiyor (tarayıcı srcset'i kullanıyor), sepette görsel boş çıkıyordu.
+      check(...(await imageLoads(product.image, `${listing.name} görsel açılıyor`)));
     } catch (error) {
       check(`${url} yüklendi`, false, error.message.split("\n")[0]);
     }
