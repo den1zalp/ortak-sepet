@@ -133,6 +133,12 @@
       parse: () => parseCrocsUk(),
     },
     {
+      id: "vans-uk",
+      label: "Vans UK",
+      matches: hostIs("vans.com"),
+      parse: () => parseVansUk(),
+    },
+    {
       // Content script yalnızca ifixit.com/en-gb/products/ yoluna enjekte
       // ediliyor; sitenin geri kalanı tamir rehberi (bkz. manifest.json).
       id: "ifixit-uk",

@@ -48,8 +48,11 @@
     "*://*.zippo.co.uk/*",
     "*://*.birkenstock.com.tr/*",
     "*://*.crocs.com.tr/*",
+    "*://*.vans.com.tr/*",
+    "*://*.boyner.com.tr/*",
     "*://*.birkenstock.com/gb/*",
     "*://*.crocs.co.uk/*",
+    "*://*.vans.com/en-gb/*",
     "*://*.ifixit.com/en-gb/products/*"
   ],
   "icons": {
@@ -103,7 +106,9 @@
         "*://*.decathlon.com.tr/*",
         "*://*.zippo.com.tr/*",
         "*://*.birkenstock.com.tr/*",
-        "*://*.crocs.com.tr/*"
+        "*://*.crocs.com.tr/*",
+        "*://*.vans.com.tr/*",
+        "*://*.boyner.com.tr/*"
       ],
       "js": [
         "browser-polyfill.js",
@@ -134,6 +139,8 @@
         "content/parsers/zippo-tr.js",
         "content/parsers/birkenstock-tr.js",
         "content/parsers/crocs-tr.js",
+        "content/parsers/vans-tr.js",
+        "content/parsers/boyner.js",
         "content/parsers/registry.js",
         "content.js"
       ],
@@ -157,6 +164,7 @@
         "*://*.zippo.co.uk/*",
         "*://*.birkenstock.com/gb/*",
         "*://*.crocs.co.uk/*",
+        "*://*.vans.com/en-gb/*",
         "*://*.ifixit.com/en-gb/products/*"
       ],
       "js": [
@@ -179,6 +187,7 @@
         "content-uk/parsers/zippo-uk.js",
         "content-uk/parsers/birkenstock-uk.js",
         "content-uk/parsers/crocs-uk.js",
+        "content-uk/parsers/vans-uk.js",
         "content-uk/parsers/ifixit-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
