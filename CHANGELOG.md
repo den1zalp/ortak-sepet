@@ -7,12 +7,31 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 ### Eklenenler
 
 * **Yeni siteler:** Birkenstock Türkiye, Birkenstock UK, Crocs Türkiye,
-  Crocs UK, iFixit UK.
+  Crocs UK, iFixit UK, Vans Türkiye, Vans UK, Boyner.
 * **Aynı modelin farklı rengi sepette artık ayırt ediliyor.** Birkenstock ve
   Crocs'un dört sayfasında da ürün başlığı yalnızca model adını veriyor
   ("Classic Clog", "ARIZONA EVA") ve her renk ayrı bir sayfada duruyor; iki
   rengi sepete atınca ikisi de aynı adla görünürdü. Başlığa seçili renk
   ekleniyor: "Classic Clog - White".
+* **Vans Türkiye'de indirimli tutar okunuyor.** Ürün sayfası indirim varken iki
+  fiyat basıyor: üstü çizili liste fiyatı ve ödenecek tutar. Fiyat kutusunun
+  tamamını okumak ikisini birden veriyor, bu yüzden ödenecek tutarı taşıyan
+  sınıf ayrıca aranıyor. Vans başlığı da yalnızca model adını verdiği için
+  ("KNU SKOOL AYAKKABI") renk başlığa ekleniyor.
+* **Boyner'de sepette uygulanan indirim doğru okunuyor.** Ürünün üstünde
+  "Sepette11.058,99 TL" gibi bir tutar duruyor ve aynı fiyat sayfada üç kez
+  basılıyor — ürün bilgisinde, yukarı kaydırınca çıkan yapışkan başlıkta ve
+  alttaki öneri kartlarında. Öneri kartındaki tutar başka bir ürüne ait
+  olduğundan okuma ürün bilgisi bloğuyla sınırlandı. Marka adı başlığın
+  dışında ayrı bir satırda durduğu için ("Converse" + "x Coca-Cola Beyaz Omuz
+  Çanta") sepette markasız görünmesin diye ikisi birleştiriliyor.
+* **Vans UK'de fiyatın tutunacak bir sınıfı yok.** Sayfa Tailwind yardımcı
+  sınıflarıyla kurulmuş, JSON-LD'de Product düğümü yok ve og: etiketleri
+  sunucudan gelen HTML'de bulunmuyor. Fiyat, ürün başlığının bulunduğu
+  kutunun içindeki ilk tutar olarak bulunuyor; sayfanın altındaki öneri
+  şeritleri onlarca fiyat daha bastığı için kutuyla sınırlamak şart.
+  İndirimli üründe kutuda iki tutar oluyor — "Initial price: £125.00" üstü
+  çizili, "Discounted price: £81.25" ödenecek olan — ve üstü çizili eleniyor.
 
 ### Düzeltilenler
 
@@ -39,6 +58,12 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   `ifixit.com/en-gb/products/` altında; sitenin geri kalanı tamir rehberi
   wiki'si ve orada sepete eklenecek bir şey yok, o yüzden eklenti oraya hiç
   girmiyor.
+* **Vans'in İngiltere mağazası ayrı bir alan adında değil**, global
+  `vans.com` adresinin `/en-gb/` yolunda; `vans.co.uk` oraya yönleniyor.
+  Eklenti yalnızca o yola giriyor, sitenin diğer ülke sayfaları
+  desteklenmiyor — oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
+  Site otomasyonla sürülen tarayıcıya ürün sayfasını vermediği için canlı
+  test bu siteyi atlıyor; parser gerçek sayfalarda elle doğrulandı.
 
 ### Geliştirme
 
@@ -55,6 +80,11 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 * `test/live/ifixit.test.mjs` indirimli iFixit ürünlerinde sepete üstü çizili
   liste fiyatının değil ödenecek tutarın girdiğini doğruluyor; site ikisini
   aynı fiyat bloğunda basıyor.
+* `test/live/vans-boyner.test.mjs` iki siteyi de canlı sayfalarda doğruluyor
+  ve parser'ın döndürdüğü tutarı sayfadaki tutarla ayrıca karşılaştırıyor;
+  site geç render etmeye başlarsa parser sessizce jenerik yedeğe düşüp testi
+  yanlış sebeple yeşil yakabiliyordu. Vans için outlet listesi de geziliyor,
+  yoksa indirimli fiyat yolu hiç sınanmıyordu.
 
 ## 1.9.1 — yayımlanmadı
 

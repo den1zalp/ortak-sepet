@@ -163,6 +163,8 @@ function getSiteName() {
   if (isSiteHost("zippo.com.tr")) return "Zippo";
   if (isSiteHost("birkenstock.com.tr")) return "Birkenstock";
   if (isSiteHost("crocs.com.tr")) return "Crocs";
+  if (isSiteHost("vans.com.tr")) return "Vans";
+  if (isSiteHost("boyner.com.tr")) return "Boyner";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }

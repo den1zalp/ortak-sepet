@@ -176,6 +176,18 @@
       parse: () => parseCrocsTr(),
       waitForPrice: true,
     },
+    {
+      id: "vans-tr",
+      label: "Vans TR",
+      matches: hostIs("vans.com.tr"),
+      parse: () => parseVansTr(),
+    },
+    {
+      id: "boyner",
+      label: "Boyner",
+      matches: hostIs("boyner.com.tr"),
+      parse: () => parseBoyner(),
+    },
   ];
 
   function getOrtakSepetParserForUrl(input) {
