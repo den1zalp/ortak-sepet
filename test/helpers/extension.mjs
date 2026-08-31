@@ -21,7 +21,7 @@ const CHROME_BINARIES = [
   ["chrome-mac-arm64", "Google Chrome for Testing.app", "Contents", "MacOS", "Google Chrome for Testing"],
 ];
 
-export function findChrome() {
+function findChrome() {
   if (process.env.ORTAK_SEPET_CHROME) {
     if (!existsSync(process.env.ORTAK_SEPET_CHROME)) {
       throw new Error(
@@ -103,6 +103,22 @@ export function readProductFromTab(sw, url) {
       return { ok: false, error: String(error && error.message) };
     }
   }, url);
+}
+
+// Görsel adresini gerçekten indirmeyi dener; adres doğru görünüp sunucu resim
+// döndürmüyorsa sepette boş kare çıkıyor. check(...) ile doğrudan kullanılsın
+// diye [ad, sonuç, ayrıntı] üçlüsü döner.
+export async function imageLoads(url, label) {
+  if (!url) return [label, false, "adres yok"];
+
+  try {
+    const response = await fetch(url, { redirect: "follow" });
+    const type = response.headers.get("content-type") || "";
+
+    return [label, response.ok && /^image\//i.test(type), `${response.status} ${type}`];
+  } catch (error) {
+    return [label, false, error.message.split("\n")[0]];
+  }
 }
 
 export function wait(ms) {
