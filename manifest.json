@@ -50,9 +50,13 @@
     "*://*.crocs.com.tr/*",
     "*://*.vans.com.tr/*",
     "*://*.boyner.com.tr/*",
+    "*://*.nike.com/tr/*",
+    "*://*.adidas.com.tr/*",
     "*://*.birkenstock.com/gb/*",
     "*://*.crocs.co.uk/*",
     "*://*.vans.com/en-gb/*",
+    "*://*.nike.com/gb/*",
+    "*://*.adidas.co.uk/*",
     "*://*.ifixit.com/en-gb/products/*"
   ],
   "icons": {
@@ -108,7 +112,9 @@
         "*://*.birkenstock.com.tr/*",
         "*://*.crocs.com.tr/*",
         "*://*.vans.com.tr/*",
-        "*://*.boyner.com.tr/*"
+        "*://*.boyner.com.tr/*",
+        "*://*.nike.com/tr/*",
+        "*://*.adidas.com.tr/*"
       ],
       "js": [
         "browser-polyfill.js",
@@ -141,6 +147,8 @@
         "content/parsers/crocs-tr.js",
         "content/parsers/vans-tr.js",
         "content/parsers/boyner.js",
+        "content/parsers/nike-tr.js",
+        "content/parsers/adidas-tr.js",
         "content/parsers/registry.js",
         "content.js"
       ],
@@ -165,6 +173,8 @@
         "*://*.birkenstock.com/gb/*",
         "*://*.crocs.co.uk/*",
         "*://*.vans.com/en-gb/*",
+        "*://*.nike.com/gb/*",
+        "*://*.adidas.co.uk/*",
         "*://*.ifixit.com/en-gb/products/*"
       ],
       "js": [
@@ -188,6 +198,8 @@
         "content-uk/parsers/birkenstock-uk.js",
         "content-uk/parsers/crocs-uk.js",
         "content-uk/parsers/vans-uk.js",
+        "content-uk/parsers/nike-uk.js",
+        "content-uk/parsers/adidas-uk.js",
         "content-uk/parsers/ifixit-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"

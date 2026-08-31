@@ -186,6 +186,8 @@ function getSiteName() {
   // Parça araması burada yanlış siteyi seçerdi: Vans'in Türkiye mağazası
   // "vans.com.tr" ve o adres "vans.com" ifadesini içeriyor.
   if (host === "vans.com" || host.endsWith(".vans.com")) return "Vans UK";
+  if (host === "nike.com" || host.endsWith(".nike.com")) return "Nike UK";
+  if (host.includes("adidas.co.uk")) return "Adidas UK";
   if (host.includes("ifixit.com")) return "iFixit UK";
 
   return host;

@@ -7,7 +7,8 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 ### Eklenenler
 
 * **Yeni siteler:** Birkenstock Türkiye, Birkenstock UK, Crocs Türkiye,
-  Crocs UK, iFixit UK, Vans Türkiye, Vans UK, Boyner.
+  Crocs UK, iFixit UK, Vans Türkiye, Vans UK, Boyner, Nike Türkiye, Nike UK,
+  Adidas Türkiye, Adidas UK.
 * **Aynı modelin farklı rengi sepette artık ayırt ediliyor.** Birkenstock ve
   Crocs'un dört sayfasında da ürün başlığı yalnızca model adını veriyor
   ("Classic Clog", "ARIZONA EVA") ve her renk ayrı bir sayfada duruyor; iki
@@ -32,6 +33,20 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   şeritleri onlarca fiyat daha bastığı için kutuyla sınırlamak şart.
   İndirimli üründe kutuda iki tutar oluyor — "Initial price: £125.00" üstü
   çizili, "Discounted price: £81.25" ödenecek olan — ve üstü çizili eleniyor.
+* **Nike ve Adidas'ta indirimli tutar okunuyor.** Dört sayfada da JSON-LD
+  yalnızca "ProductGroup" düğümü basıyor ve içinde fiyat yok, yani okunacak tek
+  yer görünen DOM. İki sitede de ödenecek tutar ile üstü çizili liste fiyatı
+  ayrı işaretlerde duruyor — Nike'ta "currentPrice-container" /
+  "initialPrice-container", Adidas'ta "main-price" / "original-price" — bu
+  yüzden fiyat kutusunun tamamı değil doğrudan ödenecek tutar okunuyor.
+  Aramanın ürün kutusuyla sınırlanması şart: Adidas'ta sayfadaki ilk fiyat
+  bileşeni alttaki öneri kartına ait (ürün 10.199 TL iken o kutu 2.049 TL
+  diyordu), Nike'ta ise öneri şeritleri onlarca fiyat daha basıyor.
+* **Nike'ta renk, Adidas'ta marka başlığa ekleniyor.** Nike'ın h1'i kısaltılmış
+  model adını veriyor ("Nike Vomero 18") ve rengi hiç taşımıyor; tam ad
+  og:title'dan, renk ürün açıklamasının ilk maddesinden alınıp birleştiriliyor.
+  Adidas'ta h1 marka ve renk taşımıyor ("Samba OG Shoes"), og:title üçünü
+  birden veriyor.
 
 ### Düzeltilenler
 
@@ -64,6 +79,13 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   desteklenmiyor — oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
   Site otomasyonla sürülen tarayıcıya ürün sayfasını vermediği için canlı
   test bu siteyi atlıyor; parser gerçek sayfalarda elle doğrulandı.
+* **Nike'ın iki mağazası da global alan adının yolunda:** Türkiye
+  `nike.com/tr`, İngiltere `nike.com/gb` (nike.com.tr birincisine yönleniyor).
+  Eklenti yalnızca bu iki yola giriyor; sitenin diğer ülke sayfaları
+  desteklenmiyor, çünkü oradaki fiyat yanlış bölgeyle damgalanırdı.
+* **Adidas otomasyonla sürülen tarayıcıya sayfa vermiyor**, kendi engel
+  sayfasını basıyor. Kullanıcının tarayıcısında sorun yok ama canlı test iki
+  Adidas sitesini de atlıyor; parserlar gerçek sayfalarda elle doğrulandı.
 
 ### Geliştirme
 
@@ -85,6 +107,10 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   site geç render etmeye başlarsa parser sessizce jenerik yedeğe düşüp testi
   yanlış sebeple yeşil yakabiliyordu. Vans için outlet listesi de geziliyor,
   yoksa indirimli fiyat yolu hiç sınanmıyordu.
+* `test/live/nike-adidas.test.mjs` dört siteyi de indirim listelemesinden
+  geziyor: bu iki markada asıl risk üstü çizili liste fiyatını sepete yazmak,
+  o yüzden her üründe okunan tutar hem sayfadaki ödenecek tutarla
+  karşılaştırılıyor hem de üstü çizili tutardan farklı olduğu doğrulanıyor.
 
 ## 1.9.1 — yayımlanmadı
 

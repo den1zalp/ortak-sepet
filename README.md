@@ -71,6 +71,8 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Crocs Türkiye
 * Vans Türkiye
 * Boyner
+* Nike Türkiye (`nike.com/tr`)
+* Adidas Türkiye
 * Zara
 * Bershka
 * H&M
@@ -95,6 +97,8 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Birkenstock UK (`birkenstock.com/gb`)
 * Crocs UK
 * Vans UK (`vans.com/en-gb`)
+* Nike UK (`nike.com/gb`)
+* Adidas UK
 * iFixit UK (`ifixit.com/en-gb`)
 
 ## Kullanım
@@ -206,7 +210,7 @@ polyfill'i güncellemek için tutulur.
 
 ## Marka ve Bağlantı Bildirimi
 
-Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Birkenstock, Crocs, Vans, Boyner, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
+Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Birkenstock, Crocs, Vans, Boyner, Nike, Adidas, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
 
 Listelenen tüm marka adları, yalnızca eklentinin hangi sitelerde çalışmayı hedeflediğini açıklamak amacıyla kullanılmıştır. Tüm marka adları ve ticari markalar ilgili sahiplerine aittir.
 
