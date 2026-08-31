@@ -92,6 +92,7 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Zippo UK
 * Birkenstock UK (`birkenstock.com/gb`)
 * Crocs UK
+* iFixit UK (`ifixit.com/en-gb`)
 
 ## Kullanım
 

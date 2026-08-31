@@ -63,6 +63,7 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 | `live/decathlon.test.mjs` | Decathlon TR/UK: fiyat, başlık, görsel |
 | `live/zippo.test.mjs` | Zippo TR/UK: fiyat, başlık, görselin gerçekten açılması |
 | `live/birkenstock-crocs.test.mjs` | Birkenstock ve Crocs TR/UK: fiyat, başlık, renk, görsel |
+| `live/ifixit.test.mjs` | iFixit UK: indirimli üründe liste fiyatı değil ödenecek tutar |
 
 Ekran görüntüleri `test/screenshots/` altına düşer (.gitignore'da).
 

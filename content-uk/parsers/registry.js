@@ -132,6 +132,14 @@
       matches: hostIs("crocs.co.uk"),
       parse: () => parseCrocsUk(),
     },
+    {
+      // Content script yalnızca ifixit.com/en-gb/products/ yoluna enjekte
+      // ediliyor; sitenin geri kalanı tamir rehberi (bkz. manifest.json).
+      id: "ifixit-uk",
+      label: "iFixit UK",
+      matches: hostIs("ifixit.com"),
+      parse: () => parseIfixitUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {
