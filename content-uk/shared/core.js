@@ -183,6 +183,7 @@ function getSiteName() {
   if (host.includes("zippo.co.uk")) return "Zippo UK";
   if (host.includes("birkenstock.com")) return "Birkenstock UK";
   if (host.includes("crocs.co.uk")) return "Crocs UK";
+  if (host.includes("ifixit.com")) return "iFixit UK";
 
   return host;
 }

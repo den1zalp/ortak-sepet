@@ -49,7 +49,8 @@
     "*://*.birkenstock.com.tr/*",
     "*://*.crocs.com.tr/*",
     "*://*.birkenstock.com/gb/*",
-    "*://*.crocs.co.uk/*"
+    "*://*.crocs.co.uk/*",
+    "*://*.ifixit.com/en-gb/products/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -155,7 +156,8 @@
         "*://*.decathlon.co.uk/*",
         "*://*.zippo.co.uk/*",
         "*://*.birkenstock.com/gb/*",
-        "*://*.crocs.co.uk/*"
+        "*://*.crocs.co.uk/*",
+        "*://*.ifixit.com/en-gb/products/*"
       ],
       "js": [
         "shared/structured-data.js",
@@ -177,6 +179,7 @@
         "content-uk/parsers/zippo-uk.js",
         "content-uk/parsers/birkenstock-uk.js",
         "content-uk/parsers/crocs-uk.js",
+        "content-uk/parsers/ifixit-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

@@ -7,7 +7,7 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 ### Eklenenler
 
 * **Yeni siteler:** Birkenstock Türkiye, Birkenstock UK, Crocs Türkiye,
-  Crocs UK.
+  Crocs UK, iFixit UK.
 * **Aynı modelin farklı rengi sepette artık ayırt ediliyor.** Birkenstock ve
   Crocs'un dört sayfasında da ürün başlığı yalnızca model adını veriyor
   ("Classic Clog", "ARIZONA EVA") ve her renk ayrı bir sayfada duruyor; iki
@@ -35,6 +35,10 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
 * **Crocs Türkiye taksit bilgisi vermiyor**, ürün sayfasında taksit metni
   bulunmuyor; sepette "Yok" görünür.
+* **iFixit'in yalnızca mağaza sayfaları destekleniyor.** İngiltere mağazası
+  `ifixit.com/en-gb/products/` altında; sitenin geri kalanı tamir rehberi
+  wiki'si ve orada sepete eklenecek bir şey yok, o yüzden eklenti oraya hiç
+  girmiyor.
 
 ### Geliştirme
 
@@ -48,6 +52,9 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 * İzin eşlemesi artık yola bağlı manifest kalıplarını da tanıyor
   (`*://*.birkenstock.com/gb/*`); tanımasaydı o üründe eksik site izni fark
   edilmezdi.
+* `test/live/ifixit.test.mjs` indirimli iFixit ürünlerinde sepete üstü çizili
+  liste fiyatının değil ödenecek tutarın girdiğini doğruluyor; site ikisini
+  aynı fiyat bloğunda basıyor.
 
 ## 1.9.1 — yayımlanmadı
 
