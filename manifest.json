@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Ortak Sepet",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "Türkiye ve Birleşik Krallık alışveriş siteleri için ortak alışveriş sepeti.",
   "permissions": [
     "storage",
@@ -45,7 +45,11 @@
     "*://*.decathlon.com.tr/*",
     "*://*.decathlon.co.uk/*",
     "*://*.zippo.com.tr/*",
-    "*://*.zippo.co.uk/*"
+    "*://*.zippo.co.uk/*",
+    "*://*.birkenstock.com.tr/*",
+    "*://*.crocs.com.tr/*",
+    "*://*.birkenstock.com/gb/*",
+    "*://*.crocs.co.uk/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -96,7 +100,9 @@
         "*://*.ikea.com.tr/*",
         "*://*.samsonite.com.tr/*",
         "*://*.decathlon.com.tr/*",
-        "*://*.zippo.com.tr/*"
+        "*://*.zippo.com.tr/*",
+        "*://*.birkenstock.com.tr/*",
+        "*://*.crocs.com.tr/*"
       ],
       "js": [
         "browser-polyfill.js",
@@ -125,6 +131,8 @@
         "content/parsers/samsonite-tr.js",
         "content/parsers/decathlon-tr.js",
         "content/parsers/zippo-tr.js",
+        "content/parsers/birkenstock-tr.js",
+        "content/parsers/crocs-tr.js",
         "content/parsers/registry.js",
         "content.js"
       ],
@@ -145,7 +153,9 @@
         "*://*.ikea.com/*",
         "*://*.samsonite.co.uk/*",
         "*://*.decathlon.co.uk/*",
-        "*://*.zippo.co.uk/*"
+        "*://*.zippo.co.uk/*",
+        "*://*.birkenstock.com/gb/*",
+        "*://*.crocs.co.uk/*"
       ],
       "js": [
         "shared/structured-data.js",
@@ -165,6 +175,8 @@
         "content-uk/parsers/samsonite-uk.js",
         "content-uk/parsers/decathlon-uk.js",
         "content-uk/parsers/zippo-uk.js",
+        "content-uk/parsers/birkenstock-uk.js",
+        "content-uk/parsers/crocs-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

@@ -38,6 +38,18 @@ check("decathlon uk", originOf("https://www.decathlon.co.uk/p/x/1/m1"), "*://*.d
 check("www yok", originOf("https://decathlon.com.tr/p/x"), "*://*.decathlon.com.tr/*");
 check("alt alan adı", originOf("https://shop.trendyol.com/x"), "*://*.trendyol.com/*");
 
+// Birkenstock'un İngiltere mağazası global alan adının /gb/ yolunda, yani
+// kalıbın kendisi de yola bağlı: "*://*.birkenstock.com/gb/*". Eşleşme alan adı
+// üzerinden yapılıyor, kalıptaki yol bunu bozmamalı.
+check(
+  "yola bağlı kalıp",
+  originOf("https://www.birkenstock.com/gb/arizona/x_1.html"),
+  "*://*.birkenstock.com/gb/*",
+);
+check("birkenstock tr ayrı kalıp", originOf("https://www.birkenstock.com.tr/x-1/"), "*://*.birkenstock.com.tr/*");
+check("crocs tr", originOf("https://crocs.com.tr/classic-atmosphere"), "*://*.crocs.com.tr/*");
+check("crocs uk", originOf("https://www.crocs.co.uk/p/classic-clog/10001.html"), "*://*.crocs.co.uk/*");
+
 // "pazarama.com" içinde "zara" geçiyor: parça araması burada yanlış eşleşirdi.
 check("pazarama zara'ya düşmüyor", originOf("https://www.pazarama.com/urun-p-1"), "*://*.pazarama.com/*");
 // "notzara.com" gibi bir alan adı da zara.com sayılmamalı.

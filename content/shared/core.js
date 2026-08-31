@@ -161,6 +161,8 @@ function getSiteName() {
   if (isSiteHost("samsonite.com.tr")) return "Samsonite";
   if (isSiteHost("decathlon.com.tr")) return "Decathlon";
   if (isSiteHost("zippo.com.tr")) return "Zippo";
+  if (isSiteHost("birkenstock.com.tr")) return "Birkenstock";
+  if (isSiteHost("crocs.com.tr")) return "Crocs";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }
@@ -789,13 +791,54 @@ function getDefaultShippingInfoForSite() {
   };
 }
 
+// "Ücretsiz kargo" tek başına bu ürünün kargosunun ücretsiz olduğunu
+// söylemiyor: TR siteleri de ücretsiz kargoyu çoğunlukla bir sepet tutarına
+// bağlıyor ve bunu her sayfada bant olarak basıyor ("2000 TL ve üzeri
+// alışverişlerde Ücretsiz Kargo"). Eşiği yok saymak 300 TL'lik üründe bile
+// "Ücretsiz kargo" yazdırıyordu — yanlış kargo bilgisi, bilgisiz kalmaktan
+// kötü. (UK tarafında aynı düzeltme analyzeFreeShippingClaim() içinde.)
+//
+// İngilizcede eşik ifadenin ardından gelirken ("on orders over £70") Türkçede
+// önüne geçiyor, o yüzden ifadenin iki yanına da bakılıyor.
+const TRY_FREE_SHIPPING_CLAIM_PATTERN =
+  "ucretsiz kargo|kargo bedava|bedava kargo|ucretsiz teslimat|teslimat ucretsiz|ucretsiz gonderim|kargo ucretsiz|kargosu bedava";
+
+// Eşik ya bir tutara ("2000 tl ve uzeri") ya da tutarı izleyen bir alışveriş
+// sözcüğüne bağlanıyor; ürünün kendi fiyatına takılmasın diye çıplak tutar
+// yetmiyor, yanında "üzeri/üstü" gibi bir sözcük aranıyor.
+const TRY_SHIPPING_THRESHOLD_RE =
+  /\d[\d.,]*\s*(?:tl|₺)\s*(?:ve\s*)?(?:uzeri|uzerinde|uzerine|ustu|ustunde)|(?:uzeri|ustu|uzerinde)\s+(?:alisveris|siparis|sepet)|(?:minimum|en az)\s*\d[\d.,]*\s*(?:tl|₺)/i;
+
+// "unconditional" | "conditional" | null döner. Sayfada birden fazla ifade
+// olabiliyor (üst bant koşullu, ürün rozeti koşulsuz); bir tanesi bile
+// koşulsuzsa ürün gerçekten ücretsiz kargolu sayılır.
+function analyzeTryFreeShippingClaim(normalized) {
+  const claimRegex = new RegExp(TRY_FREE_SHIPPING_CLAIM_PATTERN, "gi");
+  let match;
+  let sawClaim = false;
+
+  while ((match = claimRegex.exec(normalized)) !== null) {
+    sawClaim = true;
+
+    const claimEnd = match.index + match[0].length;
+    const beforeClaim = normalized.slice(Math.max(0, match.index - 80), match.index);
+    const afterClaim = normalized.slice(claimEnd, claimEnd + 80);
+
+    if (
+      !TRY_SHIPPING_THRESHOLD_RE.test(beforeClaim) &&
+      !TRY_SHIPPING_THRESHOLD_RE.test(afterClaim)
+    ) {
+      return "unconditional";
+    }
+  }
+
+  return sawClaim ? "conditional" : null;
+}
+
 function findShippingInfo() {
 
   function analyzeShippingText(text) {
     const normalized = normalizeTurkishText(text);
-
-    const freeShippingRegex =
-      /ucretsiz kargo|kargo bedava|bedava kargo|ucretsiz teslimat|teslimat ucretsiz|ucretsiz gonderim|kargo ucretsiz|kargosu bedava/i;
 
     const paidShippingRegex =
       /kargo ucreti|kargo bedeli|teslimat ucreti|teslimat bedeli|ucretli kargo|nakliye ucreti/i;
@@ -803,7 +846,9 @@ function findShippingInfo() {
     const genericShippingRegex =
       /kargo|teslimat|gonderim|kapinda|kargoya verilir|kargoda|bugun kargoda|yarin kapinda|hizli teslimat|teslim tarihi/i;
 
-    if (freeShippingRegex.test(normalized)) {
+    const freeShippingClaim = analyzeTryFreeShippingClaim(normalized);
+
+    if (freeShippingClaim === "unconditional") {
       return {
         shippingAvailable: true,
         freeShipping: true,
@@ -812,6 +857,19 @@ function findShippingInfo() {
           : "Ücretsiz kargo",
         shippingSource: "product-page",
         shippingConfidence: "explicit",
+      };
+    }
+
+    // Ücretsiz kargo var ama bir eşiğe bağlı: bu üründe geçerli mi bilemiyoruz.
+    // Metin, popup'ın i18n eşlemesi olan ifadeyle aynı tutuluyor
+    // (bkz. popup/i18n.js → normalizeDeliveryText); nüans shippingConfidence'ta.
+    if (freeShippingClaim === "conditional") {
+      return {
+        shippingAvailable: false,
+        freeShipping: false,
+        shippingText: "Sepette hesaplanır",
+        shippingSource: "cart",
+        shippingConfidence: "conditional",
       };
     }
 

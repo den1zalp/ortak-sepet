@@ -163,6 +163,19 @@
       matches: hostIs("zippo.com.tr"),
       parse: () => parseZippoTr(),
     },
+    {
+      id: "birkenstock-tr",
+      label: "Birkenstock TR",
+      matches: hostIs("birkenstock.com.tr"),
+      parse: () => parseBirkenstockTr(),
+    },
+    {
+      id: "crocs-tr",
+      label: "Crocs TR",
+      matches: hostIs("crocs.com.tr"),
+      parse: () => parseCrocsTr(),
+      waitForPrice: true,
+    },
   ];
 
   function getOrtakSepetParserForUrl(input) {

@@ -2,6 +2,53 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.10.0 — yayımlanmadı
+
+### Eklenenler
+
+* **Yeni siteler:** Birkenstock Türkiye, Birkenstock UK, Crocs Türkiye,
+  Crocs UK.
+* **Aynı modelin farklı rengi sepette artık ayırt ediliyor.** Birkenstock ve
+  Crocs'un dört sayfasında da ürün başlığı yalnızca model adını veriyor
+  ("Classic Clog", "ARIZONA EVA") ve her renk ayrı bir sayfada duruyor; iki
+  rengi sepete atınca ikisi de aynı adla görünürdü. Başlığa seçili renk
+  ekleniyor: "Classic Clog - White".
+
+### Düzeltilenler
+
+* **Eşiğe bağlı ücretsiz kargo, Türkiye sitelerinde de koşulsuz sanılıyordu.**
+  TR mağazaları ücretsiz kargoyu bir sepet tutarına bağlayıp bunu her sayfada
+  bant olarak basıyor ("2000 TL ve üzeri alışverişlerde Ücretsiz Kargo").
+  Tarama yalnızca "ücretsiz kargo" ifadesini aradığı için eşik okunmuyor, 300
+  TL'lik üründe bile kargo ücretsiz işaretleniyordu. Artık ifadenin iki yanına
+  bakılıyor — İngilizcede eşik ifadenin ardından gelirken Türkçede önüne
+  geçiyor — ve eşik varsa ürün "Sepette hesaplanır" oluyor. Aynı düzeltme UK
+  tarafında 1.9.0'da yapılmıştı; TR tarafı bugüne kadar eksikti, yani
+  Birkenstock ve Crocs'un yanı sıra eşik bandı basan diğer TR siteleri de
+  düzeldi.
+
+### Bilinen sınırlar
+
+* **Birkenstock'un İngiltere mağazası ayrı bir alan adında değil**, global
+  `birkenstock.com` adresinin `/gb/` yolunda. Eklenti yalnızca o yola giriyor;
+  aynı sitenin `/de/`, `/fr/` gibi diğer ülke sayfaları desteklenmiyor, çünkü
+  oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
+* **Crocs Türkiye taksit bilgisi vermiyor**, ürün sayfasında taksit metni
+  bulunmuyor; sepette "Yok" görünür.
+
+### Geliştirme
+
+* Kargo ifadesinin eşiğe bağlı olup olmadığı TR tarafında da
+  `test/unit/shipping.test.mjs` ile ağ gerektirmeden sınanıyor; örnekler
+  gerçek mağaza sayfalarından alındı.
+* `test/live/birkenstock-crocs.test.mjs` dört siteyi de canlı ürün
+  sayfalarında doğruluyor: indirimli üründe ödenecek tutarın seçilmesi, seçili
+  renge ait olmayan fiyat bloklarının atlanması ve görselin gerçekten
+  indirilebilmesi.
+* İzin eşlemesi artık yola bağlı manifest kalıplarını da tanıyor
+  (`*://*.birkenstock.com/gb/*`); tanımasaydı o üründe eksik site izni fark
+  edilmezdi.
+
 ## 1.9.1 — yayımlanmadı
 
 ### Düzeltilenler
