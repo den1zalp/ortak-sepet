@@ -1,5 +1,5 @@
 // Zippo TR / UK parserlarını canlı ürün sayfasında doğrula.
-import { launchExtension, createChecker, readProductFromTab, wait } from "../helpers/extension.mjs";
+import { launchExtension, createChecker, imageLoads, readProductFromTab, wait } from "../helpers/extension.mjs";
 
 const { check, summary } = createChecker();
 
@@ -26,20 +26,6 @@ const LISTINGS = [
   },
 ];
 
-// Görsel adresini gerçekten indirmeyi dener; sunucu resim döndürmüyorsa
-// sepette boş kare çıkar.
-async function imageLoads(url, label) {
-  if (!url) return [label, false, "adres yok"];
-
-  try {
-    const response = await fetch(url, { redirect: "follow" });
-    const type = response.headers.get("content-type") || "";
-
-    return [label, response.ok && /^image\//i.test(type), `${response.status} ${type}`];
-  } catch (error) {
-    return [label, false, error.message.split("\n")[0]];
-  }
-}
 
 for (const listing of LISTINGS) {
   console.log(`\n===== ${listing.name} =====`);
