@@ -124,7 +124,7 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   liste fiyatının değil ödenecek tutarın girdiğini doğruluyor; site ikisini
   aynı fiyat bloğunda basıyor.
 
-## 1.9.1 — yayımlanmadı
+## 1.9.1 — 1.10.0 ile yayımlandı
 
 ### Düzeltilenler
 
