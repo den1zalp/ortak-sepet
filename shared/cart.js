@@ -54,10 +54,14 @@ var OrtakSepetCart = (function () {
   //
   // Eşleşme alan adı bazında; "*://*.zara.com/*" kalıbını parça araması yapıp
   // "pazarama.com" ile eşleştirmemek için host'un tamamına bakılıyor.
+  // Kalıpların çoğu tüm siteyi kapsıyor ("*://*.zara.com/*") ama biri yola da
+  // bağlı: Birkenstock'un İngiltere mağazası global alan adının /gb/ yolunda.
+  // Eşleşme alan adı üzerinden yapıldığı için ilk "/" sonrasını atıyoruz;
+  // yoksa o ürün hiçbir origin'e düşmez ve eksik izin fark edilmezdi.
   function originToDomain(origin) {
     return String(origin || "")
       .replace(/^\*:\/\/(\*\.)?/, "")
-      .replace(/\/\*$/, "");
+      .replace(/\/.*$/, "");
   }
 
   function itemMatchesDomain(item, domain) {

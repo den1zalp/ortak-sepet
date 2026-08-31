@@ -118,6 +118,20 @@
       matches: hostIs("zippo.co.uk"),
       parse: () => parseZippoUk(),
     },
+    {
+      // Content script yalnızca birkenstock.com/gb/ yoluna enjekte ediliyor,
+      // bu yüzden burada alan adına bakmak yetiyor (bkz. manifest.json).
+      id: "birkenstock-uk",
+      label: "Birkenstock UK",
+      matches: hostIs("birkenstock.com"),
+      parse: () => parseBirkenstockUk(),
+    },
+    {
+      id: "crocs-uk",
+      label: "Crocs UK",
+      matches: hostIs("crocs.co.uk"),
+      parse: () => parseCrocsUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

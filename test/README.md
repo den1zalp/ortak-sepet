@@ -47,6 +47,9 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 |---|---|
 | `unit/cart.test.mjs` | `shared/cart.js` + `shared/category.js`: fiyat/para birimi ayrıştırma, ekleme, mükerrer birleştirme, `saveRefreshedItem`, kategori kuralları |
 | `unit/registry.test.mjs` | manifest'teki her host bir parser'a düşüyor mu, registry'deki her `parse` fonksiyonu tanımlı mı |
+| `unit/permissions.test.mjs` | ürün adresi ↔ manifest origin eşlemesi ve eksik izin tespiti |
+| `unit/shipping.test.mjs` | ücretsiz kargo ifadesi sepet eşiğine bağlı mı (TR + UK) |
+| `unit/zippo-image.test.mjs` | Zippo TR galeri görselinin adresi |
 | `e2e/smoke.test.mjs` | service worker kaydoluyor mu, ortak modüller yükleniyor mu, popup hatasız açılıyor mu |
 | `e2e/features.test.mjs` | onay, geri alma, iptal, paralel fiyat güncellemesi |
 | `e2e/copy-a11y.test.mjs` | "Sepeti Kopyala" çıktısı ve erişilebilirlik etiketleri |
@@ -57,6 +60,9 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 | `live/parsers.test.mjs` | IKEA TR/UK, Çiçeksepeti, D&R, Pazarama |
 | `live/ikea.test.mjs` | IKEA TR/UK ürün sayfası + sepete ekleme |
 | `live/samsonite.test.mjs` | Samsonite TR/UK: fiyat, başlık, görsel, taksit |
+| `live/decathlon.test.mjs` | Decathlon TR/UK: fiyat, başlık, görsel |
+| `live/zippo.test.mjs` | Zippo TR/UK: fiyat, başlık, görselin gerçekten açılması |
+| `live/birkenstock-crocs.test.mjs` | Birkenstock ve Crocs TR/UK: fiyat, başlık, renk, görsel |
 
 Ekran görüntüleri `test/screenshots/` altına düşer (.gitignore'da).
 
@@ -75,3 +81,9 @@ summary();   // başarısız kontrol varsa süreci 1 ile bitirir
 ```
 
 Depo yolunu koda gömme; `REPO_ROOT` yardımcıdan geliyor.
+
+Ürün görselini sınayan canlı testler `imageLoads(url, ad)` kullanıyor: adresi
+gerçekten indirip resim döndüğünü doğruluyor ve sonucu `check(...)`'e doğrudan
+verilebilecek biçimde döndürüyor (`check(...(await imageLoads(url, ad)))`).
+Adresin doğru *görünmesi* yetmiyor — açılmayan bir adres sepette boş kare
+bırakıyor.

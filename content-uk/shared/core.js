@@ -181,6 +181,8 @@ function getSiteName() {
   if (host.includes("samsonite.co.uk")) return "Samsonite UK";
   if (host.includes("decathlon.co.uk")) return "Decathlon UK";
   if (host.includes("zippo.co.uk")) return "Zippo UK";
+  if (host.includes("birkenstock.com")) return "Birkenstock UK";
+  if (host.includes("crocs.co.uk")) return "Crocs UK";
 
   return host;
 }

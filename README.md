@@ -67,6 +67,8 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Decathlon Türkiye
 * Sephora Türkiye
 * Zippo Türkiye
+* Birkenstock Türkiye
+* Crocs Türkiye
 * Zara
 * Bershka
 * H&M
@@ -88,6 +90,8 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Samsonite UK
 * Decathlon UK
 * Zippo UK
+* Birkenstock UK (`birkenstock.com/gb`)
+* Crocs UK
 
 ## Kullanım
 
@@ -198,7 +202,7 @@ polyfill'i güncellemek için tutulur.
 
 ## Marka ve Bağlantı Bildirimi
 
-Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
+Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Birkenstock, Crocs, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
 
 Listelenen tüm marka adları, yalnızca eklentinin hangi sitelerde çalışmayı hedeflediğini açıklamak amacıyla kullanılmıştır. Tüm marka adları ve ticari markalar ilgili sahiplerine aittir.
 
