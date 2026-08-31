@@ -2,18 +2,12 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.10.0 — yayımlanmadı
+## 1.11.0 — yayımlanmadı
 
 ### Eklenenler
 
-* **Yeni siteler:** Birkenstock Türkiye, Birkenstock UK, Crocs Türkiye,
-  Crocs UK, iFixit UK, Vans Türkiye, Vans UK, Boyner, Nike Türkiye, Nike UK,
+* **Yeni siteler:** Vans Türkiye, Vans UK, Boyner, Nike Türkiye, Nike UK,
   Adidas Türkiye, Adidas UK.
-* **Aynı modelin farklı rengi sepette artık ayırt ediliyor.** Birkenstock ve
-  Crocs'un dört sayfasında da ürün başlığı yalnızca model adını veriyor
-  ("Classic Clog", "ARIZONA EVA") ve her renk ayrı bir sayfada duruyor; iki
-  rengi sepete atınca ikisi de aynı adla görünürdü. Başlığa seçili renk
-  ekleniyor: "Classic Clog - White".
 * **Vans Türkiye'de indirimli tutar okunuyor.** Ürün sayfası indirim varken iki
   fiyat basıyor: üstü çizili liste fiyatı ve ödenecek tutar. Fiyat kutusunun
   tamamını okumak ikisini birden veriyor, bu yüzden ödenecek tutarı taşıyan
@@ -48,6 +42,46 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   Adidas'ta h1 marka ve renk taşımıyor ("Samba OG Shoes"), og:title üçünü
   birden veriyor.
 
+### Bilinen sınırlar
+
+* **Vans'in İngiltere mağazası ayrı bir alan adında değil**, global
+  `vans.com` adresinin `/en-gb/` yolunda; `vans.co.uk` oraya yönleniyor.
+  Eklenti yalnızca o yola giriyor, sitenin diğer ülke sayfaları
+  desteklenmiyor — oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
+  Site otomasyonla sürülen tarayıcıya ürün sayfasını vermediği için canlı
+  test bu siteyi atlıyor; parser gerçek sayfalarda elle doğrulandı.
+* **Nike'ın iki mağazası da global alan adının yolunda:** Türkiye
+  `nike.com/tr`, İngiltere `nike.com/gb` (nike.com.tr birincisine yönleniyor).
+  Eklenti yalnızca bu iki yola giriyor; sitenin diğer ülke sayfaları
+  desteklenmiyor, çünkü oradaki fiyat yanlış bölgeyle damgalanırdı.
+* **Adidas otomasyonla sürülen tarayıcıya sayfa vermiyor**, kendi engel
+  sayfasını basıyor. Kullanıcının tarayıcısında sorun yok ama canlı test iki
+  Adidas sitesini de atlıyor; parserlar gerçek sayfalarda elle doğrulandı.
+
+### Geliştirme
+
+* `test/live/vans-boyner.test.mjs` iki siteyi de canlı sayfalarda doğruluyor
+  ve parser'ın döndürdüğü tutarı sayfadaki tutarla ayrıca karşılaştırıyor;
+  site geç render etmeye başlarsa parser sessizce jenerik yedeğe düşüp testi
+  yanlış sebeple yeşil yakabiliyordu. Vans için outlet listesi de geziliyor,
+  yoksa indirimli fiyat yolu hiç sınanmıyordu.
+* `test/live/nike-adidas.test.mjs` dört siteyi de indirim listelemesinden
+  geziyor: bu iki markada asıl risk üstü çizili liste fiyatını sepete yazmak,
+  o yüzden her üründe okunan tutar hem sayfadaki ödenecek tutarla
+  karşılaştırılıyor hem de üstü çizili tutardan farklı olduğu doğrulanıyor.
+
+## 1.10.0 — 31 Ağustos 2026
+
+### Eklenenler
+
+* **Yeni siteler:** Birkenstock Türkiye, Birkenstock UK, Crocs Türkiye,
+  Crocs UK, iFixit UK.
+* **Aynı modelin farklı rengi sepette artık ayırt ediliyor.** Birkenstock ve
+  Crocs'un dört sayfasında da ürün başlığı yalnızca model adını veriyor
+  ("Classic Clog", "ARIZONA EVA") ve her renk ayrı bir sayfada duruyor; iki
+  rengi sepete atınca ikisi de aynı adla görünürdü. Başlığa seçili renk
+  ekleniyor: "Classic Clog - White".
+
 ### Düzeltilenler
 
 * **Eşiğe bağlı ücretsiz kargo, Türkiye sitelerinde de koşulsuz sanılıyordu.**
@@ -73,19 +107,6 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   `ifixit.com/en-gb/products/` altında; sitenin geri kalanı tamir rehberi
   wiki'si ve orada sepete eklenecek bir şey yok, o yüzden eklenti oraya hiç
   girmiyor.
-* **Vans'in İngiltere mağazası ayrı bir alan adında değil**, global
-  `vans.com` adresinin `/en-gb/` yolunda; `vans.co.uk` oraya yönleniyor.
-  Eklenti yalnızca o yola giriyor, sitenin diğer ülke sayfaları
-  desteklenmiyor — oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
-  Site otomasyonla sürülen tarayıcıya ürün sayfasını vermediği için canlı
-  test bu siteyi atlıyor; parser gerçek sayfalarda elle doğrulandı.
-* **Nike'ın iki mağazası da global alan adının yolunda:** Türkiye
-  `nike.com/tr`, İngiltere `nike.com/gb` (nike.com.tr birincisine yönleniyor).
-  Eklenti yalnızca bu iki yola giriyor; sitenin diğer ülke sayfaları
-  desteklenmiyor, çünkü oradaki fiyat yanlış bölgeyle damgalanırdı.
-* **Adidas otomasyonla sürülen tarayıcıya sayfa vermiyor**, kendi engel
-  sayfasını basıyor. Kullanıcının tarayıcısında sorun yok ama canlı test iki
-  Adidas sitesini de atlıyor; parserlar gerçek sayfalarda elle doğrulandı.
 
 ### Geliştirme
 
@@ -102,15 +123,6 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 * `test/live/ifixit.test.mjs` indirimli iFixit ürünlerinde sepete üstü çizili
   liste fiyatının değil ödenecek tutarın girdiğini doğruluyor; site ikisini
   aynı fiyat bloğunda basıyor.
-* `test/live/vans-boyner.test.mjs` iki siteyi de canlı sayfalarda doğruluyor
-  ve parser'ın döndürdüğü tutarı sayfadaki tutarla ayrıca karşılaştırıyor;
-  site geç render etmeye başlarsa parser sessizce jenerik yedeğe düşüp testi
-  yanlış sebeple yeşil yakabiliyordu. Vans için outlet listesi de geziliyor,
-  yoksa indirimli fiyat yolu hiç sınanmıyordu.
-* `test/live/nike-adidas.test.mjs` dört siteyi de indirim listelemesinden
-  geziyor: bu iki markada asıl risk üstü çizili liste fiyatını sepete yazmak,
-  o yüzden her üründe okunan tutar hem sayfadaki ödenecek tutarla
-  karşılaştırılıyor hem de üstü çizili tutardan farklı olduğu doğrulanıyor.
 
 ## 1.9.1 — yayımlanmadı
 
