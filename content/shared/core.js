@@ -165,6 +165,8 @@ function getSiteName() {
   if (isSiteHost("crocs.com.tr")) return "Crocs";
   if (isSiteHost("vans.com.tr")) return "Vans";
   if (isSiteHost("boyner.com.tr")) return "Boyner";
+  if (isSiteHost("nike.com")) return "Nike";
+  if (isSiteHost("adidas.com.tr")) return "Adidas";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }

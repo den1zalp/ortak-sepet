@@ -139,6 +139,22 @@
       parse: () => parseVansUk(),
     },
     {
+      // İngiltere mağazası global alan adının /gb/ yolunda; content script
+      // yalnızca oraya enjekte edildiği için host eşleşmesi yeterli.
+      id: "nike-uk",
+      label: "Nike UK",
+      matches: hostIs("nike.com"),
+      parse: () => parseNikeUk(),
+      // Fiyat kutusu bir saniyeyi aşabiliyor.
+      waitForPrice: true,
+    },
+    {
+      id: "adidas-uk",
+      label: "Adidas UK",
+      matches: hostIs("adidas.co.uk"),
+      parse: () => parseAdidasUk(),
+    },
+    {
       // Content script yalnızca ifixit.com/en-gb/products/ yoluna enjekte
       // ediliyor; sitenin geri kalanı tamir rehberi (bkz. manifest.json).
       id: "ifixit-uk",

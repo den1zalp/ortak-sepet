@@ -188,6 +188,22 @@
       matches: hostIs("boyner.com.tr"),
       parse: () => parseBoyner(),
     },
+    {
+      // Türkiye mağazası global alan adının /tr/ yolunda; content script
+      // yalnızca oraya enjekte edildiği için host eşleşmesi yeterli.
+      id: "nike-tr",
+      label: "Nike TR",
+      matches: hostIs("nike.com"),
+      parse: () => parseNikeTr(),
+      // Fiyat kutusu bir saniyeyi aşabiliyor.
+      waitForPrice: true,
+    },
+    {
+      id: "adidas-tr",
+      label: "Adidas TR",
+      matches: hostIs("adidas.com.tr"),
+      parse: () => parseAdidasTr(),
+    },
   ];
 
   function getOrtakSepetParserForUrl(input) {
