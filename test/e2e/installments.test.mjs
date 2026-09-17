@@ -1,4 +1,9 @@
-// Taksit bilgisi okunamadığında "Bilinmiyor" yerine "Yok" yazıyor mu?
+// Taksit bilgisi okunamayan ürün "Bilinmiyor", taksitsiz ürün "Yok" diyor mu?
+//
+// Bu dosya eskiden tersini sınıyordu: okunamayan da "Yok" gösteriliyordu.
+// Kullanıcı bunun yanlış olduğunu bildirdi — sayfada taksit seçeneği olduğu
+// hâlde eklentinin okuyamadığı mağazalar var (Champion, Lacoste) ve orada "Yok"
+// yazmak yanlış bilgi veriyor. Bilinmiyor ile yok artık arayüzde de ayrı.
 import { launchExtension, createChecker, screenshotPath } from "../helpers/extension.mjs";
 
 const { check, summary } = createChecker();
@@ -41,12 +46,14 @@ const read = () =>
 
 const rows = await read();
 console.log(rows);
-check("bilgi okunamayan üründe 'Yok' yazıyor", rows[0]?.taksit === "Taksit:Yok", rows[0]?.taksit);
+check("bilgi okunamayan üründe 'Bilinmiyor' yazıyor", rows[0]?.taksit === "Taksit:Bilinmiyor", rows[0]?.taksit);
 check("taksitsiz üründe 'Yok' yazıyor", rows[1]?.taksit === "Taksit:Yok", rows[1]?.taksit);
 check("taksitli üründe 'Var' yazıyor", rows[2]?.taksit === "Taksit:Var", rows[2]?.taksit);
 
 const pageText = await popup.evaluate(() => document.body.innerText);
-check("popup'ta hiç 'Bilinmiyor' geçmiyor", !pageText.includes("Bilinmiyor"), pageText.match(/.{0,30}Bilinmiyor.{0,30}/)?.[0] || "");
+check("popup'ta 'Bilinmiyor' geçiyor", pageText.includes("Bilinmiyor"), pageText.match(/.{0,30}Bilinmiyor.{0,30}/)?.[0] || "");
+// Taksitsiz ürün hâlâ "Yok" demeli; ikisi karışmamalı.
+check("popup'ta 'Yok' da geçiyor", /Taksit:\s*Yok/.test(pageText), "");
 
 // Taksit gruplaması
 await popup.click("#installmentProductsBtn");
@@ -55,13 +62,15 @@ const groups = await popup.evaluate(() =>
   [...document.querySelectorAll("#cartItems .category-title, #cartItems .group-title, #cartItems h3")].map((el) => el.textContent.trim()),
 );
 console.log(groups);
+// Gruplama yalnızca "taksit var / yok" ayrımı yapıyor; bilinmiyor ayrı bir grup
+// değil, taksiti olmayanlarla birlikte listeleniyor.
 check("grup başlığında 'Bilinmiyor' yok", !groups.some((g) => g.includes("Bilinmiyor")), groups.join(" | "));
 
 // İngilizce tarafı
 await popup.click("#languageToggleBtn");
 await new Promise((r) => setTimeout(r, 1200));
 const enText = await popup.evaluate(() => document.body.innerText);
-check("İngilizcede 'Unknown' geçmiyor", !enText.includes("Unknown"), enText.match(/.{0,30}Unknown.{0,30}/)?.[0] || "");
+check("İngilizcede 'Unknown' geçiyor", enText.includes("Unknown"), enText.match(/.{0,30}Unknown.{0,30}/)?.[0] || "");
 
 await popup.screenshot({ path: screenshotPath("taksit-yok.png") });
 await browser.close();

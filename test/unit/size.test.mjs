@@ -52,15 +52,28 @@ function element(tag, options = {}) {
   const descendants = (list) =>
     list.flatMap((child) => [child, ...descendants(child.children || [])]);
 
+  // Seçiciyi parçalara ayırıp etiket adını tam eşleştiriyoruz. "includes" ile
+  // bakmak yanlış sonuç veriyordu: "table".includes("a") doğru döndüğü için her
+  // bağlantı tablo sanılıyor ve gerçek kodun ölçü tablosu elemesi testte yanlış
+  // yere tetikleniyordu.
+  const matchesSelector = (child, selector) =>
+    selector
+      .split(",")
+      .map((part) => part.trim())
+      .some((part) => {
+        if (part === child.tag) return true;
+
+        const withAttribute = part.match(/^(\w+)\[([\w-]+)(?:=['"]?([^'"\]]+)['"]?)?\]$/);
+
+        if (!withAttribute || withAttribute[1] !== child.tag) return false;
+
+        const value = child.getAttribute(withAttribute[2]);
+
+        return withAttribute[3] ? value === withAttribute[3] : Boolean(value);
+      });
+
   node.querySelectorAll = (selector) =>
-    descendants(children).filter(
-      (child) =>
-        CANDIDATE_TAGS.includes(child.tag) &&
-        (child.tag !== "span" || child.getAttribute("data-size")) &&
-        (child.tag !== "div" || child.getAttribute("data-size")) &&
-        (child.tag !== "input" || child.getAttribute("type") === "radio") &&
-        selector.includes(child.tag),
-    );
+    descendants(children).filter((child) => matchesSelector(child, selector));
 
   node.querySelector = (selector) => node.querySelectorAll(selector)[0] || null;
 
@@ -425,6 +438,104 @@ const labelNoise = element("div", {
 });
 
 check("etiket satırları elendi", runScan({ containers: [labelNoise] }).sizes.join(","), "24,26");
+
+// Listeleme filtresi ürün sayfasında da duruyor ve seçenekleri gerçek beden
+// seçicisininkilerle karışıyordu. (Koton)
+const facetBox = element("div", {
+  attrs: { class: "rfbz-bd beden-filtre" },
+  children: [
+    element("li", { text: "Beden (tüm bedenler)" }),
+    element("li", { text: "29/30 bedeninde 40 ürün" }),
+    element("li", { text: "30/32 bedeninde 35 ürün" }),
+    element("li", { text: "29/30" }),
+    element("li", { text: "30/32" }),
+  ],
+});
+
+check("filtre seçenekleri elendi", runScan({ containers: [facetBox] }).sizes.join(","), "29/30,30/32");
+
+// Beden tablosunun sekmeleri ürün türü ve kalıp adı; beden değil.
+// (Colin's: "DENIM ÖLÇÜLERİ" sepete seçili beden olarak yazılmıştı · Tudors)
+const chartTabs = element("div", {
+  attrs: { class: "beden-secimi" },
+  children: [
+    element("button", { text: "GÖMLEK" }),
+    element("button", { text: "DENIM ÖLÇÜLERİ" }),
+    element("button", { text: "SLİM FİT" }),
+    element("button", { text: "BÜYÜK BEDEN" }),
+    element("button", { text: "S" }),
+    element("button", { text: "M" }),
+  ],
+});
+
+check("ürün türü ve kalıp adları elendi", runScan({ containers: [chartTabs] }).sizes.join(","), "S,M");
+
+// Ölçü tablosu taşıyan kap bir seçici değil. (Desa'da sayfadaki tek "beden"
+// kabı buydu.)
+const chartTable = element("div", {
+  attrs: { class: "beden-bilgisi" },
+  children: [
+    element("table", {
+      children: [element("td", { text: "40" }), element("td", { text: "41" })],
+    }),
+  ],
+});
+
+check("ölçü tablosu okunmuyor", runScan({ containers: [chartTable] }).sizes.length, 0);
+
+// İşaretli kapta seçenekler düz span olabiliyor. (Beymen)
+const spanSizes = element("div", {
+  attrs: { id: "sizes" },
+  children: [
+    element("span", { attrs: { class: "m-variation__item" }, text: "39" }),
+    element("span", { attrs: { class: "m-variation__item" }, text: "40" }),
+    element("span", { attrs: { class: "m-variation__item" }, text: "41" }),
+  ],
+});
+
+check("span bedenler okundu", runScan({ containers: [spanSizes] }).sizes.join(","), "39,40,41");
+
+// Seçenek metnindeki "Size" öneki iki nokta olmadan da atılıyor, kargo ve
+// favori bağlantıları ile renk adı listeye girmiyor. (Levi's UK)
+const levis = element("div", {
+  attrs: { class: "product-size" },
+  children: [
+    element("button", { text: "At That Point - Green" }),
+    element("button", { text: "Size S" }),
+    element("button", { text: "Size M" }),
+    element("a", { text: "Shipping Info" }),
+    element("a", { text: "Add to Favourite" }),
+  ],
+});
+
+check("Levi's çöpü elendi, önek atıldı", runScan({ containers: [levis] }).sizes.join(","), "S,M");
+
+// Beden kutusunun yanındaki arayüz eylemleri ve form alanları seçenek değil.
+// (Mudo "GÖNDER" · Madame Coco "ARA" · Marks & Spencer "Anasayfa" ·
+// Under Armour TR giriş formu · Levi's UK "Sale price is")
+const uiNoise = element("div", {
+  attrs: { class: "beden-alani" },
+  children: [
+    element("button", { text: "ARA" }),
+    element("button", { text: "GÖNDER" }),
+    element("a", { text: "Anasayfa" }),
+    element("button", { text: "Giriş Yap" }),
+    element("button", { text: "Parolayı Yenile" }),
+    element("span", { text: "Sale price is" }),
+    element("button", { text: "XS" }),
+    element("button", { text: "S" }),
+  ],
+});
+
+check("arayüz eylemleri elendi", runScan({ containers: [uiNoise] }).sizes.join(","), "XS,S");
+
+// Ayraç karakteri seçenek değil. (Marks & Spencer TR)
+const separator = element("div", {
+  attrs: { class: "size-list" },
+  children: [element("span", { text: "/" }), element("span", { text: "M" }), element("span", { text: "L" })],
+});
+
+check("ayraç elendi", runScan({ containers: [separator] }).sizes.join(","), "M,L");
 
 // --- yapılandırılmış veri yedeği ---
 const fromJsonLd = runScan({

@@ -103,6 +103,16 @@ function pickPlatformTitle(structuredName, titleSelectors) {
   if (name) {
     const normalizedName = normalize(name);
 
+    // Görünen başlık yapılandırılmış addan daha zengin olabiliyor: Champion'da
+    // JSON-LD "Short Sleeve T-shirt" derken sayfada "Reverse Weave Core Short
+    // Sleeve T-shirt" yazıyor ve sepete kısa ad düşüyordu. Adı içeren başlık
+    // varsa o kazanır.
+    const richer = headings.find((heading) => normalize(heading).includes(normalizedName));
+
+    if (richer) return richer;
+
+    // Ya da tersi: başlık adın kısaltılmışı ve daha okunaklı olabiliyor
+    // (Supplementler'in JSON-LD adı sonunda tire taşıyor).
     const matching = headings.find(
       (heading) =>
         normalizedName.includes(normalize(heading)) &&
@@ -153,15 +163,18 @@ function parsePlatformProduct(options = {}) {
   // sayfadan okunan tutarın para birimini cleanPrice zaten metinde taşıyor.
   const currency = price && price === structuredPrice.price ? structuredPrice.currency : null;
 
-  // Önce yapılandırılmış veri ve og:image: sayfayı tarayıp en büyük görseli
+  // Önce yapılandırılmış veri, sonra og:image: sayfayı tarayıp en büyük görseli
   // seçmek kampanya afişini ürün sanabiliyor. İkisi de yoksa tarama son çare —
   // LC Waikiki'de ikisi de bulunmadığı için sepette görsel hiç çıkmıyordu.
+  // og:image logo olabiliyor (Mavi); öyleyse taramaya düşülüyor ve logo ancak
+  // tarama da bir şey bulamazsa kullanılıyor.
+  const metaImage = getAttr("meta[property='og:image']", "content");
+  const scanImage = () =>
+    findProductImage(imageOptions || { preferLeftSide: true, minWidth: 180, minHeight: 180 });
+
   const image =
     structured?.image ||
-    getAttr("meta[property='og:image']", "content") ||
-    findProductImage(
-      imageOptions || { preferLeftSide: true, minWidth: 180, minHeight: 180 },
-    );
+    (looksLikeLogoImage(metaImage) ? scanImage() || metaImage : metaImage || scanImage());
 
   return {
     site,

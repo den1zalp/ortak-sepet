@@ -98,4 +98,12 @@ check(
 check("görsel yoksa boş", readProduct(base).image, "");
 check("boş dizi", readProduct({ ...base, image: [] }).image, "");
 
+// Mağaza ürün adını HTML varlığıyla yazdığında sepete çözülmüş hâli gitmeli.
+// (Levi's TR: "Kısa Kollu G&#246;mlek")
+check(
+  "HTML varlığı çözülüyor",
+  readProduct({ ...base, name: "Kısa Kollu G&#246;mlek" }).title,
+  "Kısa Kollu Gömlek",
+);
+
 summary();

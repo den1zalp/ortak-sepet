@@ -4,6 +4,44 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ## 1.12.0 — yayımlanmadı
 
+### Düzeltilenler
+
+* **Beden listesine sayfanın başka parçaları giriyordu.** Kullanıcı on yedi
+  mağazada ekran görüntüsüyle bildirdi; her biri için ayrı bir eleme kuralı ve
+  birim testi eklendi: listeleme filtresinin seçenekleri ("29/30 bedeninde 40
+  ürün", "Beden (tüm bedenler)" — Koton), beden tablosunun sekmeleri ("GÖMLEK",
+  "DENIM ÖLÇÜLERİ", "SLİM FİT" — Colin's ve Tudors; Colin's'te bu metin sepete
+  seçili beden olarak da yazılmıştı), renk adı ve yardım bağlantıları
+  ("At That Point - Green", "Shipping Info", "Add to Favourite" — Levi's UK),
+  arayüz eylemleri ("ARA" — Madame Coco, "GÖNDER" — Mudo, "Anasayfa" — Marks &
+  Spencer), giriş formunun alanları (Under Armour TR), ekran okuyucu etiketi
+  ("Sale price is" — Levi's UK) ve ayraç karakteri ("/" — Marks & Spencer).
+  Ölçü tablosu taşıyan kap ile menü, modal ve başlık içindeki kaplar artık hiç
+  okunmuyor; gerçek beden seçicisi ürün formunda durur.
+* **Türkçe büyük İ yüzünden eleme kuralları büyük harfli seçeneklerde
+  çalışmıyordu.** "SLİM" küçültülünce noktası ayrı bir işaret olarak kalıyor ve
+  kalıplar tutmuyordu; metin artık `shared/category.js` ile aynı biçimde
+  normalize ediliyor.
+* **Beden seçenekleri düz `span` ile yazılan mağazalarda hiç okunmuyordu.**
+  Beymen bedenleri `<span class="m-variation__item">39</span>` olarak basıyor ve
+  tarama yalnızca `li/button/label/a` arıyordu; beden işareti taşıyan kapta artık
+  her etiket okunuyor.
+* **Taksit bilgisi bulunamadığında sepette "Yok" yazıyordu.** Sayfada taksit
+  seçeneği olduğu hâlde eklentinin okuyamadığı mağazalar var (Champion,
+  Lacoste); "bulunamadı" ile "yok" farklı şeyler ve ayrım artık arayüzde de
+  görünüyor ("Bilinmiyor"). Ayrıca "Taksit Seçenekleri" başlığı sayfanın
+  altında, ürün başlığından uzakta durduğu için mesafe filtresine takılıyordu
+  (Karaca, Konyalı Saat) — bu ifade yeterince özel olduğundan artık sayfanın
+  tamamında aranıyor, tekil yazımı da ("Taksit Seçeneği") tanınıyor.
+* **Ürün adındaki HTML varlığı çözülmüyordu.** Levi's TR yapılandırılmış veriye
+  "Kısa Kollu G&#246;mlek" yazıyor ve sepete de öyle düşüyordu. DOM'dan gelen
+  metinde bu sorun yok, çözüm yalnızca JSON-LD ve meta etiketlerine uygulanıyor.
+* **og:image site logosu olan mağazalarda sepette logo görünüyordu** (Mavi).
+  Adres logo/yer tutucu gibi görünüyorsa sayfadaki ürün görseli aranıyor.
+* **Görünen başlık yapılandırılmış addan zenginken kısa olan seçiliyordu.**
+  Champion'da sayfada "Reverse Weave Core Short Sleeve T-shirt" yazarken sepete
+  "Short Sleeve T-shirt" düşüyordu; artık adı içeren başlık kazanıyor.
+
 ### Eklenenler
 
 * **Beden seçimi.** Ürün sepete eklenirken sayfadaki beden seçenekleri de
@@ -121,6 +159,16 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   zaten orada duruyordu.
 
 ### Bilinen sınırlar
+
+* **Bazı mağazalar beden seçeneklerini ancak etkileşimden sonra basıyor.**
+  DeFacto'da bedenler "Sepete Ekle"ye basılınca çıkıyor, Champion ve Lacoste'ta
+  ise otomasyonla sürülen tarayıcıda hiç render edilmiyor. Eklenti sayfayı
+  okuduğu anda orada olmayan seçeneği göremiyor; o mağazalarda beden "Beden Gir"
+  ile elle yazılıyor.
+* **Renk, uzunluk ve depolama seçimi henüz yok.** Sepette yalnızca beden
+  seçilebiliyor; Jack & Jones'un ayrı "Uzunluk" ekseni, Apple'ın depolama
+  seçenekleri ve mağazaların renk seçenekleri için ortak bir "seçenek ekseni"
+  tasarımı gerekiyor.
 
 * **Yeni eklenen 54 mağazanın 53'ü canlı ürün sayfasında doğrulandı.**
   Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs

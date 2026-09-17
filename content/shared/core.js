@@ -728,7 +728,8 @@ function findInstallmentInfo() {
       return false;
     }
 
-    return /taksit secenekleri|taksitli odeme|taksitle ode|taksitle al/i.test(
+    // Tekil hâli de var: Konyalı Saat sayfanın altında "Taksit Seçeneği" yazıyor.
+    return /taksit secenek|taksitli odeme|taksitle ode|taksitle al|vade farksiz/i.test(
       normalized,
     );
   }
@@ -791,6 +792,25 @@ function findInstallmentInfo() {
   );
 
   if (weakRegularMatch) {
+    return {
+      installmentAvailable: true,
+      installmentText: "Taksit var",
+    };
+  }
+
+  // "Taksit Seçenekleri" başlığı/sekmesi sayfanın altında, ürün başlığından
+  // uzakta duruyor (Karaca, Konyalı Saat) ve yukarıdaki mesafe filtresine
+  // takılıyordu. İfade yeterince özel olduğu için sayfanın tamamında aranıyor.
+  const pageWideWeakMatch = elements.some((element) => {
+    const text = cleanText(element.textContent);
+
+    if (!text || text.length > 120) return false;
+    if (!isWeakInstallmentText(text, text)) return false;
+
+    return isVisibleElement(element);
+  });
+
+  if (pageWideWeakMatch) {
     return {
       installmentAvailable: true,
       installmentText: "Taksit var",

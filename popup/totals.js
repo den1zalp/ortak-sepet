@@ -121,14 +121,21 @@ function calculateCategoryTotal(items) {
 }
 
 function getInstallmentDisplay(item) {
-  // Taksit okunamadığında "Bilinmiyor" göstermiyoruz: kullanıcı için taksit
-  // yoksa yoktur. Bilinmiyor/yok ayrımı yalnızca depoda tutuluyor; fiyat
-  // güncellemesi sırasında bilinen bilgiyi ezmemek için gerekiyor
-  // (bkz. shared/cart.js → isUnknownInstallmentInfo).
   if (item.installmentAvailable === true) {
     return {
       text: translate("available"),
       bold: true,
+    };
+  }
+
+  // Taksit bilgisi bulunamadığında "Yok" yazmak yanlış: sayfada taksit
+  // seçeneği olduğu hâlde eklenti okuyamamış olabiliyor (Champion, Lacoste).
+  // Bilinmiyor ile yok farklı şeyler; ayrım zaten depoda tutuluyordu
+  // (bkz. shared/cart.js → isUnknownInstallmentInfo), artık arayüzde de var.
+  if (OrtakSepetCart.isUnknownInstallmentInfo(item)) {
+    return {
+      text: translate("unknown"),
+      bold: false,
     };
   }
 

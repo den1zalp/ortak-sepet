@@ -73,6 +73,16 @@ function pickPlatformTitle(structuredName, titleSelectors) {
   if (name) {
     const normalizedName = normalize(name);
 
+    // Görünen başlık yapılandırılmış addan daha zengin olabiliyor: Champion'da
+    // JSON-LD "Short Sleeve T-shirt" derken sayfada "Reverse Weave Core Short
+    // Sleeve T-shirt" yazıyor ve sepete kısa ad düşüyordu. Adı içeren başlık
+    // varsa o kazanır.
+    const richer = headings.find((heading) => normalize(heading).includes(normalizedName));
+
+    if (richer) return richer;
+
+    // Ya da tersi: başlık adın kısaltılmışı ve daha okunaklı olabiliyor
+    // (Supplementler'in JSON-LD adı sonunda tire taşıyor).
     const matching = headings.find(
       (heading) =>
         normalizedName.includes(normalize(heading)) &&
@@ -125,8 +135,12 @@ function parsePlatformProduct(options = {}) {
   // Structured data and og:image first: scanning the page for the biggest
   // picture can land on a campaign banner. The scan is the last resort, for
   // stores that publish neither.
+  // og:image logo olabiliyor; öyleyse sayfadaki ürün görseli aranıyor.
+  const metaImage = getAttr("meta[property='og:image']", "content");
+
   const image =
-    structured?.image || getAttr("meta[property='og:image']", "content") || findMainImage();
+    structured?.image ||
+    (looksLikeLogoImage(metaImage) ? findMainImage() || metaImage : metaImage || findMainImage());
 
   return {
     site,
