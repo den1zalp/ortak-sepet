@@ -537,6 +537,67 @@ const separator = element("div", {
 
 check("ayraç elendi", runScan({ containers: [separator] }).sizes.join(","), "M,L");
 
+// Denetim koşumunda diğer mağazalarda çıkanlar: breadcrumb adları ve karusel
+// sayacı (Marks & Spencer TR), sepete ekleme düğmesi (Oysho).
+const navNoise = element("div", {
+  attrs: { class: "size-selector" },
+  children: [
+    element("a", { text: "Erkek" }),
+    element("a", { text: "Giyim" }),
+    element("span", { text: "1 of 6" }),
+    element("button", { text: "Add to basket" }),
+    element("button", { text: "S (UK SREG)" }),
+    element("button", { text: "M (UK MREG)" }),
+  ],
+});
+
+check(
+  "breadcrumb ve karusel sayacı elendi",
+  runScan({ containers: [navNoise] }).sizes.join(","),
+  "S (UK SREG),M (UK MREG)",
+);
+
+// Adet seçicisinin rakamları beden değil. (Supplementler)
+const quantityBox = element("div", {
+  attrs: { class: "product-size adet-secimi" },
+  children: [
+    element("button", { text: "1" }),
+    element("button", { text: "2" }),
+    element("button", { text: "3" }),
+  ],
+});
+
+check("adet seçicisi okunmuyor", runScan({ containers: [quantityBox] }).sizes.length, 0);
+
+// Koca bir kap beden seçicisi değil, sayfa bölümüdür: Marks & Spencer TR'de
+// "beden" işaretli sarmalayıcı ürün açıklamasını ve mağaza şehirlerini de
+// kapsıyordu.
+const hugeSection = element("div", {
+  attrs: { class: "beden-ve-detay" },
+  children: [
+    element("p", { text: "x".repeat(700) }),
+    element("button", { text: "S" }),
+    element("button", { text: "M" }),
+  ],
+});
+
+check("koca kap okunmuyor", runScan({ containers: [hugeSection] }).sizes.length, 0);
+
+// Promosyon, stok uyarısı ve renk adı elendi. (Marks & Spencer TR, Supplementler)
+const promoNoise = element("div", {
+  attrs: { class: "size-box" },
+  children: [
+    element("span", { text: "%42" }),
+    element("span", { text: "Son 3 adet" }),
+    element("span", { text: "krem" }),
+    element("span", { text: "ECRU MIX" }),
+    element("button", { text: "HEMEN AL" }),
+    element("button", { text: "S (UK SREG)" }),
+  ],
+});
+
+check("promosyon ve renk elendi", runScan({ containers: [promoNoise] }).sizes.join(","), "S (UK SREG)");
+
 // --- yapılandırılmış veri yedeği ---
 const fromJsonLd = runScan({
   jsonLd: [

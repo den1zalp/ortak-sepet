@@ -18,6 +18,17 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   ("Sale price is" — Levi's UK) ve ayraç karakteri ("/" — Marks & Spencer).
   Ölçü tablosu taşıyan kap ile menü, modal ve başlık içindeki kaplar artık hiç
   okunmuyor; gerçek beden seçicisi ürün formunda durur.
+* **Kullanıcının bakmadığı mağazalar da tarandı ve aynı hatalar orada da
+  çıktı.** Elli dört mağazanın hepsi gerçek ürün sayfalarında gezilip okunan
+  başlık, taksit, görsel ve beden listesi tek tek gözden geçirildi. Çıkanlar:
+  ürün adı yerine adres parçası ("poco-f9-pro" — Mi Store TR ve UK), beden
+  listesinde breadcrumb ve karusel sayacı ("Erkek", "Giyim", "1 of 6" — Marks &
+  Spencer TR), sepete ekleme düğmesi (Oysho), adet seçicisinin rakamları
+  (Supplementler), indirim oranı ("%42"), stok uyarısı ("Son 3 adet"), renk
+  adları ("krem", "ECRU MIX") ve sayfa bölümlerinin kendisi ("Ürün Açıklaması",
+  "İSTANBUL"). Sonuncusu için kural kelime elemekten çıkıp yapısal oldu: gerçek
+  beden seçicisi küçük bir kutudur, metni altı yüz karakteri aşan kap sayfa
+  bölümüdür ve hiç okunmuyor.
 * **Türkçe büyük İ yüzünden eleme kuralları büyük harfli seçeneklerde
   çalışmıyordu.** "SLİM" küçültülünce noktası ayrı bir işaret olarak kalıyor ve
   kalıplar tutmuyordu; metin artık `shared/category.js` ile aynı biçimde

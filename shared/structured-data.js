@@ -514,7 +514,24 @@ const SIZE_TOKEN_PATTERN = new RegExp(
 // Spencer "Anasayfa") ve ekran okuyucu etiketi (Levi's UK "Sale price is").
 // Hepsi gerçek sayfalarda sepete beden diye yazılmıştı.
 const SIZE_UI_PATTERN =
-  /^(ara|search|gonder|submit|kapat|close|uygula|temizle|filtrele|sirala|anasayfa|home|devam|iptal|tamam|length|uzunluk|boy)$|giris yap|kayit ol|uye ol|parola|sifre|oturum|hesabim|price is|fiyat/i;
+  /^(ara|search|gonder|submit|kapat|close|uygula|temizle|filtrele|sirala|anasayfa|home|devam|iptal|tamam|length|uzunluk|boy)$|giris yap|kayit ol|uye ol|parola|sifre|oturum|hesabim|price is|fiyat|add to|sepete/i;
+
+// Breadcrumb ve gezinme adları ("Erkek", "Giyim" — Marks & Spencer TR) ile
+// karusel sayaçları ("1 of 6") beden değil.
+// Stok uyarısı, promosyon ve yardım bağlantıları beden kutusunun içinde ya da
+// hemen yanında duruyor: "Son 3 adet", "%42", "HEMEN AL", "Benzer ürünleri bul"
+// (Marks & Spencer TR ve Supplementler).
+const SIZE_PROMO_PATTERN =
+  /%|son \d+|hemen al|benzer|kali[pb]i nasil|kazancli|stokta|indirim|kampanya|\badet\b|shaker/i;
+
+// Renk adları beden seçicisinin yanında duruyor ve kısa oldukları için jeton
+// gibi görünüyorlar ("krem", "ECRU MIX" — Marks & Spencer TR). Beden adlarıyla
+// çakışan bir renk adı yok, bu yüzden liste güvenli.
+const COLOUR_WORD_PATTERN =
+  /^(siyah|beyaz|krem|ekru|ecru|bej|lacivert|mavi|kirmizi|yesil|sari|gri|antrasit|kahve|kahverengi|pembe|mor|turuncu|bordo|haki|vizon|gumus|altin|black|white|cream|navy|blue|red|green|yellow|grey|gray|pink|purple|orange|brown|beige|khaki|silver|gold|ivory|multi)(\s|$)/i;
+
+const SIZE_NAVIGATION_PATTERN =
+  /^(erkek|kadin|cocuk|bebek|genc|unisex|giyim|aksesuar|ayakkabi|canta|kozmetik|indirim|yeni)$|^\d+\s+of\s+\d+$/i;
 
 const SIZE_PLACEHOLDER_PATTERN =
   /seçin|secin|seçiniz|seciniz|choose|select|please|lütfen|lutfen|tablo|rehber|guide|chart|bedenimi bul|bedenini bul|find my|stokta yok|out of stock|tükendi|tukendi|bildir|notify|ekle|paylaş|paylas|favori|favourite|favorite|karşılaştır|karsilastir|e-posta|e-mail|email|telefon|adres|share|shipping|kargo|teslimat|iade/i;
@@ -527,7 +544,7 @@ const SIZE_FACET_PATTERN = /bedeninde|tum bedenler|adet urun|urun\)?$/i;
 // Beden tablosunun sekmeleri beden değil, ürün türü ve kalıp adları: Colin's ve
 // Tudors'ta sepete "GÖMLEK", "DENIM ÖLÇÜLERİ", "SLİM FİT" yazılıyordu.
 const GARMENT_WORD_PATTERN =
-  /olculeri|gomlek|tisort|t-?shirt|sweatshirt|triko|mont|pantolon|cargo|kemer|boxer|elbise|etek|ceket|ayakkabi|canta|denim|jean|polo yaka|slim|regular|relax|oversize|klasik|modern|kalip|buyuk beden|genis kalip|\bfit\b/i;
+  /olculeri|gomlek|tisort|t-?shirt|sweatshirt|triko|mont|pantolon|cargo|kemer|boxer|elbise|etek|ceket|ayakkabi|canta|denim|jean|polo yaka|slim|regular|relax|oversize|klasik|modern|kali[pb]|buyuk beden|genis kalip|\bfit\b/i;
 
 // Bazı mağazalar seçeneğin metnine etiketi de koyuyor: Under Armour'da her
 // beden "UK Size: 3" diye geliyor ve açılır listede tekrar tekrar "UK Size:"
@@ -599,6 +616,9 @@ function looksLikeSizeText(text) {
   if (!/[\p{L}\p{N}]/u.test(value)) return false;
 
   if (SIZE_UI_PATTERN.test(normalized)) return false;
+  if (SIZE_NAVIGATION_PATTERN.test(normalized)) return false;
+  if (SIZE_PROMO_PATTERN.test(normalized)) return false;
+  if (COLOUR_WORD_PATTERN.test(normalized)) return false;
   if (SIZE_FACET_PATTERN.test(normalized)) return false;
   if (GARMENT_WORD_PATTERN.test(normalized)) return false;
 
@@ -676,6 +696,27 @@ function isSelectedSizeOption(element) {
 // diye yazılıyordu. Kalıba "swatch" eklenemez — aynı sayfada beden düğmeleri de
 // "SizeSwatchesSection" sınıfını taşıyor ve gerçek beden listesi elenirdi.
 const COLOUR_CONTAINER_PATTERN = /renk|colou?r/i;
+
+// Adet seçicisinin rakamları beden jetonuna benziyor (Supplementler'de "1", "2",
+// "3" beden listesine giriyordu) ve ayakkabı bedenleriyle karışıyor; kabı
+// işaretinden tanıyıp hiç okumuyoruz.
+const QUANTITY_CONTAINER_PATTERN = /adet|quantity|\bqty\b|miktar/i;
+
+function isQuantityContainer(element) {
+  if (!element || !element.getAttribute) return false;
+
+  const attributes = [
+    element.getAttribute("name"),
+    element.getAttribute("class"),
+    element.getAttribute("id"),
+    element.getAttribute("data-testid"),
+    element.getAttribute("aria-label"),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return QUANTITY_CONTAINER_PATTERN.test(attributes);
+}
 
 // Beden tablosu (ölçü tablosu) bir seçici değil: içindeki hücreler ürün türü,
 // kalıp adı ve santimetre değerleri taşıyor. Desa'da sayfadaki tek "beden" kabı
@@ -919,6 +960,7 @@ function findSizeOptions() {
 
   for (const select of document.querySelectorAll("select")) {
     if (!hasSizeSignal(select)) continue;
+    if (isQuantityContainer(select)) continue;
 
     const fromSelect = collectSizesFromSelect(select);
 
@@ -946,7 +988,14 @@ function findSizeOptions() {
     // olmayan kapta önce ucuz olan çocuk sayısına bakıyoruz — gerçek bir beden
     // seçicisinde kırktan fazla seçenek olmuyor.
     if (!signalled && container.childElementCount > 40) continue;
+
+    // Gerçek beden seçicisi küçük bir kutudur. İşaretli bile olsa koca bir kap
+    // sayfa bölümüdür: Marks & Spencer TR'de "beden" işaretli sarmalayıcı ürün
+    // açıklamasını ve mağaza şehirlerini de kapsıyor ve hepsi beden listesine
+    // giriyordu.
+    if (cleanText(container.textContent).length > 600) continue;
     if (isColourContainer(container)) continue;
+    if (isQuantityContainer(container)) continue;
     if (isSizeChartContainer(container)) continue;
     if (isSiteChromeContainer(container)) continue;
     if (!isVisibleElement(container)) continue;

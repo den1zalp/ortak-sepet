@@ -97,8 +97,15 @@ function pickPlatformTitle(structuredName, titleSelectors) {
     }
   }
 
+  // Yapılandırılmış ad bazen ürün adı değil adres parçası oluyor
+  // ("poco-f9-pro" — Mi Store); boşluksuz, tireli ve küçük harfli metin ürün
+  // adı değildir, sayfadaki başlık ya da og:title daha doğru.
+  const looksLikeSlug = (text) =>
+    /^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(cleanText(text));
+
   const normalize = (text) => cleanText(text).toLocaleLowerCase("tr-TR");
-  const name = cleanText(structuredName);
+  const rawName = cleanText(structuredName);
+  const name = looksLikeSlug(rawName) ? "" : rawName;
 
   if (name) {
     const normalizedName = normalize(name);
