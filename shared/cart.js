@@ -28,71 +28,6 @@ var OrtakSepetCart = (function () {
     return String(text).replace(/\s+/g, " ").trim();
   }
 
-  // Seçilen seçenekler ürün kimliğinin parçası: aynı pantolonun 30 ve 32 bedeni
-  // sepette iki ayrı satır, ayrı adet. Aynısı renk, uzunluk ve depolama için de
-  // geçerli. Karşılaştırma büyük/küçük harf ve boşluk farkını yok sayar.
-  function normalizeSize(size) {
-    return cleanText(size).toLocaleLowerCase("tr-TR");
-  }
-
-  // Sayfadan okunmuş "tek beden" işareti (Levi's "OS", Champion "UNI", "Tek
-  // Ebat") bir seçim değil: ürünün bedeni yok demek. Depoda bu eleme
-  // gelmeden önce kaydedilmiş satırlar var ve sepette "Beden: OS" diye
-  // görünüyorlardı; okurken düşürülüyorlar. Parser tarafındaki aynı eleme
-  // shared/structured-data.js içinde. Kullanıcının elle yazdığı beden değer
-  // listesi taşımaz, o yüzden buradan etkilenmez.
-  const ONE_SIZE_PATTERN =
-    /^(os|uni|u|std|tek|onesize|one size|tek ebat|tek beden|tek boy|standart|standard|universal|beden yok)$/i;
-
-  function isOneSizeOnlyAxis(option) {
-    const values = option?.values || [];
-
-    return (
-      option?.key === "size" &&
-      values.length === 1 &&
-      ONE_SIZE_PATTERN.test(normalizeSize(values[0]).replace(/ı/g, "i"))
-    );
-  }
-
-  // Ürün eskiden yalnızca beden taşıyordu. Depoda o dönemden kalan kayıtlar var;
-  // okurken tek eksenli bir seçenek listesine çevriliyorlar ki sepet, dışa
-  // aktarma ve fiyat güncellemesi tek bir yapı görsün.
-  function readOptions(item) {
-    if (Array.isArray(item?.options)) {
-      return item.options.filter((option) => !isOneSizeOnlyAxis(option));
-    }
-
-    if (item?.size || item?.sizes?.length) {
-      return [
-        {
-          key: "size",
-          label: "Beden",
-          values: item.sizes || [],
-          selected: item.size || "",
-        },
-      ].filter((option) => !isOneSizeOnlyAxis(option));
-    }
-
-    return [];
-  }
-
-  // Satırın kimliği: hangi eksende ne seçilmiş. Seçilmemiş eksen imzaya
-  // girmiyor, yoksa "renk seçilmemiş" ile "renk yok" farklı satır olurdu.
-  function optionSignature(options) {
-    return (options || [])
-      .filter((option) => cleanText(option?.selected))
-      .map((option) => `${option.key}=${normalizeSize(option.selected)}`)
-      .sort()
-      .join("|");
-  }
-
-  function isSameCartLine(item, url, options) {
-    return (
-      normalizeUrl(item.url) === url &&
-      optionSignature(readOptions(item)) === optionSignature(options)
-    );
-  }
-
   function normalizeUrl(url) {
     if (!url) return "";
 
@@ -359,10 +294,6 @@ var OrtakSepetCart = (function () {
 
     existingItem.image = product.image || existingItem.image;
 
-    // Seçilenler zaten eşleşti (kimliğin parçası); tazelenen yalnızca sayfadaki
-    // seçenek listeleri — satıcı beden ya da renk eklemiş, çıkarmış olabilir.
-    existingItem.options = mergeOptions(readOptions(existingItem), readOptions(product));
-
     const currency = product.currency || detectCurrencyFromPrice(existingItem.price);
     existingItem.currency = currency;
     existingItem.currencySymbol = product.currencySymbol || currencySymbolForCurrency(currency);
@@ -379,32 +310,6 @@ var OrtakSepetCart = (function () {
     existingItem.updatedAt = new Date().toISOString();
 
     return existingItem;
-  }
-
-  // Tazelemede değerler sayfadan, seçimler kullanıcıdan gelir. Sayfada artık
-  // bulunmayan bir eksen (mağaza kaldırmış olabilir) kullanıcının seçimiyle
-  // birlikte duruyor: satır o seçime ait.
-  function mergeOptions(currentOptions, freshOptions) {
-    const fresh = new Map((freshOptions || []).map((option) => [option.key, option]));
-    const merged = [];
-
-    for (const option of currentOptions || []) {
-      const incoming = fresh.get(option.key);
-
-      merged.push({
-        ...option,
-        label: incoming?.label || option.label,
-        values: incoming?.values?.length ? incoming.values : option.values,
-      });
-
-      fresh.delete(option.key);
-    }
-
-    for (const option of fresh.values()) {
-      merged.push({ ...option, selected: "" });
-    }
-
-    return merged;
   }
 
   function createId() {
@@ -424,7 +329,6 @@ var OrtakSepetCart = (function () {
       currency,
       currencySymbol: product.currencySymbol || currencySymbolForCurrency(currency),
       region: resolveRegion(product, currency),
-      options: readOptions(product),
       quantity: 1,
       selected: true,
       category: null,
@@ -446,8 +350,8 @@ var OrtakSepetCart = (function () {
     const items = await getItems();
     const productUrl = normalizeUrl(product.url);
 
-    const existingItem = items.find((item) =>
-      isSameCartLine(item, productUrl, readOptions(product)),
+    const existingItem = items.find(
+      (item) => normalizeUrl(item.url) === productUrl,
     );
 
     if (existingItem) {
@@ -490,10 +394,6 @@ var OrtakSepetCart = (function () {
       quantity: items[index].quantity,
       selected: items[index].selected,
       category: items[index].category,
-      // The chosen options are the user's and part of this line's identity: a
-      // refresh that read a different size off the page must not move the item
-      // onto it. Only the value lists are renewed.
-      options: mergeOptions(readOptions(items[index]), readOptions(refreshedItem)),
     };
 
     await setItems(items);
@@ -515,15 +415,10 @@ var OrtakSepetCart = (function () {
     getQuantity,
     getViewMode,
     hasUnavailableMainPrice,
-    isSameCartLine,
     isUnknownInstallmentInfo,
-    mergeOptions,
     mergeInstallmentAvailable,
     mergeInstallmentText,
-    normalizeSize,
     normalizeUrl,
-    optionSignature,
-    readOptions,
     regionForCurrency,
     resolveRegion,
     saveRefreshedItem,

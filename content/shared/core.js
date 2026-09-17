@@ -52,12 +52,7 @@ function extractTryPriceCandidates(rawPrice) {
   const text = normalizeSplitTryPriceText(rawPrice);
   if (!text) return [];
 
-  // Üçüncü dal noktayı ondalık ayracı olarak okuyor. TR siteleri tutarı
-  // genelde "1.699,99" yazıyor ama yazmayan da var: DeFacto "1699.99 TL"
-  // basıyor ve o biçim hiçbir dala uymadığı için yalnızca sondaki "99 TL"
-  // eşleşiyordu — sepete 1699,99 yerine 99 TL yazılıyordu. Dal para birimi
-  // şart koşuyor ki "4.5 yıldız" gibi ondalıklar fiyat sanılmasın.
-  const regex = /₺\s*\d{1,3}(?:[.]\d{3})*(?:,\d{1,2})?|\d{1,3}(?:[.]\d{3})+(?:,\d{1,2})?\s*(?:TL|₺)?|\d+[.]\d{1,2}(?!\d)\s*(?:TL|₺)|\d+(?:,\d{1,2})\s*(?:TL|₺)?|\d+\s*(?:TL|₺)/gi;
+  const regex = /₺\s*\d{1,3}(?:[.]\d{3})*(?:,\d{1,2})?|\d{1,3}(?:[.]\d{3})+(?:,\d{1,2})?\s*(?:TL|₺)?|\d+(?:,\d{1,2})\s*(?:TL|₺)?|\d+\s*(?:TL|₺)/gi;
 
   const candidates = [];
   let match;
@@ -172,48 +167,6 @@ function getSiteName() {
   if (isSiteHost("boyner.com.tr")) return "Boyner";
   if (isSiteHost("nike.com")) return "Nike";
   if (isSiteHost("adidas.com.tr")) return "Adidas";
-  if (isSiteHost("mavi.com")) return "Mavi";
-  if (isSiteHost("ltbjeans.com")) return "LTB";
-  if (isSiteHost("koton.com")) return "Koton";
-  if (isSiteHost("levis.com.tr")) return "Levi's";
-  if (isSiteHost("lcw.com")) return "LC Waikiki";
-  if (isSiteHost("colins.com.tr")) return "Colin's";
-  if (isSiteHost("tudors.com")) return "Tudors";
-  if (isSiteHost("defacto.com.tr")) return "DeFacto";
-  if (isSiteHost("jackjones.com.tr")) return "Jack & Jones";
-  if (isSiteHost("gratis.com")) return "Gratis";
-  if (isSiteHost("watsons.com.tr")) return "Watsons";
-  if (isSiteHost("rossmann.com.tr")) return "Rossmann";
-  if (isSiteHost("atasunoptik.com.tr")) return "Atasun Optik";
-  if (isSiteHost("beymen.com")) return "Beymen";
-  if (isSiteHost("calvinklein.com")) return "Calvin Klein";
-  if (isSiteHost("championturkiye.com")) return "Champion";
-  if (isSiteHost("columbia.com.tr")) return "Columbia";
-  if (isSiteHost("desa.com.tr")) return "Desa";
-  if (isSiteHost("karaca.com")) return "Karaca";
-  if (isSiteHost("konyalisaat.com.tr")) return "Konyalı Saat";
-  if (isSiteHost("lacoste.com.tr")) return "Lacoste";
-  if (isSiteHost("lego.tr")) return "LEGO";
-  if (isSiteHost("marksandspencer.com.tr")) return "Marks & Spencer";
-  if (isSiteHost("mudo.com.tr")) return "Mudo";
-  if (isSiteHost("penti.com")) return "Penti";
-  if (isSiteHost("saatvesaat.com.tr")) return "Saat&Saat";
-  if (isSiteHost("superstep.com.tr")) return "SuperStep";
-  if (isSiteHost("supplementler.com")) return "Supplementler";
-  if (isSiteHost("underarmour.com.tr")) return "Under Armour";
-  if (isSiteHost("zuhalmuzik.com")) return "Zuhal Müzik";
-  if (isSiteHost("madamecoco.com")) return "Madame Coco";
-  if (isSiteHost("englishhome.com")) return "English Home";
-  // Aşağıdaki markaların iki bölgedeki mağazası aynı alan adında; content
-  // script yalnızca Türkiye yoluna enjekte edildiği için (manifest.json) host
-  // eşleşmesi burada Türkiye mağazası demek.
-  if (isSiteHost("apple.com")) return "Apple";
-  if (isSiteHost("mi.com")) return "Mi Store";
-  if (isSiteHost("oysho.com")) return "Oysho";
-  if (isSiteHost("pandora.net")) return "Pandora";
-  if (isSiteHost("pullandbear.com")) return "Pull & Bear";
-  if (isSiteHost("stradivarius.com")) return "Stradivarius";
-  if (isSiteHost("swatch.com")) return "Swatch";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }
@@ -728,8 +681,7 @@ function findInstallmentInfo() {
       return false;
     }
 
-    // Tekil hâli de var: Konyalı Saat sayfanın altında "Taksit Seçeneği" yazıyor.
-    return /taksit secenek|taksitli odeme|taksitle ode|taksitle al|vade farksiz/i.test(
+    return /taksit secenekleri|taksitli odeme|taksitle ode|taksitle al/i.test(
       normalized,
     );
   }
@@ -792,25 +744,6 @@ function findInstallmentInfo() {
   );
 
   if (weakRegularMatch) {
-    return {
-      installmentAvailable: true,
-      installmentText: "Taksit var",
-    };
-  }
-
-  // "Taksit Seçenekleri" başlığı/sekmesi sayfanın altında, ürün başlığından
-  // uzakta duruyor (Karaca, Konyalı Saat) ve yukarıdaki mesafe filtresine
-  // takılıyordu. İfade yeterince özel olduğu için sayfanın tamamında aranıyor.
-  const pageWideWeakMatch = elements.some((element) => {
-    const text = cleanText(element.textContent);
-
-    if (!text || text.length > 120) return false;
-    if (!isWeakInstallmentText(text, text)) return false;
-
-    return isVisibleElement(element);
-  });
-
-  if (pageWideWeakMatch) {
     return {
       installmentAvailable: true,
       installmentText: "Taksit var",

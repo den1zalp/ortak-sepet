@@ -34,9 +34,6 @@ function normalizeProduct(product) {
   const fallback = parseGenericProduct();
   const installmentInfo = findInstallmentInfo();
   const shippingInfo = findShippingInfo();
-  // Beden taraması da taksit/kargo gibi tüm sayfayı geziyor; burada bir kez
-  // çalışır, waitForPrice döngüsünün içinde asla.
-  const productOptions = findProductOptions();
 
   const price =
     product?.price ||
@@ -62,15 +59,6 @@ function normalizeProduct(product) {
     currency: product?.currency || fallbackCurrency || null,
     currencySymbol: product?.currencySymbol || null,
     region: product?.region || "TR",
-
-    // Parser kendi seçeneklerini verebilir; vermediyse jenerik tarama.
-    options: dropOneSizeAxes(
-      product?.options?.length
-        ? product.options
-        : product?.sizes?.length
-          ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
-          : productOptions,
-    ),
 
     installmentAvailable: installmentInfo.installmentAvailable,
     installmentText: installmentInfo.installmentText,

@@ -19,9 +19,6 @@ function normalizeProduct(product) {
   const fallback = parseGenericProduct();
   const financeInfo = findFinanceInfo();
   const shippingInfo = findShippingInfo();
-  // The size scan walks the whole page like the finance and shipping ones do:
-  // it runs once here, never inside the waitForPrice loop.
-  const productOptions = findProductOptions();
 
   const price =
     product?.price ||
@@ -47,15 +44,6 @@ function normalizeProduct(product) {
     currency: product?.currency || fallbackCurrency || null,
     currencySymbol: product?.currencySymbol || null,
     region: product?.region || "UK",
-
-    // A parser may supply its own options; otherwise the generic scan wins.
-    options: dropOneSizeAxes(
-      product?.options?.length
-        ? product.options
-        : product?.sizes?.length
-          ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
-          : productOptions,
-    ),
 
     installmentAvailable: financeInfo.installmentAvailable,
     installmentText: financeInfo.installmentText,

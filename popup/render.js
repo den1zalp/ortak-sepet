@@ -165,73 +165,6 @@ function applyCategoryAccent(element, categoryName) {
   element.style.setProperty("--category-color", getCategoryColor(categoryName));
 }
 
-// Seçenek satırı. Ürün sayfasında ne varsa o gösteriliyor: beden, renk,
-// uzunluk, depolama. Eksen yoksa satır da yok — kullanıcı televizyonun altında
-// boş bir "Beden" alanı görmüyor.
-//
-// Kullanıcının seçtiği değer listede olmayabilir: satıcı o bedeni kaldırmış ya
-// da ürün sayfası bu kez seçenekleri geç render etmiş olabilir. Sepetteki satır
-// o değere ait olduğu için listeye başa ekleniyor; yoksa seçim sessizce
-// kaybolurdu.
-function createOptionRow(item, option, fullTitle) {
-  const row = document.createElement("div");
-  row.className = "detail-row";
-
-  const label = document.createElement("span");
-  label.className = "detail-label";
-  label.textContent = `${translateOptionLabel(option)}:`;
-  row.appendChild(label);
-
-  const values = Array.isArray(option.values) ? option.values : [];
-
-  // Tek değerli eksende seçilecek bir şey yok; açılır liste yerine değerin
-  // kendisi yazılıyor (Jack & Jones'ta renk tek: "Gri / Asphalt").
-  if (values.length <= 1) {
-    const value = document.createElement("span");
-    value.className = option.selected
-      ? "detail-value detail-value-strong"
-      : "detail-value";
-    value.textContent = option.selected || translate("sizeUnknown");
-    row.appendChild(value);
-
-    return row;
-  }
-
-  const select = document.createElement("select");
-  select.className = "size-select";
-  select.dataset.setOption = item.id;
-  select.dataset.optionKey = option.key;
-  select.setAttribute(
-    "aria-label",
-    translate("optionLabel", { option: translateOptionLabel(option), title: fullTitle }),
-  );
-
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = translate("optionPlaceholder", {
-    option: translateOptionLabel(option),
-  });
-  placeholder.selected = !option.selected;
-  select.appendChild(placeholder);
-
-  const listed =
-    option.selected && !values.includes(option.selected)
-      ? [option.selected, ...values]
-      : values;
-
-  for (const value of listed) {
-    const element = document.createElement("option");
-    element.value = value;
-    element.textContent = value;
-    element.selected = value === option.selected;
-    select.appendChild(element);
-  }
-
-  row.appendChild(select);
-
-  return row;
-}
-
 function createCartItemElement(item) {
   const wrapper = document.createElement("div");
   wrapper.className = isSelected(item)
@@ -305,15 +238,6 @@ function createCartItemElement(item) {
   details.appendChild(
     createDetailRow(translate("price"), getPriceDisplayText(item), Boolean(item.price)),
   );
-
-  // Ürün sayfasında bulunan her seçenek ekseni için bir satır; hiçbiri yoksa
-  // hiç satır yok. Bedeni elle yazmak isteyen için "Beden Gir" düğmesi eylem
-  // satırında duruyor.
-  for (const option of OrtakSepetCart.readOptions(item)) {
-    if (!option.values?.length && !option.selected) continue;
-
-    details.appendChild(createOptionRow(item, option, fullTitle));
-  }
 
   const stockDisplayText = getStockDisplayText(item);
   if (stockDisplayText) {
@@ -398,14 +322,6 @@ function createCartItemElement(item) {
   editPriceButton.dataset.editPrice = item.id;
   editPriceButton.setAttribute("aria-label", translate("manualPriceLabel", { title: fullTitle }));
 
-  // Sayfadan seçenek okunabildiyse seçim açılır listeden yapılıyor; düğme
-  // yalnızca hiç eksen yokken gerekiyor.
-  const editSizeButton = document.createElement("button");
-  editSizeButton.className = "small-button";
-  editSizeButton.textContent = translate("editSize");
-  editSizeButton.dataset.editSize = item.id;
-  editSizeButton.setAttribute("aria-label", translate("editSizeLabel", { title: fullTitle }));
-
   const removeButton = document.createElement("button");
   removeButton.className = "small-button";
   removeButton.textContent = translate("remove");
@@ -415,11 +331,6 @@ function createCartItemElement(item) {
   actions.appendChild(purchaseButton);
   actions.appendChild(openButton);
   actions.appendChild(editPriceButton);
-
-  if (!OrtakSepetCart.readOptions(item).some((option) => option.values?.length)) {
-    actions.appendChild(editSizeButton);
-  }
-
   actions.appendChild(removeButton);
 
   if (itemNeedsPermission(item)) {
@@ -677,12 +588,6 @@ function createPurchaseElement(record) {
   details.appendChild(
     createDetailRow(translate("price"), getPriceDisplayText(record), Boolean(record.price)),
   );
-  for (const option of OrtakSepetCart.readOptions(record)) {
-    if (!option.selected) continue;
-
-    details.appendChild(createDetailRow(translateOptionLabel(option), option.selected, true));
-  }
-
   details.appendChild(
     createDetailRow(translate("csvQuantity"), String(getQuantity(record)), false),
   );

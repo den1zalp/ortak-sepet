@@ -399,14 +399,6 @@ async function updateSingleItem(item) {
         site: freshProduct.site || item.site,
         url: item.url,
 
-        // Seçenek listeleri tazeleniyor (satıcı beden ya da renk eklemiş,
-        // çıkarmış olabilir); kullanıcının seçtikleri satırın kimliği olduğu
-        // için korunuyor.
-        options: OrtakSepetCart.mergeOptions(
-          OrtakSepetCart.readOptions(item),
-          OrtakSepetCart.readOptions(freshProduct),
-        ),
-
         currency,
         currencySymbol: freshProduct.currencySymbol || item.currencySymbol || OrtakSepetCart.currencySymbolForCurrency(currency),
         region: OrtakSepetCart.resolveRegion(freshProduct, currency) || item.region,

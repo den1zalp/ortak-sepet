@@ -164,13 +164,6 @@ function isBadImageCandidate(url, alt = "", element = null) {
 }
 
 
-// Alan adı eşleşmesi parça aramasıyla yapılmamalı: "marksandspencer.com" parça
-// olarak "marksandspencer.com.tr" içinde de geçiyor ve site adı yanlış çıkardı.
-function isUkSiteHost(domain) {
-  const host = window.location.hostname.replace(/^www\d*\./, "");
-  return host === domain || host.endsWith(`.${domain}`);
-}
-
 function getSiteName() {
   const host = window.location.hostname.replace("www.", "");
 
@@ -196,23 +189,6 @@ function getSiteName() {
   if (host === "nike.com" || host.endsWith(".nike.com")) return "Nike UK";
   if (host.includes("adidas.co.uk")) return "Adidas UK";
   if (host.includes("ifixit.com")) return "iFixit UK";
-  if (isUkSiteHost("levi.com")) return "Levi's UK";
-  if (isUkSiteHost("jackjones.com")) return "Jack & Jones UK";
-  if (isUkSiteHost("calvinklein.co.uk")) return "Calvin Klein UK";
-  if (isUkSiteHost("championstore.com")) return "Champion";
-  if (isUkSiteHost("columbiasportswear.co.uk")) return "Columbia UK";
-  if (isUkSiteHost("marksandspencer.com")) return "Marks & Spencer UK";
-  if (isUkSiteHost("underarmour.co.uk")) return "Under Armour UK";
-  // Bu markaların Türkiye mağazası da aynı alan adında; content script yalnızca
-  // İngiltere yoluna/alt alan adına enjekte ediliyor (bkz. manifest.json).
-  if (isUkSiteHost("apple.com")) return "Apple UK";
-  if (isUkSiteHost("lacoste.com")) return "Lacoste UK";
-  if (isUkSiteHost("lego.com")) return "LEGO UK";
-  if (isUkSiteHost("mi.com")) return "Mi Store UK";
-  if (isUkSiteHost("pandora.net")) return "Pandora UK";
-  if (isUkSiteHost("pullandbear.com")) return "Pull & Bear UK";
-  if (isUkSiteHost("stradivarius.com")) return "Stradivarius UK";
-  if (isUkSiteHost("swatch.com")) return "Swatch UK";
 
   return host;
 }

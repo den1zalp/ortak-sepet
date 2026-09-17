@@ -121,21 +121,14 @@ function calculateCategoryTotal(items) {
 }
 
 function getInstallmentDisplay(item) {
+  // Taksit okunamadığında "Bilinmiyor" göstermiyoruz: kullanıcı için taksit
+  // yoksa yoktur. Bilinmiyor/yok ayrımı yalnızca depoda tutuluyor; fiyat
+  // güncellemesi sırasında bilinen bilgiyi ezmemek için gerekiyor
+  // (bkz. shared/cart.js → isUnknownInstallmentInfo).
   if (item.installmentAvailable === true) {
     return {
       text: translate("available"),
       bold: true,
-    };
-  }
-
-  // Taksit bilgisi bulunamadığında "Yok" yazmak yanlış: sayfada taksit
-  // seçeneği olduğu hâlde eklenti okuyamamış olabiliyor (Champion, Lacoste).
-  // Bilinmiyor ile yok farklı şeyler; ayrım zaten depoda tutuluyordu
-  // (bkz. shared/cart.js → isUnknownInstallmentInfo), artık arayüzde de var.
-  if (OrtakSepetCart.isUnknownInstallmentInfo(item)) {
-    return {
-      text: translate("unknown"),
-      bold: false,
     };
   }
 
@@ -231,25 +224,4 @@ function getLastUpdateText(item) {
   }
 
   return translate("lastSuccess");
-}
-
-// Bilinen eksenlerin adı kullanıcının dilinde; bilinmeyen bir eksen çıkarsa
-// sayfanın kendi etiketi gösteriliyor.
-function translateOptionLabel(option) {
-  const known = {
-    size: "size",
-    colour: "optionColour",
-    length: "optionLength",
-    storage: "optionStorage",
-  }[option?.key];
-
-  return known ? translate(known) : option?.label || "";
-}
-
-// "Beden: M · Renk: Siyah" — CSV ve panoya kopyalanan liste için.
-function formatSelectedOptions(item) {
-  return OrtakSepetCart.readOptions(item)
-    .filter((option) => option.selected)
-    .map((option) => `${translateOptionLabel(option)}: ${option.selected}`)
-    .join(" · ");
 }

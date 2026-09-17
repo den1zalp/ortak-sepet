@@ -21,8 +21,6 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Taksit / finance bilgisi okuma
 * TL ve GBP toplamlarını ayrı ayrı hesaplama
 * Genel toplam ve seçili ürün toplamı hesaplama
-* Ürün sayfasındaki beden seçeneklerini okuyup sepette seçtirme
-  (aynı ürünün farklı bedeni ayrı satır olur)
 * Ürün adedi artırma ve azaltma
 * Aynı ürün tekrar eklenirse adedi artırma
 * Satın alınan ürünü "Alındı" ile ayrı listeye taşıma
@@ -80,46 +78,6 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * H&M
 * JeansLab
 
-* Mavi
-* LTB
-* Koton
-* Levi's Türkiye
-* LC Waikiki
-* Colin's
-* Tudors
-* DeFacto
-* Jack & Jones Türkiye
-* Gratis
-* Watsons
-* Rossmann
-* Apple Türkiye (`apple.com/tr`)
-* Atasun Optik
-* Beymen
-* Calvin Klein Türkiye (`tr.calvinklein.com`)
-* Champion Türkiye
-* Columbia Türkiye
-* Desa
-* Karaca
-* Konyalı Saat
-* Lacoste Türkiye
-* LEGO Türkiye (`lego.tr`)
-* Marks & Spencer Türkiye
-* Mi Store Türkiye (`mi.com/tr`)
-* Mudo
-* Oysho (`oysho.com/tr`)
-* Pandora Türkiye (`tr.pandora.net`)
-* Penti
-* Pull & Bear Türkiye (`pullandbear.com/tr`)
-* Saat&Saat
-* Stradivarius Türkiye (`stradivarius.com/tr`)
-* SuperStep
-* Supplementler (`supplementler.com`)
-* Swatch Türkiye (`swatch.com/tr-tr`)
-* Under Armour Türkiye
-* Zuhal Müzik
-* Madame Coco
-* English Home
-
 ### İngiltere
 
 * Amazon UK
@@ -142,21 +100,6 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Nike UK (`nike.com/gb`)
 * Adidas UK
 * iFixit UK (`ifixit.com/en-gb`)
-* Levi's UK (`levi.com/GB`)
-* Jack & Jones UK (`jackjones.com/en-gb`)
-* Apple UK (`apple.com/uk`)
-* Calvin Klein UK
-* Champion (`championstore.com`)
-* Columbia UK (`columbiasportswear.co.uk`)
-* Lacoste UK (`lacoste.com/gb`)
-* LEGO UK (`lego.com/en-gb`)
-* Marks & Spencer UK
-* Mi Store UK (`mi.com/uk`)
-* Pandora UK (`uk.pandora.net`)
-* Pull & Bear UK (`pullandbear.com/gb`)
-* Stradivarius UK (`stradivarius.com/gb`)
-* Swatch UK (`swatch.com/en-gb`)
-* Under Armour UK
 
 ## Kullanım
 

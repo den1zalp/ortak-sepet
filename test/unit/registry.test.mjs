@@ -53,23 +53,14 @@ function loadBlock(blockIndex, entryFile, hosts, registryGetter) {
   const getParser = context[registryGetter];
   check(`${registryGetter} global`, typeof getParser === "function");
 
-  for (const url of hosts) {
-    const parser = getParser(url);
-    check(`${url} -> ${parser ? parser.id : "YOK"}`, Boolean(parser));
+  for (const host of hosts) {
+    const parser = getParser(`https://www.${host}/product/1`);
+    check(`${host} -> ${parser ? parser.id : "YOK"}`, Boolean(parser));
   }
 }
 
-// Eşleşme kalıbından sınanacak bir adres üretir. Kalıpların hepsi
-// "*://*.alan.com/*" biçiminde değil: bazı mağazalar global alan adının bir
-// yolunda ("*://*.nike.com/tr/*"), bazıları ayrı bir alt alan adında
-// ("*://tr.pandora.net/*") ve parser bunların hepsine düşmeli.
-function matchPatternToUrl(pattern) {
-  const withoutScheme = pattern.replace(/^\*:\/\//, "").replace(/^\*\./, "");
-  return `https://${withoutScheme.replace(/\/\*$/, "")}/product/1`;
-}
-
-const trHosts = manifest.content_scripts[0].matches.map(matchPatternToUrl);
-const ukHosts = manifest.content_scripts[1].matches.map(matchPatternToUrl);
+const trHosts = manifest.content_scripts[0].matches.map((m) => m.replace("*://*.", "").replace("/*", ""));
+const ukHosts = manifest.content_scripts[1].matches.map((m) => m.replace("*://*.", "").replace("/*", ""));
 
 console.log("--- TR ---");
 loadBlock(0, "content.js", trHosts, "getOrtakSepetParserForUrl");
