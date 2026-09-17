@@ -659,6 +659,45 @@ check(
   "Antrasit",
 );
 
+// Ürün kodu rengin adı değil ve rengin adı kodla birlikte yazılıyor. LC
+// Waikiki'de renk iki ayrı yerde duruyor: "Renk: Yeni Siyah / W60094Z4-CVL"
+// satırı (yanında kodu kopyalayan düğme) ve diğer renklerin kutucukları.
+const lcwColourLine = element("div", {
+  attrs: { class: "product-detail__color" },
+  children: [
+    element("span", { text: "Renk:" }),
+    element("span", { text: "Yeni Siyah / W60094Z4-CVL" }),
+    element("button", { attrs: { title: "W60094Z4-CVL" } }),
+  ],
+});
+
+const lcwSwatches = element("div", {
+  attrs: { class: "product-detail__colors" },
+  children: [
+    element("span", { attrs: { title: "Koyu Lacivert" } }),
+    element("span", { attrs: { title: "Antrasit" } }),
+    element("span", { attrs: { title: "Koyu Bej" } }),
+    element("span", { text: "1 Renk" }),
+    element("span", { text: "+1" }),
+  ],
+});
+
+const lcwAxis = runScanAxes({ containers: [lcwColourLine, lcwSwatches] }).find(
+  (axis) => axis.key === "colour",
+);
+
+check("renk adı koddan ayrıldı", lcwAxis?.values.join(","), "Yeni Siyah,Koyu Lacivert,Antrasit,Koyu Bej");
+check("etiket satırındaki renk seçili geldi", lcwAxis?.selected, "Yeni Siyah");
+
+// Kod ekini atan kural gerçek bedenleri bozmamalı: "29/32" bir beden, ayraçın
+// iki yanında boşluk yok.
+const slashSizes = element("div", {
+  attrs: { class: "size-box" },
+  children: [element("button", { text: "29/32" }), element("button", { text: "30/32" })],
+});
+
+check("bölü işaretli beden bozulmuyor", runScan({ containers: [slashSizes] }).sizes.join(","), "29/32,30/32");
+
 // Renk kodu renk adı değil. (Mi UK)
 const hexSwatches = element("div", {
   attrs: { class: "colour-options" },

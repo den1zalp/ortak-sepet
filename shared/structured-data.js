@@ -618,6 +618,29 @@ function stripOptionLabelPrefix(value) {
   return withoutColon ? withoutColon[2] : value;
 }
 
+// Ürün/varyant kodu: boşluksuz, hem harf hem rakam taşıyan kısa metin
+// ("W60094Z4-CVL" — LC Waikiki). Renk adı böyle görünmez ama beden görünebilir
+// ("W32L34"), o yüzden yalnızca renk ekseninde eleniyor.
+function looksLikeProductCode(value) {
+  return (
+    value.length >= 5 &&
+    !/\s/.test(value) &&
+    /[A-Za-z]/.test(value) &&
+    /\d/.test(value) &&
+    /^[A-Za-z0-9._\/-]+$/.test(value)
+  );
+}
+
+// LC Waikiki rengi "Yeni Siyah / W60094Z4-CVL" diye yazıyor: adın yanında ürün
+// kodu duruyor ve birleşik metin uzunluk sınırına takılıp eleniyordu, geriye
+// kopyala düğmesinin title'ındaki çıplak kod kalıyordu. Kod eki atılıp rengin
+// adı bırakılıyor. Ayraçların iki yanındaki boşluk şart: "29/32" bir beden.
+function stripOptionCodeSuffix(value) {
+  const match = value.match(/^(.+?)\s+[\/|-]\s+(\S+)$/);
+
+  return match && looksLikeProductCode(match[2]) ? match[1].trim() : value;
+}
+
 function looksLikeOptionText(text, axis) {
   const value = cleanText(text);
 
@@ -643,8 +666,16 @@ function looksLikeOptionText(text, axis) {
 
   if (axis === "colour") {
     // Renk bir sayı değil: Tudors'ta "43", English Home'da "4" renk listesine
-    // giriyordu.
-    if (/^[\d.,\/-]+$/.test(value)) return false;
+    // giriyordu. Artı işareti de sayı sayılıyor: LC Waikiki diğer renkleri
+    // "+1" rozetiyle gösteriyor.
+    if (/^[+\d.,\/-]+$/.test(value)) return false;
+
+    // Ürün kodu rengin adı değil: LC Waikiki'de kopyala düğmesinin title'ındaki
+    // "W60094Z4-CVL" sepete renk diye yazılıyordu.
+    if (looksLikeProductCode(value)) return false;
+
+    // Kaç renk olduğunu söyleyen rozet bir renk değil ("1 Renk" — LC Waikiki).
+    if (/^\+?\d+\s*(renk|renkler|colou?rs?)$/i.test(normalized)) return false;
 
     // Renk kodu rengin adı değil: Mi UK'de swatch'ın "#000000" değeri listeye
     // "Black"in yanına ayrı bir renk gibi giriyordu.
@@ -851,8 +882,8 @@ function collectOptionsFromSelect(select, axis) {
   let selected = "";
 
   for (const option of Array.from(select.options || [])) {
-    const text = stripOptionLabelPrefix(
-      cleanText(option.textContent) || cleanText(option.value),
+    const text = stripOptionCodeSuffix(
+      stripOptionLabelPrefix(cleanText(option.textContent) || cleanText(option.value)),
     );
 
     if (!looksLikeOptionText(text, axis)) continue;
@@ -864,6 +895,20 @@ function collectOptionsFromSelect(select, axis) {
   }
 
   return { values, selected };
+}
+
+// "Renk: Yeni Siyah" bir seçici değil, sayfanın o an seçili olanı söylediği
+// satırdır. LC Waikiki'de rengin adı yalnızca burada yazıyor — kutucuklar
+// diğer renklerin ayrı ürün sayfalarına götürdüğü için seçili olanın kutucuğu
+// yok ve sepette renk satırı boş geliyordu.
+function isLabelValueLine(container, axis) {
+  const pattern = OPTION_LABEL_PATTERNS[axis];
+
+  if (!pattern) return false;
+
+  const head = cleanText(container.textContent).match(/^([^:]{1,14}):\s*\S/);
+
+  return Boolean(head && pattern.test(normalizeOptionWords(head[1])));
 }
 
 function collectOptionsFromContainer(container, axis, requireStrictToken) {
@@ -885,7 +930,7 @@ function collectOptionsFromContainer(container, axis, requireStrictToken) {
     if (candidate.querySelector && candidate.querySelector("li, button, label, a")) continue;
 
     // Renk kutucukları çoğu sitede metinsiz; adı title/alt niteliğinde taşıyorlar.
-    const text = stripOptionLabelPrefix(
+    const raw = stripOptionLabelPrefix(
       cleanText(candidate.getAttribute("data-size")) ||
         cleanText(candidate.getAttribute("aria-label")) ||
         cleanText(candidate.getAttribute("title")) ||
@@ -894,6 +939,8 @@ function collectOptionsFromContainer(container, axis, requireStrictToken) {
         cleanText(candidate.value),
     );
 
+    const text = stripOptionCodeSuffix(raw);
+
     if (!looksLikeOptionText(text, axis)) continue;
     if (requireStrictToken && !isStrictSizeToken(text)) continue;
     if (isDisabledOption(candidate)) continue;
@@ -901,6 +948,10 @@ function collectOptionsFromContainer(container, axis, requireStrictToken) {
     values.push(text);
 
     if (isSelectedOption(candidate)) selected = text;
+  }
+
+  if (!selected && values.length === 1 && isLabelValueLine(container, axis)) {
+    selected = values[0];
   }
 
   return { values, selected };

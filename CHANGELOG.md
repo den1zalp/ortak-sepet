@@ -21,6 +21,20 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   "145 MM" beden seçici gibi okunuyordu; gözlükte seçilecek beden yok.
   Milimetre artık beden sayılmıyor, santimetre sayılıyor — nevresim ve tencere
   gerçekten "200x220 Cm" diye seçiliyor.
+* **Renk yerine ürün kodu yazılıyordu.** Kullanıcı LC Waikiki'de bildirdi:
+  sayfada "Renk: Yeni Siyah / W60094Z4-CVL" yazarken sepete renk olarak
+  "W60094Z4-CVL" düşüyordu. Rengin adı kodla birlikte tek metin olduğu için
+  uzunluk sınırına takılıp eleniyor, geriye kodu panoya kopyalayan düğmenin
+  `title` niteliğindeki çıplak kod kalıyordu. Artık ad kodundan ayrılıyor
+  ("Yeni Siyah"), boşluksuz ve hem harf hem rakam taşıyan kod benzeri metinler
+  renk listesine hiç girmiyor. Ayraçın iki yanında boşluk aranıyor: "29/32" bir
+  beden, kod değil.
+* **Sayfanın yazdığı renk seçili gelmiyordu.** LC Waikiki'de her renk ayrı bir
+  ürün sayfası, o yüzden o an açık olan rengin kutucuğu yok ve sepetteki renk
+  satırı boş kalıyordu. "Renk: X" gibi bir etiket-değer satırı artık sayfanın
+  seçili değeri sayılıyor.
+* **Kaç renk olduğunu söyleyen rozet renk sanılıyordu.** LC Waikiki'de "1 Renk"
+  ve "+1" renk listesine giriyordu.
 * **Renk kodu renk adının yanına giriyordu.** Mi UK'de swatch'ın "#000000"
   değeri "Black"ten ayrı bir renk gibi listeye düşüyordu.
 * **Beden listesine sayfanın başka parçaları giriyordu.** Kullanıcı on yedi
@@ -205,9 +219,10 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   ise otomasyonla sürülen tarayıcıda hiç render edilmiyor. Eklenti sayfayı
   okuduğu anda orada olmayan seçeneği göremiyor; o mağazalarda beden "Beden Gir"
   ile elle yazılıyor.
-* **Renk yalnızca sayfada metin olarak varsa okunuyor.** LC Waikiki gibi
-  mağazalarda renk kutucukları ne metin ne de ad niteliği taşıyor; orada renk
-  ekseni çıkmıyor.
+* **Renk yalnızca sayfada metin olarak varsa okunuyor.** Renk kutucukları ne
+  metin ne de ad niteliği taşıyan mağazalarda renk ekseni çıkmıyor. (LC Waikiki
+  bu maddenin örneğiydi; kutucukların `title` niteliğini ve sayfanın yazdığı
+  "Renk: X" satırını okumak orada çözdü.)
 
 * **Yeni eklenen 54 mağazanın 53'ü canlı ürün sayfasında doğrulandı.**
   Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs
