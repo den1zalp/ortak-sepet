@@ -21,7 +21,7 @@ function normalizeProduct(product) {
   const shippingInfo = findShippingInfo();
   // The size scan walks the whole page like the finance and shipping ones do:
   // it runs once here, never inside the waitForPrice loop.
-  const sizeInfo = findSizeOptions();
+  const productOptions = findProductOptions();
 
   const price =
     product?.price ||
@@ -48,9 +48,12 @@ function normalizeProduct(product) {
     currencySymbol: product?.currencySymbol || null,
     region: product?.region || "UK",
 
-    // A parser may supply its own size list; otherwise the generic scan wins.
-    sizes: product?.sizes?.length ? product.sizes : sizeInfo.sizes,
-    size: product?.size || sizeInfo.size || "",
+    // A parser may supply its own options; otherwise the generic scan wins.
+    options: product?.options?.length
+      ? product.options
+      : product?.sizes?.length
+        ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
+        : productOptions,
 
     installmentAvailable: financeInfo.installmentAvailable,
     installmentText: financeInfo.installmentText,

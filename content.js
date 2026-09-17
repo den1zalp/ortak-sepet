@@ -36,7 +36,7 @@ function normalizeProduct(product) {
   const shippingInfo = findShippingInfo();
   // Beden taraması da taksit/kargo gibi tüm sayfayı geziyor; burada bir kez
   // çalışır, waitForPrice döngüsünün içinde asla.
-  const sizeInfo = findSizeOptions();
+  const productOptions = findProductOptions();
 
   const price =
     product?.price ||
@@ -63,9 +63,12 @@ function normalizeProduct(product) {
     currencySymbol: product?.currencySymbol || null,
     region: product?.region || "TR",
 
-    // Parser kendi beden listesini verebilir; vermediyse jenerik tarama.
-    sizes: product?.sizes?.length ? product.sizes : sizeInfo.sizes,
-    size: product?.size || sizeInfo.size || "",
+    // Parser kendi seçeneklerini verebilir; vermediyse jenerik tarama.
+    options: product?.options?.length
+      ? product.options
+      : product?.sizes?.length
+        ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
+        : productOptions,
 
     installmentAvailable: installmentInfo.installmentAvailable,
     installmentText: installmentInfo.installmentText,

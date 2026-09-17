@@ -55,6 +55,18 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Eklenenler
 
+* **Renk, uzunluk ve depolama seçimi.** Beden tek eksen olmaktan çıktı: ürün
+  sayfasında ne varsa kendi etiketiyle okunuyor ve sepette her biri için ayrı
+  bir satır çıkıyor — Jack & Jones'ta beden ve renk, Apple'da renk, Koton'da
+  beden ve boy. Eksen yoksa satır da yok; televizyonun altında boş bir "Beden"
+  alanı görünmüyor. Seçilenlerin tamamı satırın kimliği: aynı üründen farklı
+  renk ya da farklı beden sepette ayrı satır, aynısı adet artırıyor. Tek değerli
+  eksen bir seçim değil bilgidir (bu mağazalarda diğer renkler ayrı ürün
+  sayfası), o yüzden açılır liste yerine değerin kendisi yazılıyor ve seçili
+  sayılıyor. Renk adları çoğu sitede metin değil kutucuk olduğu için `title` ve
+  `alt` nitelikleri de okunuyor. Depoda eski biçimde duran kayıtlar (yalnızca
+  beden taşıyanlar) okunurken tek eksenli listeye çevriliyor; kullanıcının
+  sepetindeki seçim kaybolmuyor.
 * **Beden seçimi.** Ürün sepete eklenirken sayfadaki beden seçenekleri de
   okunuyor ve sepette her ürünün altında bir açılır liste çıkıyor: kot için
   "29/32", tişört için "M", kozmetikte "50 ml". Beden ürünün kimliğinin parçası
@@ -176,10 +188,9 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   ise otomasyonla sürülen tarayıcıda hiç render edilmiyor. Eklenti sayfayı
   okuduğu anda orada olmayan seçeneği göremiyor; o mağazalarda beden "Beden Gir"
   ile elle yazılıyor.
-* **Renk, uzunluk ve depolama seçimi henüz yok.** Sepette yalnızca beden
-  seçilebiliyor; Jack & Jones'un ayrı "Uzunluk" ekseni, Apple'ın depolama
-  seçenekleri ve mağazaların renk seçenekleri için ortak bir "seçenek ekseni"
-  tasarımı gerekiyor.
+* **Renk yalnızca sayfada metin olarak varsa okunuyor.** LC Waikiki gibi
+  mağazalarda renk kutucukları ne metin ne de ad niteliği taşıyor; orada renk
+  ekseni çıkmıyor.
 
 * **Yeni eklenen 54 mağazanın 53'ü canlı ürün sayfasında doğrulandı.**
   Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs

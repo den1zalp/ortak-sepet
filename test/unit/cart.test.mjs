@@ -107,49 +107,130 @@ const removed = { ...target, id: "silinmis-id" };
 check("silinmiş ürün geri yazılmadı", await Cart.saveRefreshedItem(removed), false);
 check("kalem sayısı değişmedi", store.ortakSepetItems.length, 3);
 
-// --- beden ürün kimliğinin parçası ---
+// --- seçilen seçenekler ürün kimliğinin parçası ---
+const jeanUrl = "https://www.mavi.com/marcus-jean/p/123";
+
+const sizeAxis = (selected) => ({
+  key: "size",
+  label: "Beden",
+  values: ["29/32", "30/32", "31/32"],
+  selected,
+});
+
+const colourAxis = (selected) => ({
+  key: "colour",
+  label: "Renk",
+  values: ["Siyah", "Mavi"],
+  selected,
+});
+
 const jean = {
   title: "Mavi Marcus Jean",
   price: "1.299,90 TL",
-  url: "https://www.mavi.com/marcus-jean/p/123",
+  url: jeanUrl,
   site: "Mavi",
   region: "TR",
-  sizes: ["29/32", "30/32", "31/32"],
 };
 
-const jeanSmall = await Cart.addProduct({ ...jean, size: "30/32" });
-check("bedenli ürün eklendi", jeanSmall.status, "added");
-check("beden kaydedildi", jeanSmall.item.size, "30/32");
-check("beden listesi kaydedildi", jeanSmall.item.sizes.length, 3);
+const jeanSmall = await Cart.addProduct({ ...jean, options: [sizeAxis("30/32")] });
+check("seçenekli ürün eklendi", jeanSmall.status, "added");
+check("seçim kaydedildi", jeanSmall.item.options[0].selected, "30/32");
+check("değer listesi kaydedildi", jeanSmall.item.options[0].values.length, 3);
 
-const jeanLarge = await Cart.addProduct({ ...jean, size: "31/32" });
+const jeanLarge = await Cart.addProduct({ ...jean, options: [sizeAxis("31/32")] });
 check("farklı beden ayrı satır", jeanLarge.status, "added");
 
-const jeanAgain = await Cart.addProduct({ ...jean, size: "30/32" });
+const jeanAgain = await Cart.addProduct({ ...jean, options: [sizeAxis("30/32")] });
 check("aynı beden adet artırdı", jeanAgain.status, "increased");
 check("aynı bedende adet 2", jeanAgain.item.quantity, 2);
 
+// Beden aynı ama renk farklıysa ayrı satır: seçimlerin tamamı kimliğin parçası.
+const jeanBlack = await Cart.addProduct({
+  ...jean,
+  options: [sizeAxis("30/32"), colourAxis("Siyah")],
+});
+check("renk farkı ayrı satır", jeanBlack.status, "added");
+
+const jeanBlackAgain = await Cart.addProduct({
+  ...jean,
+  options: [sizeAxis("30/32"), colourAxis("Siyah")],
+});
+check("aynı beden+renk adet artırdı", jeanBlackAgain.status, "increased");
+
+// Eksenlerin sırası kimliği değiştirmemeli.
+const reversed = await Cart.addProduct({
+  ...jean,
+  options: [colourAxis("Siyah"), sizeAxis("30/32")],
+});
+check("eksen sırası kimliği değiştirmiyor", reversed.status, "increased");
+
+// Büyük/küçük harf ve boşluk farkı aynı seçim sayılmalı.
+const spaced = await Cart.addProduct({ ...jean, options: [sizeAxis(" 30/32 ")] });
+check("boşluklu seçim aynı satır", spaced.status, "increased");
+
+// Seçimsiz eklenen ürün kendi satırı.
+const jeanNoChoice = await Cart.addProduct({ ...jean, options: [sizeAxis("")] });
+check("seçimsiz ürün ayrı satır", jeanNoChoice.status, "added");
+
 const jeanLines = store.ortakSepetItems.filter((item) => item.site === "Mavi");
-check("iki beden iki satır", jeanLines.length, 2);
+check("dört ayrı satır", jeanLines.length, 4);
 
-// Büyük/küçük harf ve boşluk farkı aynı beden sayılmalı.
-const jeanSpaced = await Cart.addProduct({ ...jean, size: " 30/32 " });
-check("boşluklu beden aynı satır", jeanSpaced.status, "increased");
+// Parser eski biçimde beden verdiğinde de çalışmalı.
+const legacyProduct = await Cart.addProduct({
+  ...jean,
+  url: "https://www.mavi.com/legacy/p/1",
+  sizes: ["S", "M"],
+  size: "M",
+});
+check("eski biçim seçeneğe çevrildi", legacyProduct.item.options[0].key, "size");
+check("eski biçim seçimi korundu", legacyProduct.item.options[0].selected, "M");
 
-// Bedensiz eklenen ürün de kendi satırı; eski kayıtlar böyle duruyor.
-const jeanNoSize = await Cart.addProduct(jean);
-check("bedensiz ürün ayrı satır", jeanNoSize.status, "added");
+// Depoda eski biçimde duran kayıt da tek eksenli listeye çevrilmeli.
+const legacyStored = Cart.readOptions({ size: "L", sizes: ["S", "M", "L"] });
+check("eski kayıt okunuyor", legacyStored[0].selected, "L");
+check("eski kaydın değerleri", legacyStored[0].values.length, 3);
 
-// Fiyat güncellemesi kullanıcının bedenini değiştirmemeli: sayfa o an başka
-// bir bedeni seçili gösterse bile satır kullanıcının seçtiği bedene ait.
-const sizedTarget = store.ortakSepetItems.find((item) => item.size === "30/32");
-await Cart.saveRefreshedItem({ ...sizedTarget, size: "31/32", price: "1.199,90 TL" });
-const afterRefresh = store.ortakSepetItems.find((item) => item.id === sizedTarget.id);
-check("beden güncellemede korundu", afterRefresh.size, "30/32");
+// Fiyat güncellemesi kullanıcının seçimini değiştirmemeli: sayfa o an başka bir
+// beden seçili gösterse bile satır kullanıcının seçtiğine ait.
+const chosen = store.ortakSepetItems.find(
+  (item) => Cart.readOptions(item)[0]?.selected === "30/32" && Cart.readOptions(item).length === 1,
+);
+
+await Cart.saveRefreshedItem({
+  ...chosen,
+  options: [sizeAxis("31/32")],
+  price: "1.199,90 TL",
+});
+
+const afterRefresh = store.ortakSepetItems.find((item) => item.id === chosen.id);
+check("seçim güncellemede korundu", Cart.readOptions(afterRefresh)[0].selected, "30/32");
 check("fiyat güncellemede yazıldı", afterRefresh.price, "1.199,90 TL");
 
-check("isSameCartLine: aynı URL + aynı beden", Cart.isSameCartLine({ url: jean.url, size: "M" }, Cart.normalizeUrl(jean.url), "m"), true);
-check("isSameCartLine: aynı URL + farklı beden", Cart.isSameCartLine({ url: jean.url, size: "M" }, Cart.normalizeUrl(jean.url), "L"), false);
+// Tazelemede sayfadan gelen yeni değerler listeye yansımalı.
+await Cart.saveRefreshedItem({
+  ...chosen,
+  options: [{ key: "size", label: "Beden", values: ["30/32", "32/34"], selected: "" }],
+});
+
+const afterValues = store.ortakSepetItems.find((item) => item.id === chosen.id);
+check("değer listesi tazelendi", Cart.readOptions(afterValues)[0].values.join(","), "30/32,32/34");
+check("seçim yine korundu", Cart.readOptions(afterValues)[0].selected, "30/32");
+
+check(
+  "isSameCartLine: aynı seçim",
+  Cart.isSameCartLine({ url: jeanUrl, options: [sizeAxis("M")] }, Cart.normalizeUrl(jeanUrl), [
+    sizeAxis("m"),
+  ]),
+  true,
+);
+
+check(
+  "isSameCartLine: farklı seçim",
+  Cart.isSameCartLine({ url: jeanUrl, options: [sizeAxis("M")] }, Cart.normalizeUrl(jeanUrl), [
+    sizeAxis("L"),
+  ]),
+  false,
+);
 
 // --- kategori kuralları ---
 check("kategori: iPhone kılıf şarj kablosu", categorize({ title: "iPhone kılıf şarj kablosu", site: "Trendyol" }), "Telefon & Aksesuar");

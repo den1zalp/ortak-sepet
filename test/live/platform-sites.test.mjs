@@ -16,8 +16,8 @@
 //   4. Okunan tutar sayfada gerçekten yazıyor mu ve üstü çizili liste fiyatı
 //      değil mi — indirimli üründe yanlış tutarı sepete yazmak asıl risk.
 //   5. Görsel adresi gerçekten resim döndürüyor mu.
-//   6. Beden okunabiliyorsa listede kaç seçenek var (bilgi olarak yazılır,
-//      beden her üründe olmadığı için başarısızlık sayılmaz).
+//   6. Hangi seçenek eksenleri okundu (beden, renk, uzunluk, depolama) — bilgi
+//      olarak yazılır, her üründe seçenek olmadığı için başarısızlık sayılmaz.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -247,9 +247,15 @@ for (const [id, url] of targets) {
 
   check(...(await imageLoads(product.image, `${id}: görsel yüklendi`)));
 
-  const sizeCount = Array.isArray(product.sizes) ? product.sizes.length : 0;
+  const axes = Array.isArray(product.options) ? product.options : [];
   console.log(
-    `     ${id}: ${sizeCount ? `${sizeCount} beden (${product.sizes.slice(0, 6).join(", ")})` : "beden okunmadı"}`,
+    `     ${id}: ${
+      axes.length
+        ? axes
+            .map((axis) => `${axis.key}(${axis.values.length}): ${axis.values.slice(0, 5).join(", ")}`)
+            .join(" | ")
+        : "seçenek okunmadı"
+    }`,
   );
 
   await page.close();

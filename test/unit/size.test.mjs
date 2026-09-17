@@ -106,7 +106,12 @@ function select(attrs, optionTexts) {
   return node;
 }
 
-function runScan({ selects = [], containers = [], jsonLd = [] }) {
+// Eksenlerin tamamını döndüren sürüm; renk ekseni testleri bunu kullanıyor.
+function runScanAxes(input) {
+  return buildContext(input).findProductOptions();
+}
+
+function buildContext({ selects = [], containers = [], jsonLd = [] }) {
   const context = vm.createContext({
     console,
     document: {
@@ -142,7 +147,11 @@ function runScan({ selects = [], containers = [], jsonLd = [] }) {
     { filename: "shared/structured-data.js" },
   );
 
-  return context.findSizeOptions();
+  return context;
+}
+
+function runScan(input) {
+  return buildContext(input).findSizeOptions();
 }
 
 // --- select tabanlı beden seçici ---
@@ -597,6 +606,42 @@ const promoNoise = element("div", {
 });
 
 check("promosyon ve renk elendi", runScan({ containers: [promoNoise] }).sizes.join(","), "S (UK SREG)");
+
+// Renk ekseninde de başlık ve "daha fazla" düğmesi seçenek değil.
+// (Under Armour UK: "Product Colours", "Show More")
+const colourNoise = element("div", {
+  attrs: { class: "product-colour-picker" },
+  children: [
+    element("span", { text: "Product Colours" }),
+    element("button", { text: "Show More" }),
+    element("button", { text: "Siyah" }),
+    element("button", { text: "Lacivert" }),
+  ],
+});
+
+check(
+  "renk ekseninde başlık elendi, renk adları kaldı",
+  runScanAxes({ containers: [colourNoise] }).find((a) => a.key === "colour")?.values.join(","),
+  "Siyah,Lacivert",
+);
+
+// Renk sayı değildir ve bölüm başlıkları renk sayılmaz. (Tudors "43",
+// English Home "4", LTB "female/male", Lacoste "Ürün Özellikleri")
+const colourJunk = element("div", {
+  attrs: { class: "renk-secimi" },
+  children: [
+    element("button", { text: "43" }),
+    element("a", { text: "female" }),
+    element("a", { text: "Ürün Özellikleri" }),
+    element("button", { text: "Antrasit" }),
+  ],
+});
+
+check(
+  "renk ekseninde sayı ve başlık elendi",
+  runScanAxes({ containers: [colourJunk] }).find((a) => a.key === "colour")?.values.join(","),
+  "Antrasit",
+);
 
 // --- yapılandırılmış veri yedeği ---
 const fromJsonLd = runScan({

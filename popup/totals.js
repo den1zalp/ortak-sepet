@@ -232,3 +232,24 @@ function getLastUpdateText(item) {
 
   return translate("lastSuccess");
 }
+
+// Bilinen eksenlerin adı kullanıcının dilinde; bilinmeyen bir eksen çıkarsa
+// sayfanın kendi etiketi gösteriliyor.
+function translateOptionLabel(option) {
+  const known = {
+    size: "size",
+    colour: "optionColour",
+    length: "optionLength",
+    storage: "optionStorage",
+  }[option?.key];
+
+  return known ? translate(known) : option?.label || "";
+}
+
+// "Beden: M · Renk: Siyah" — CSV ve panoya kopyalanan liste için.
+function formatSelectedOptions(item) {
+  return OrtakSepetCart.readOptions(item)
+    .filter((option) => option.selected)
+    .map((option) => `${translateOptionLabel(option)}: ${option.selected}`)
+    .join(" · ");
+}

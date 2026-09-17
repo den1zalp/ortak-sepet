@@ -265,27 +265,34 @@ async function editItemPrice(id) {
   await renderCart();
 }
 
-// Beden değiştirmek satırın kimliğini değiştiriyor: aynı üründen o bedeni
+// Seçim değiştirmek satırın kimliğini değiştiriyor: aynı üründen o seçimi
 // taşıyan başka bir satır varsa ikisi tek satırda birleşiyor. Yoksa sepette
 // birbirinin aynısı iki satır kalır ve "Bu Ürünü Ekle" hangisine yazacağını
 // bilemezdi.
-async function setItemSize(id, newSize) {
+async function setItemOption(id, key, rawValue) {
   const items = await getCartItems();
   const item = items.find((cartItem) => cartItem.id === id);
 
   if (!item) return;
 
-  const size = OrtakSepetCart.cleanText(newSize);
+  const value = OrtakSepetCart.cleanText(rawValue);
+  const options = OrtakSepetCart.readOptions(item);
+  const target = options.find((option) => option.key === key);
 
-  if (OrtakSepetCart.normalizeSize(item.size) === OrtakSepetCart.normalizeSize(size)) {
+  if (!target) return;
+  if (OrtakSepetCart.normalizeSize(target.selected) === OrtakSepetCart.normalizeSize(value)) {
     return;
   }
+
+  const updated = options.map((option) =>
+    option.key === key ? { ...option, selected: value } : option,
+  );
 
   const itemUrl = OrtakSepetCart.normalizeUrl(item.url);
 
   const twin = items.find(
     (cartItem) =>
-      cartItem.id !== id && OrtakSepetCart.isSameCartLine(cartItem, itemUrl, size),
+      cartItem.id !== id && OrtakSepetCart.isSameCartLine(cartItem, itemUrl, updated),
   );
 
   if (twin) {
@@ -293,31 +300,46 @@ async function setItemSize(id, newSize) {
     twin.updatedAt = new Date().toISOString();
 
     await saveCartItems(items.filter((cartItem) => cartItem.id !== id));
-    setStatus(translate("sizeMerged"));
+    setStatus(translate("optionMerged"));
     await renderCart();
     return;
   }
 
-  item.size = size;
+  item.options = updated;
   item.updatedAt = new Date().toISOString();
 
   await saveCartItems(items);
-  setStatus(translate("sizeUpdated"));
+  setStatus(translate("optionUpdated"));
   await renderCart();
 }
 
-// Sayfadan beden okunamayan sitelerde kullanıcı kendi yazıyor.
+// Sayfadan hiç seçenek okunamayan sitelerde kullanıcı bedeni kendi yazıyor.
 async function editItemSize(id) {
   const items = await getCartItems();
   const item = items.find((cartItem) => cartItem.id === id);
 
   if (!item) return;
 
-  const input = window.prompt(translate("promptNewSize"), item.size || "");
+  const options = OrtakSepetCart.readOptions(item);
+  const current = options.find((option) => option.key === "size");
+  const input = window.prompt(translate("promptNewSize"), current?.selected || "");
 
   if (input === null) return;
 
-  await setItemSize(id, input);
+  if (!current) {
+    item.options = [
+      ...options,
+      { key: "size", label: "Beden", values: [], selected: OrtakSepetCart.cleanText(input) },
+    ];
+    item.updatedAt = new Date().toISOString();
+
+    await saveCartItems(items);
+    setStatus(translate("optionUpdated"));
+    await renderCart();
+    return;
+  }
+
+  await setItemOption(id, "size", input);
 }
 
 async function removeItem(id) {
@@ -345,7 +367,7 @@ function createPurchaseRecord(item) {
     image: item.image || "",
     category: item.category || null,
     price: item.price || null,
-    size: item.size || "",
+    options: OrtakSepetCart.readOptions(item),
     quantity: getQuantity(item),
     currency: getItemCurrency(item),
     currencySymbol: item.currencySymbol || null,
@@ -410,7 +432,7 @@ async function restorePurchase(id) {
     image: record.image,
     category: record.category || null,
     price: record.price,
-    size: record.size || "",
+    options: OrtakSepetCart.readOptions(record),
     currency: record.currency,
     currencySymbol: record.currencySymbol,
     region: record.region,

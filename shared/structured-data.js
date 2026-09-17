@@ -464,30 +464,46 @@ function parseMetaProduct() {
 }
 
 // ---------------------------------------------------------------------------
-// Beden / varyant seçenekleri
+// Ürün seçenekleri: beden, renk, uzunluk, depolama
 //
-// Kullanıcı sepete eklediği ürünün bedenini popup'ta bir açılır listeden
-// seçiyor; liste burada, ürün sayfasından okunuyor. Bölgeye bağlı bir tarafı
+// Kullanıcı sepete eklediği ürünün seçeneklerini popup'ta açılır listelerden
+// seçiyor; listeler burada, ürün sayfasından okunuyor. Bölgeye bağlı bir tarafı
 // yok, iki content script de aynı kodu kullanıyor.
 //
-// Tarama bilerek "işaretli kap" üzerinden yürüyor: sayfadaki her düğmeyi okuyup
-// beden gibi görüneni toplamak, adet artırma düğmelerini ve renk adlarını da
-// beden sanıyordu. Bunun yerine önce beden seçicisi olduğu markup'tan belli olan
-// kaplar bulunuyor (select[name*=beden], [data-qa-action*=size], başlığı "Beden"
-// olan liste...), seçenekler yalnızca onların içinden alınıyor. İşareti olmayan
-// kapta ise metnin beden jetonuna benzemesi (S/M/XL, 40, 29/32) şart koşuluyor.
+// Eksen kavramı sonradan geldi: önce yalnızca beden okunuyordu, ama aynı kutuda
+// duran renk, uzunluk (Jack & Jones'ta "Uzunluk Seç") ve depolama (Apple'da
+// 256/512 GB) da kullanıcının seçtiği şeyler. Hepsi aynı taramadan çıkıyor;
+// değişen tek şey hangi etiketin altında toplandıkları.
 //
-// Kozmetik ve ev tekstilinde aynı seçici hacim ya da ebat veriyor ("50 ml",
-// "Tek Kişilik"); onlar da alınıyor, kullanıcı için seçilecek şey aynı.
+// Tarama bilerek "işaretli kap" üzerinden yürüyor: sayfadaki her düğmeyi okuyup
+// seçenek gibi görüneni toplamak, adet düğmelerini, menü başlıklarını ve
+// kampanya metinlerini de seçenek sanıyordu. Aşağıdaki elemelerin her biri
+// gerçek bir ürün sayfasında yakalandı; test/unit/size.test.mjs hangisinin
+// nereden geldiğini tek tek yazıyor.
 
-// "size" sözcüğü sınıf adında her geçtiğinde beden seçicisi demek değil:
-// Tailwind'in size-4 / size-6 / size-full yardımcı sınıfları genişlik-yükseklik
-// veriyor ve sayfadaki onlarca düğümde bulunuyor, "resize" de içinde "size"
-// geçiriyor. Lacoste'ta bu yüzden sepete beden diye "0" yazılıyordu.
-// Bu yüzden "size" yalnızca sözcük sınırındayken ve ardından ölçü eki
-// gelmiyorken işaret sayılıyor; Türkçe karşılıklarında böyle bir çakışma yok.
-const SIZE_LABEL_PATTERN =
-  /beden|numara|ebat|ölçü|olcu|boyut|talla|variant|varyant|(?:^|[^a-z])sizes?(?!-(?:\d|full|px|auto|fit|min|max))(?:[^a-z]|$)/i;
+const OPTION_LABEL_PATTERNS = {
+  // "size" en gevşek kalıp olduğu için en sonda sınanıyor.
+  colour: /renk|colou?r/i,
+  storage: /depolama|storage|hafiza|hafıza|kapasite|capacity/i,
+  length: /uzunluk|boy secim|boy sec|\binseam\b|\blength\b|\bboy\b/i,
+  size: /beden|numara|ebat|ölçü|olcu|boyut|talla|variant|varyant|(?:^|[^a-z])sizes?(?!-(?:\d|full|px|auto|fit|min|max))(?:[^a-z]|$)/i,
+};
+
+const OPTION_AXIS_ORDER = ["size", "colour", "length", "storage"];
+
+// Sayfadaki etiket metni popup'ta olduğu gibi gösterilmiyor; bilinen eksenlerde
+// kullanıcının dili kullanılıyor. Yine de saklanıyor: bilinmeyen bir eksen
+// çıkarsa gösterilecek tek şey o.
+const OPTION_AXIS_LABELS = {
+  size: "Beden",
+  colour: "Renk",
+  length: "Uzunluk",
+  storage: "Depolama",
+};
+
+// Renk adları uzun olabiliyor ("At That Point - Green" — Levi's UK), beden ve
+// uzunluk kısadır.
+const OPTION_MAX_WORDS = { size: 3, length: 3, storage: 3, colour: 6 };
 
 // Tek başına bir beden sayılabilecek metinler: harf bedenleri, sayı bedenleri
 // (40, 8.5), kot bedeni (29/32) ve hacim/ölçü ekli olanlar.
@@ -502,76 +518,53 @@ const SIZE_TOKEN_PATTERN = new RegExp(
   "i",
 );
 
-// "Beden seçiniz" gibi yer tutucular listeye girmemeli: seçilmemiş hâli
-// anlatıyorlar, satın alınabilir bir beden değiller.
-// Beden seçicisinin içinde ya da yanında duran ama seçenek olmayan metinler:
-// yer tutucular, beden rehberi bağlantıları, eylem düğmeleri ("Favorilerime
-// Ekle", "Paylaş" — Levi's) ve bülten formunun alanları ("E-posta Adresi *" —
-// Under Armour TR). Hepsi gerçek sayfalarda sepete beden diye yazılmıştı.
 // Beden kutusunun yakınındaki arayüz eylemleri ve form alanları: arama ve
 // gönder düğmeleri (Madame Coco "ARA", Mudo "GÖNDER"), giriş formu (Under
 // Armour TR "Giriş Yap", "Parolayı Yenile"), gezinme bağlantısı (Marks &
 // Spencer "Anasayfa") ve ekran okuyucu etiketi (Levi's UK "Sale price is").
-// Hepsi gerçek sayfalarda sepete beden diye yazılmıştı.
-const SIZE_UI_PATTERN =
-  /^(ara|search|gonder|submit|kapat|close|uygula|temizle|filtrele|sirala|anasayfa|home|devam|iptal|tamam|length|uzunluk|boy)$|giris yap|kayit ol|uye ol|parola|sifre|oturum|hesabim|price is|fiyat|add to|sepete/i;
+const OPTION_UI_PATTERN =
+  /^(ara|search|gonder|submit|kapat|close|uygula|temizle|filtrele|sirala|anasayfa|home|devam|iptal|tamam|length|uzunluk|boy|renk|color|colour|depolama|storage)$|giris yap|kayit ol|uye ol|parola|sifre|oturum|hesabim|price is|fiyat|add to|sepete|show more|show less|daha fazla|product colou?rs|tum renkler/i;
 
-// Breadcrumb ve gezinme adları ("Erkek", "Giyim" — Marks & Spencer TR) ile
-// karusel sayaçları ("1 of 6") beden değil.
-// Stok uyarısı, promosyon ve yardım bağlantıları beden kutusunun içinde ya da
+// Stok uyarısı, promosyon ve yardım bağlantıları seçenek kutusunun içinde ya da
 // hemen yanında duruyor: "Son 3 adet", "%42", "HEMEN AL", "Benzer ürünleri bul"
 // (Marks & Spencer TR ve Supplementler).
-const SIZE_PROMO_PATTERN =
+const OPTION_PROMO_PATTERN =
   /%|son \d+|hemen al|benzer|kali[pb]i nasil|kazancli|stokta|indirim|kampanya|\badet\b|shaker/i;
 
 // Renk adları beden seçicisinin yanında duruyor ve kısa oldukları için jeton
-// gibi görünüyorlar ("krem", "ECRU MIX" — Marks & Spencer TR). Beden adlarıyla
-// çakışan bir renk adı yok, bu yüzden liste güvenli.
+// gibi görünüyorlar ("krem", "ECRU MIX" — Marks & Spencer TR). Renk ekseninde
+// bunlar gerçek değer olduğu için eleme yalnızca diğer eksenlerde çalışıyor.
 const COLOUR_WORD_PATTERN =
-  /^(siyah|beyaz|krem|ekru|ecru|bej|lacivert|mavi|kirmizi|yesil|sari|gri|antrasit|kahve|kahverengi|pembe|mor|turuncu|bordo|haki|vizon|gumus|altin|black|white|cream|navy|blue|red|green|yellow|grey|gray|pink|purple|orange|brown|beige|khaki|silver|gold|ivory|multi)(\s|$)/i;
+  /^(siyah|beyaz|krem|ekru|ecru|bej|lacivert|mavi|kirmizi|yesil|sari|gri|antrasit|kahve|kahverengi|pembe|mor|turuncu|bordo|haki|vizon|gumus|altin|black|white|cream|navy|blue|red|green|yellow|grey|gray|pink|purple|orange|brown|beige|khaki|silver|gold|ivory|multi|turquoise|teal|burgundy|charcoal|olive|mint|coral|lilac|fuchsia|indigo|sand|stone|rust|taupe|camel|denim blue|off-white|wine)(\s|$)/i;
 
-const SIZE_NAVIGATION_PATTERN =
+// Breadcrumb ve gezinme adları ("Erkek", "Giyim" — Marks & Spencer TR) ile
+// karusel sayaçları ("1 of 6") seçenek değil.
+const OPTION_NAVIGATION_PATTERN =
   /^(erkek|kadin|cocuk|bebek|genc|unisex|giyim|aksesuar|ayakkabi|canta|kozmetik|indirim|yeni)$|^\d+\s+of\s+\d+$/i;
 
-const SIZE_PLACEHOLDER_PATTERN =
+// "Beden seçiniz" gibi yer tutucular listeye girmemeli: seçilmemiş hâli
+// anlatıyorlar, satın alınabilir bir seçenek değiller.
+const OPTION_PLACEHOLDER_PATTERN =
   /seçin|secin|seçiniz|seciniz|choose|select|please|lütfen|lutfen|tablo|rehber|guide|chart|bedenimi bul|bedenini bul|find my|stokta yok|out of stock|tükendi|tukendi|bildir|notify|ekle|paylaş|paylas|favori|favourite|favorite|karşılaştır|karsilastir|e-posta|e-mail|email|telefon|adres|share|shipping|kargo|teslimat|iade/i;
 
 // Listeleme filtresinin seçenekleri: "29/30 bedeninde 40 ürün", "Beden (tüm
 // bedenler)". Koton'un ürün sayfasında filtre kutusu da duruyor ve seçenekleri
-// gerçek beden seçicisininkilerle karışıyordu.
-const SIZE_FACET_PATTERN = /bedeninde|tum bedenler|adet urun|urun\)?$/i;
+// gerçek seçicininkilerle karışıyordu.
+const OPTION_FACET_PATTERN = /bedeninde|tum bedenler|adet urun|urun\)?$/i;
 
-// Beden tablosunun sekmeleri beden değil, ürün türü ve kalıp adları: Colin's ve
-// Tudors'ta sepete "GÖMLEK", "DENIM ÖLÇÜLERİ", "SLİM FİT" yazılıyordu.
+// Beden tablosunun sekmeleri seçenek değil, ürün türü ve kalıp adları: Colin's
+// ve Tudors'ta sepete "GÖMLEK", "DENIM ÖLÇÜLERİ", "SLİM FİT" yazılıyordu.
 const GARMENT_WORD_PATTERN =
   /olculeri|gomlek|tisort|t-?shirt|sweatshirt|triko|mont|pantolon|cargo|kemer|boxer|elbise|etek|ceket|ayakkabi|canta|denim|jean|polo yaka|slim|regular|relax|oversize|klasik|modern|kali[pb]|buyuk beden|genis kalip|\bfit\b/i;
-
-// Bazı mağazalar seçeneğin metnine etiketi de koyuyor: Under Armour'da her
-// beden "UK Size: 3" diye geliyor ve açılır listede tekrar tekrar "UK Size:"
-// okumak gereksiz. Önek yalnızca beden etiketiyse atılıyor; "L/XL: ..." gibi
-// bedenin kendisinde iki nokta geçen değerler korunuyor.
-function stripSizeLabelPrefix(value) {
-  const withColon = value.match(/^([^:]{1,14}):\s*(.+)$/);
-
-  if (withColon) {
-    return SIZE_LABEL_PATTERN.test(withColon[1]) ? withColon[2] : value;
-  }
-
-  // İki nokta olmadan da yazılıyor: Levi's UK seçenekleri "Size S" diye
-  // listeliyor ve açılır listede her satırda "Size" okumak gereksiz.
-  const withoutColon = value.match(/^(beden|size|numara|talla)\s+(.+)$/i);
-
-  return withoutColon ? withoutColon[2] : value;
-}
 
 // Türkçe büyük İ küçültülünce noktası ayrı bir işaret olarak kalıyor
 // ("SLİM" → "sli̇m") ve /slim/i kalıbı tutmuyordu; eleme kuralları bu yüzden
 // büyük harfle yazılmış seçeneklerde çalışmıyordu. shared/category.js aynı
 // normalizasyonu kendi anahtar kelimeleri için yapıyor.
-function normalizeSizeWords(text) {
+function normalizeOptionWords(text) {
   return String(text || "")
     .toLocaleLowerCase("tr-TR")
-    .replace(/i\u0307/g, "i")
+    .replace(/i̇/g, "i")
     .replace(/ı/g, "i")
     .replace(/ğ/g, "g")
     .replace(/ü/g, "u")
@@ -580,65 +573,92 @@ function normalizeSizeWords(text) {
     .replace(/ç/g, "c");
 }
 
-function looksLikeSizeText(text) {
+// Bazı mağazalar seçeneğin metnine etiketi de koyuyor: Under Armour'da her
+// beden "UK Size: 3" diye geliyor ve açılır listede tekrar tekrar "UK Size:"
+// okumak gereksiz.
+function stripOptionLabelPrefix(value) {
+  const withColon = value.match(/^([^:]{1,14}):\s*(.+)$/);
+
+  if (withColon) {
+    const isLabel = Object.values(OPTION_LABEL_PATTERNS).some((pattern) =>
+      pattern.test(withColon[1]),
+    );
+
+    return isLabel ? withColon[2] : value;
+  }
+
+  // İki nokta olmadan da yazılıyor: Levi's UK seçenekleri "Size S" diye
+  // listeliyor.
+  const withoutColon = value.match(/^(beden|size|numara|talla|renk|colou?r)\s+(.+)$/i);
+
+  return withoutColon ? withoutColon[2] : value;
+}
+
+function looksLikeOptionText(text, axis) {
   const value = cleanText(text);
 
   if (!value || value.length > 24) return false;
-  if (SIZE_PLACEHOLDER_PATTERN.test(normalizeSizeWords(value))) return false;
 
-  // Listeleme sayfasının beden filtresi seçeneğin yanına o bedendeki ürün
-  // sayısını yazıyor ("200x220 Cm (174)"). Gerçek bir beden seçeneği sonuna
-  // parantez içinde sayı almaz; bu eleme olmadan kategori sayfasının filtre
-  // kutusu beden listesi sanılıyordu.
+  // Harf ya da rakam taşımayan metin seçenek değil: Marks & Spencer'ın beden
+  // kutusunda ayraç olarak duran "/" listeye giriyordu.
+  if (!/[\p{L}\p{N}]/u.test(value)) return false;
+
+  // Sondaki noktalama etiketi gizliyordu: Apple UK renk listesine "Colour."
+  // diye giriyordu.
+  const normalized = normalizeOptionWords(value).replace(/[.:,;]+$/, "");
+
+  if (OPTION_PLACEHOLDER_PATTERN.test(normalized)) return false;
+  if (OPTION_UI_PATTERN.test(normalized)) return false;
+  if (OPTION_NAVIGATION_PATTERN.test(normalized)) return false;
+  if (OPTION_PROMO_PATTERN.test(normalized)) return false;
+  if (OPTION_FACET_PATTERN.test(normalized)) return false;
+  if (GARMENT_WORD_PATTERN.test(normalized)) return false;
+
+  // Renk ekseninde renk adı gerçek değerdir; diğer eksenlerde çöptür.
+  if (axis !== "colour" && COLOUR_WORD_PATTERN.test(normalized)) return false;
+
+  if (axis === "colour") {
+    // Renk bir sayı değil: Tudors'ta "43", English Home'da "4" renk listesine
+    // giriyordu.
+    if (/^[\d.,\/-]+$/.test(value)) return false;
+
+    // Cinsiyet bağlantıları ve bölüm başlıkları renk kutusunun yanında duruyor
+    // (LTB "female/male", Lacoste "Ürün Özellikleri").
+    if (/^(male|female|erkek|kadin|unisex|cocuk)$/i.test(normalized)) return false;
+    if (/ozellik|aciklama|detay|bilgi|yorum|degerlendirme/i.test(normalized)) return false;
+  }
+
+  // İçinde fiyat geçen metin seçenek değil, fiyat satırıdır.
+  if (/[₺£$€]|\bTL\b|\bGBP\b/i.test(value)) return false;
+
+  // Listeleme sayfasının filtresi seçeneğin yanına o bedendeki ürün sayısını
+  // yazıyor ("200x220 Cm (174)" — Karaca). Gerçek bir seçenek sonuna parantez
+  // içinde sayı almaz; "6 (EU 39)" gibi değerler harf taşıdığı için kalıyor.
   if (/\(\s*\d+\s*\)$/.test(value)) return false;
 
-  // Sıfır bir beden değil. Beden seçicisi sanılan bir kaptan tek başına "0"
-  // geldiğinde sepette tek seçenekli, anlamsız bir liste çıkıyordu.
-  if (/^0+([.,]0+)?$/.test(value)) return false;
+  // Etiketin kendisi ("Beden", "Size") seçenek değil.
+  if (/^(beden|size|numara|ebat|talla)$/i.test(value)) return false;
 
-  // Seçeneğin değil, başlığın kendisi: "Beden:" (Penti'de yakalandı).
-  if (/:$/.test(value)) return false;
-
-  // Form alanı etiketi: zorunlu alanlar yıldızla işaretleniyor (Under Armour TR).
+  // Form alanı etiketi: zorunlu alanlar yıldızla işaretleniyor.
   if (value.includes("*")) return false;
 
   // İşaretlenmemiş onay kutusunun tarayıcı varsayılanı; Marks & Spencer UK'de
   // beden listesine "on" diye giriyordu.
   if (/^(on|off)$/i.test(value)) return false;
 
-  // Etiketin kendisi ("Beden", "Size") seçenek değil.
-  if (/^(beden|size|numara|ebat|talla|boy|renk|color|colour)$/i.test(value)) return false;
-
-  const normalized = normalizeSizeWords(value);
-
-  // Harf ya da rakam taşımayan metin beden değil: Marks & Spencer'ın beden
-  // kutusunda ayraç olarak duran "/" listeye giriyordu.
-  if (!/[\p{L}\p{N}]/u.test(value)) return false;
-
-  if (SIZE_UI_PATTERN.test(normalized)) return false;
-  if (SIZE_NAVIGATION_PATTERN.test(normalized)) return false;
-  if (SIZE_PROMO_PATTERN.test(normalized)) return false;
-  if (COLOUR_WORD_PATTERN.test(normalized)) return false;
-  if (SIZE_FACET_PATTERN.test(normalized)) return false;
-  if (GARMENT_WORD_PATTERN.test(normalized)) return false;
-
-  // Gerçek beden adları kısa: "M", "29/32", "Tek Kişilik", "6 (EU 39)". Üçten
-  // fazla sözcük varsa elimizdeki şey beden değil, bir renk ya da pazarlama
-  // adıdır — Levi's UK'de renk seçeneği ("At That Point - Green") beden
-  // listesine böyle giriyordu.
-  if (value.split(/\s+/).length > 3) return false;
-
-  // Önek atıldıktan sonra hâlâ iki nokta taşıyan metin beden değil, bir
+  // Önek atıldıktan sonra hâlâ iki nokta taşıyan metin seçenek değil, bir
   // etiket-değer satırı: Levi's TR'de "Fit Referance : Ribcage" giriyordu.
   if (value.includes(":")) return false;
 
-  // Üç haneden uzun sayı beden değil, varyant kimliği: Champion'da seçenek
-  // listesine "55342174437720" düşüyordu.
+  // Sıfır bir beden değil.
+  if (/^0+([.,]0+)?$/.test(value)) return false;
+
+  // Üç haneden uzun sayı seçenek değil, varyant kimliği: Champion'da listeye
+  // "55342174437720" düşüyordu.
   if (/^\d{4,}$/.test(value)) return false;
 
   // "1 / 5" galeri sayacı ve "3.5/5" puanı kot bedeni kalıbına ("29/32")
-  // benziyor. Gerçek kot bedeninde iki sayı da yirminin üstünde; Mi ve
-  // Under Armour sayfalarında sepete beden diye sayfa sayacı yazılıyordu.
+  // benziyor. Gerçek kot bedeninde iki sayı da yirminin üstünde.
   const slashPair = value.match(/^(\d{1,3})(?:[.,]\d+)?\s*[\/-]\s*(\d{1,3})(?:[.,]\d+)?$/);
 
   if (slashPair && (Number(slashPair[1]) < 20 || Number(slashPair[2]) < 20)) {
@@ -647,16 +667,17 @@ function looksLikeSizeText(text) {
 
   // Tek başına duran sayının beden olabilmesi için makul bir aralıkta olması ve
   // başında sıfır bulunmaması gerekiyor: Under Armour'un renk kodları ("001",
-  // "513", "738") beden listesine böyle giriyordu. Gerçek sayı bedenleri
-  // ayakkabıda 14-50, konfeksiyonda 24-60 aralığında.
+  // "513") beden listesine böyle giriyordu.
   const bareNumber = value.match(/^(\d{1,3})(?:[.,]\d{1,2})?$/);
 
   if (bareNumber && (/^0\d/.test(bareNumber[1]) || Number(bareNumber[1]) > 100)) {
     return false;
   }
 
-  // İçinde fiyat geçen metin beden değil, fiyat satırıdır.
-  if (/[₺£$€]|\bTL\b|\bGBP\b/i.test(value)) return false;
+  // Gerçek seçenek adları kısa. Renk adları biraz daha uzun olabiliyor.
+  const maxWords = OPTION_MAX_WORDS[axis] || 3;
+
+  if (value.split(/\s+/).length > maxWords) return false;
 
   return true;
 }
@@ -665,7 +686,7 @@ function isStrictSizeToken(text) {
   return SIZE_TOKEN_PATTERN.test(cleanText(text));
 }
 
-function isDisabledSizeOption(element) {
+function isDisabledOption(element) {
   if (!element) return false;
 
   if (element.disabled === true) return true;
@@ -676,7 +697,7 @@ function isDisabledSizeOption(element) {
   return /disabled|sold-?out|out-?of-?stock|unavailable|tukendi|tükendi/i.test(className);
 }
 
-function isSelectedSizeOption(element) {
+function isSelectedOption(element) {
   if (!element || !element.getAttribute) return false;
 
   if (element.getAttribute("aria-checked") === "true") return true;
@@ -689,33 +710,28 @@ function isSelectedSizeOption(element) {
   return /(^|[^a-z])(selected|active|checked|is-current)([^a-z]|$)/i.test(className);
 }
 
-// Kabın beden seçicisi olduğunu markup'tan anlamaya çalışıyoruz: kendi
-// nitelikleri ya da hemen öncesindeki başlık/etiket metni.
-// Renk seçicisi de beden seçicisine benzeyen bir kap ama içindekiler beden
-// değil: Under Armour sayfasında renk kodları (001, 513, 738) sepete beden
-// diye yazılıyordu. Kalıba "swatch" eklenemez — aynı sayfada beden düğmeleri de
-// "SizeSwatchesSection" sınıfını taşıyor ve gerçek beden listesi elenirdi.
-const COLOUR_CONTAINER_PATTERN = /renk|colou?r/i;
-
 // Adet seçicisinin rakamları beden jetonuna benziyor (Supplementler'de "1", "2",
-// "3" beden listesine giriyordu) ve ayakkabı bedenleriyle karışıyor; kabı
-// işaretinden tanıyıp hiç okumuyoruz.
+// "3" listeye giriyordu) ve ayakkabı bedenleriyle karışıyor.
 const QUANTITY_CONTAINER_PATTERN = /adet|quantity|\bqty\b|miktar/i;
 
-function isQuantityContainer(element) {
-  if (!element || !element.getAttribute) return false;
+function containerAttributes(element) {
+  if (!element || !element.getAttribute) return "";
 
-  const attributes = [
+  return [
     element.getAttribute("name"),
-    element.getAttribute("class"),
     element.getAttribute("id"),
-    element.getAttribute("data-testid"),
+    element.getAttribute("class"),
     element.getAttribute("aria-label"),
+    element.getAttribute("data-testid"),
+    element.getAttribute("data-qa-action"),
+    element.getAttribute("data-qa-qualifier"),
   ]
     .filter(Boolean)
     .join(" ");
+}
 
-  return QUANTITY_CONTAINER_PATTERN.test(attributes);
+function isQuantityContainer(element) {
+  return QUANTITY_CONTAINER_PATTERN.test(containerAttributes(element));
 }
 
 // Beden tablosu (ölçü tablosu) bir seçici değil: içindeki hücreler ürün türü,
@@ -724,43 +740,24 @@ function isQuantityContainer(element) {
 function isSizeChartContainer(element) {
   if (!element || !element.getAttribute) return false;
 
-  const attributes = [
-    element.getAttribute("class"),
-    element.getAttribute("id"),
-    element.getAttribute("data-testid"),
-    element.getAttribute("aria-label"),
-  ]
-    .filter(Boolean)
-    .join(" ");
+  if (/tablo|chart|guide|rehber|ölçü|olcu|measure/i.test(containerAttributes(element))) {
+    return true;
+  }
 
-  if (/tablo|chart|guide|rehber|ölçü|olcu|measure/i.test(attributes)) return true;
-
-  // Tablo taşıyan kap seçici değil, ölçü tablosudur.
   return Boolean(element.querySelector && element.querySelector("table"));
 }
 
-// Beden seçicisi ürün formunda durur; menüde, modalda, başlıkta ya da alt
-// bilgide değil. Koton'un kategori menüsü ("Kadın", "Erkek", "Mayo") beden
-// listesine bu yüzden sızıyordu: menü de sayfada duruyor ve gizli olsa bile
-// kabı beden işareti taşıyabiliyor.
-const SITE_CHROME_PATTERN = /modal|menu|menü|nav|drawer|popup|header|footer|cookie|cerez|çerez|basket|sepet|mini-?cart/i;
+// Seçici ürün formunda durur; menüde, modalda, başlıkta ya da alt bilgide
+// değil. Koton'un kategori menüsü ("Kadın", "Erkek", "Mayo") beden listesine bu
+// yüzden sızıyordu.
+const SITE_CHROME_PATTERN =
+  /modal|menu|menü|nav|drawer|popup|header|footer|cookie|cerez|çerez|basket|sepet|mini-?cart/i;
 
 function isSiteChromeContainer(element) {
   let current = element;
 
   for (let depth = 0; depth < 5 && current; depth += 1) {
-    if (current.getAttribute) {
-      const attributes = [
-        current.getAttribute("class"),
-        current.getAttribute("id"),
-        current.getAttribute("role"),
-        current.getAttribute("data-testid"),
-      ]
-        .filter(Boolean)
-        .join(" ");
-
-      if (SITE_CHROME_PATTERN.test(attributes)) return true;
-    }
+    if (SITE_CHROME_PATTERN.test(containerAttributes(current))) return true;
 
     const tag = current.tagName ? current.tagName.toLowerCase() : "";
 
@@ -774,132 +771,105 @@ function isSiteChromeContainer(element) {
   return false;
 }
 
-function isColourContainer(element) {
-  if (!element || !element.getAttribute) return false;
+// Kabın hangi ekseni taşıdığını markup'tan anlamaya çalışıyoruz: kendi
+// nitelikleri, aria etiketi ya da hemen öncesindeki başlık metni.
+function axisForContainer(element) {
+  if (!element || !element.getAttribute) return null;
 
-  const attributes = [
-    element.getAttribute("class"),
-    element.getAttribute("id"),
-    element.getAttribute("data-testid"),
-    element.getAttribute("aria-label"),
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return COLOUR_CONTAINER_PATTERN.test(attributes);
-}
-
-function hasSizeSignal(element) {
-  if (!element || !element.getAttribute) return false;
-
-  if (isColourContainer(element)) return false;
-
-  const attributes = [
-    element.getAttribute("name"),
-    element.getAttribute("id"),
-    element.getAttribute("class"),
-    element.getAttribute("aria-label"),
-    element.getAttribute("data-testid"),
-    element.getAttribute("data-qa-action"),
-    element.getAttribute("data-qa-qualifier"),
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  if (SIZE_LABEL_PATTERN.test(attributes)) return true;
+  const sources = [containerAttributes(element)];
 
   const labelledBy = element.getAttribute("aria-labelledby");
 
   if (labelledBy && document.getElementById) {
     const label = document.getElementById(labelledBy);
-    if (label && SIZE_LABEL_PATTERN.test(cleanText(label.textContent))) return true;
+    if (label) sources.push(cleanText(label.textContent));
   }
 
-  // Başlık çoğu sitede kabın kardeşi: "Beden" <div>...seçenekler...</div>
+  // Başlık çoğu sitede kabın kardeşi: "Beden" <div>…seçenekler…</div>
   const previous = element.previousElementSibling;
 
   if (previous) {
     const previousText = cleanText(previous.textContent);
-    if (previousText.length <= 40 && SIZE_LABEL_PATTERN.test(previousText)) return true;
+    if (previousText.length <= 40) sources.push(previousText);
   }
 
   const parent = element.parentElement;
 
   if (parent && parent.getAttribute) {
-    const parentAttributes = [
-      parent.getAttribute("id"),
-      parent.getAttribute("class"),
-      parent.getAttribute("data-testid"),
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-    if (SIZE_LABEL_PATTERN.test(parentAttributes)) return true;
+    sources.push(
+      [parent.getAttribute("id"), parent.getAttribute("class"), parent.getAttribute("data-testid")]
+        .filter(Boolean)
+        .join(" "),
+    );
   }
 
-  return false;
+  const haystack = sources.join(" ");
+
+  for (const axis of OPTION_AXIS_ORDER) {
+    if (OPTION_LABEL_PATTERNS[axis].test(haystack)) return axis;
+  }
+
+  return null;
 }
 
-function collectSizesFromSelect(select) {
-  const options = Array.from(select.options || []);
-  const sizes = [];
+function collectOptionsFromSelect(select, axis) {
+  const values = [];
   let selected = "";
 
-  for (const option of options) {
-    const text = stripSizeLabelPrefix(
+  for (const option of Array.from(select.options || [])) {
+    const text = stripOptionLabelPrefix(
       cleanText(option.textContent) || cleanText(option.value),
     );
 
-    if (!looksLikeSizeText(text)) continue;
-    if (isDisabledSizeOption(option)) continue;
+    if (!looksLikeOptionText(text, axis)) continue;
+    if (isDisabledOption(option)) continue;
 
-    sizes.push(text);
+    values.push(text);
 
     if (option.selected) selected = text;
   }
 
-  return { sizes, selected };
+  return { values, selected };
 }
 
-function collectSizesFromContainer(container, requireStrictToken) {
+function collectOptionsFromContainer(container, axis, requireStrictToken) {
   // İşaretli kapta seçenekler herhangi bir etikette olabiliyor: Beymen bedenleri
   // düz <span> olarak basıyor ve yalnızca li/button/label/a aramak onları
   // tamamen kaçırıyordu. İşareti olmayan kapta liste dar tutuluyor, çünkü orada
-  // her yaprağı aday saymak sayfanın yarısını beden sanmak demek.
+  // her yaprağı aday saymak sayfanın yarısını seçenek sanmak demek.
   const selector = requireStrictToken
     ? "li, button, label, a, span[data-size], div[data-size], input[type='radio']"
     : "li, button, label, a, span, div, option, input[type='radio']";
 
-  const candidates = Array.from(container.querySelectorAll(selector));
-
-  const sizes = [];
+  const values = [];
   let selected = "";
 
-  for (const candidate of candidates) {
-    // İç içe düğümlerde aynı metni iki kez okumamak için yalnızca başka bir
-    // aday içermeyen en alttaki düğümü alıyoruz.
+  for (const candidate of Array.from(container.querySelectorAll(selector))) {
     // İç içe düğümlerde aynı metni iki kez okumamak için yalnızca başka bir
     // aday içermeyen en alttaki düğüm alınıyor.
     if (candidate.children && candidate.children.length > 1) continue;
     if (candidate.querySelector && candidate.querySelector("li, button, label, a")) continue;
 
-    const text = stripSizeLabelPrefix(
+    // Renk kutucukları çoğu sitede metinsiz; adı title/alt niteliğinde taşıyorlar.
+    const text = stripOptionLabelPrefix(
       cleanText(candidate.getAttribute("data-size")) ||
         cleanText(candidate.getAttribute("aria-label")) ||
+        cleanText(candidate.getAttribute("title")) ||
+        cleanText(candidate.getAttribute("alt")) ||
         cleanText(candidate.textContent) ||
         cleanText(candidate.value),
     );
 
-    if (!looksLikeSizeText(text)) continue;
+    if (!looksLikeOptionText(text, axis)) continue;
     if (requireStrictToken && !isStrictSizeToken(text)) continue;
-    if (isDisabledSizeOption(candidate)) continue;
+    if (isDisabledOption(candidate)) continue;
 
-    sizes.push(text);
+    values.push(text);
 
-    if (isSelectedSizeOption(candidate)) selected = text;
+    if (isSelectedOption(candidate)) selected = text;
   }
 
-  return { sizes, selected };
+  return { values, selected };
 }
 
 // schema.org ürünü bedenleri varyant olarak verebiliyor; sayfa geç render
@@ -914,16 +884,16 @@ function collectSizesFromStructuredData() {
       if (!product) continue;
 
       const variants = [product.hasVariant, product.offers].flat(Infinity).filter(Boolean);
-      const sizes = [];
+      const values = [];
 
       for (const variant of variants) {
         const raw = variant.size ?? null;
         const text = cleanText(typeof raw === "object" ? raw?.name : raw);
 
-        if (text && looksLikeSizeText(text)) sizes.push(text);
+        if (text && looksLikeOptionText(text, "size")) values.push(text);
       }
 
-      if (sizes.length) return sizes;
+      if (values.length) return values;
     } catch {
       continue;
     }
@@ -932,40 +902,50 @@ function collectSizesFromStructuredData() {
   return [];
 }
 
-function dedupeSizes(sizes) {
+function dedupeOptionValues(values) {
   const seen = new Set();
   const unique = [];
 
-  for (const size of sizes) {
-    const key = size.toLocaleLowerCase("tr-TR");
+  for (const value of values) {
+    const key = value.toLocaleLowerCase("tr-TR");
 
     if (seen.has(key)) continue;
 
     seen.add(key);
-    unique.push(size);
+    unique.push(value);
 
-    // Liste bu kadar uzunsa beden değil başka bir liste yakalanmıştır.
+    // Liste bu kadar uzunsa seçenek değil başka bir liste yakalanmıştır.
     if (unique.length >= 40) break;
   }
 
   return unique;
 }
 
-// Sayfadaki beden seçeneklerini ve varsa sayfada seçili olanı döndürür.
+// Sayfadaki seçenek eksenlerini ve varsa sayfada seçili olanları döndürür.
 // Tüm body'yi gezdiği için pahalı: taksit ve kargo taraması gibi yalnızca ürün
 // oturduktan sonra bir kez çağrılır, yoklama döngüsünün içinde asla.
-function findSizeOptions() {
-  const sizes = [];
-  let selected = "";
+function findProductOptions() {
+  const collected = new Map();
+
+  const add = (axis, result) => {
+    if (!result.values.length) return;
+
+    const current = collected.get(axis) || { values: [], selected: "" };
+
+    current.values.push(...result.values);
+    if (!current.selected) current.selected = result.selected;
+
+    collected.set(axis, current);
+  };
 
   for (const select of document.querySelectorAll("select")) {
-    if (!hasSizeSignal(select)) continue;
     if (isQuantityContainer(select)) continue;
 
-    const fromSelect = collectSizesFromSelect(select);
+    const axis = axisForContainer(select);
 
-    sizes.push(...fromSelect.sizes);
-    if (!selected) selected = fromSelect.selected;
+    if (!axis) continue;
+
+    add(axis, collectOptionsFromSelect(select, axis));
   }
 
   const containerSelector = [
@@ -973,7 +953,15 @@ function findSizeOptions() {
     "[class*='beden' i]",
     "[id*='size' i]",
     "[id*='beden' i]",
+    "[class*='renk' i]",
+    "[class*='color' i]",
+    "[class*='colour' i]",
+    "[class*='uzunluk' i]",
+    "[class*='length' i]",
+    "[class*='storage' i]",
+    "[class*='depolama' i]",
     "[data-testid*='size' i]",
+    "[data-testid*='color' i]",
     "[data-qa-action*='size' i]",
     "[aria-label*='beden' i]",
     "fieldset",
@@ -981,40 +969,75 @@ function findSizeOptions() {
   ].join(",");
 
   for (const container of document.querySelectorAll(containerSelector)) {
-    const signalled = hasSizeSignal(container);
+    const axis = axisForContainer(container);
 
     // Seçicide "ul" ve "fieldset" de var: ağır bir sayfada bunlardan yüzlerce
     // olabiliyor ve her birinde görünürlük kontrolü layout tetikliyor. İşareti
-    // olmayan kapta önce ucuz olan çocuk sayısına bakıyoruz — gerçek bir beden
-    // seçicisinde kırktan fazla seçenek olmuyor.
-    if (!signalled && container.childElementCount > 40) continue;
+    // olmayan kapta önce ucuz olan çocuk sayısına bakılıyor.
+    if (!axis && container.childElementCount > 40) continue;
 
-    // Gerçek beden seçicisi küçük bir kutudur. İşaretli bile olsa koca bir kap
-    // sayfa bölümüdür: Marks & Spencer TR'de "beden" işaretli sarmalayıcı ürün
-    // açıklamasını ve mağaza şehirlerini de kapsıyor ve hepsi beden listesine
-    // giriyordu.
+    // Gerçek seçici küçük bir kutudur. İşaretli bile olsa koca bir kap sayfa
+    // bölümüdür: Marks & Spencer TR'de "beden" işaretli sarmalayıcı ürün
+    // açıklamasını ve mağaza şehirlerini de kapsıyordu.
     if (cleanText(container.textContent).length > 600) continue;
-    if (isColourContainer(container)) continue;
+
     if (isQuantityContainer(container)) continue;
     if (isSizeChartContainer(container)) continue;
     if (isSiteChromeContainer(container)) continue;
     if (!isVisibleElement(container)) continue;
-    const fromContainer = collectSizesFromContainer(container, !signalled);
 
-    // İşareti olmayan kapta tek bir jeton beden listesi sayılmaz; gerçek beden
-    // seçicisinde her zaman birden fazla seçenek olur.
-    if (!signalled && fromContainer.sizes.length < 2) continue;
+    const result = collectOptionsFromContainer(container, axis || "size", !axis);
 
-    sizes.push(...fromContainer.sizes);
-    if (!selected) selected = fromContainer.selected;
+    // İşareti olmayan kapta tek bir jeton liste sayılmaz; gerçek seçicide her
+    // zaman birden fazla seçenek olur.
+    if (!axis && result.values.length < 2) continue;
+
+    add(axis || "size", result);
   }
 
-  if (!sizes.length) sizes.push(...collectSizesFromStructuredData());
+  if (!collected.has("size")) {
+    const structured = collectSizesFromStructuredData();
 
-  const uniqueSizes = dedupeSizes(sizes);
+    if (structured.length) collected.set("size", { values: structured, selected: "" });
+  }
 
-  return {
-    sizes: uniqueSizes,
-    size: uniqueSizes.includes(selected) ? selected : "",
-  };
+  const axes = [];
+
+  for (const axis of OPTION_AXIS_ORDER) {
+    const entry = collected.get(axis);
+
+    if (!entry) continue;
+
+    const values = dedupeOptionValues(entry.values);
+
+    if (!values.length) continue;
+
+    // Tek değerli eksen bir seçim değil, bilgidir: bu sitelerde diğer renkler
+    // ayrı ürün sayfası ve sayfadaki tek renk zaten bu ürünün rengi. Seçili
+    // sayılıyor ki sepete, CSV'ye ve paylaşılan listeye geçsin.
+    const selected = values.includes(entry.selected)
+      ? entry.selected
+      : values.length === 1
+        ? values[0]
+        : "";
+
+    axes.push({
+      key: axis,
+      label: OPTION_AXIS_LABELS[axis] || "",
+      values,
+      selected,
+    });
+  }
+
+  return axes;
+}
+
+// Beden ekseni tek başına da isteniyor: sepet kimliği ve eski kayıtlar bunun
+// üzerinden yürüyor.
+function findSizeOptions() {
+  const size = findProductOptions().find((axis) => axis.key === "size");
+
+  return size
+    ? { sizes: size.values, size: size.selected }
+    : { sizes: [], size: "" };
 }

@@ -112,13 +112,13 @@ cartItemsEl.addEventListener("click", async (event) => {
   }
 });
 
-// Beden açılır listesi tıklamayla değil seçimle çalışır; delegasyon da ayrı.
+// Seçenek açılır listeleri tıklamayla değil seçimle çalışır; delegasyon da ayrı.
 cartItemsEl.addEventListener("change", async (event) => {
   const target = event.target;
 
-  if (!target || !target.dataset || !target.dataset.setSize) return;
+  if (!target || !target.dataset || !target.dataset.setOption) return;
 
-  await setItemSize(target.dataset.setSize, target.value);
+  await setItemOption(target.dataset.setOption, target.dataset.optionKey, target.value);
 });
 
 purchasedItemsEl.addEventListener("click", async (event) => {

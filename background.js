@@ -399,10 +399,13 @@ async function updateSingleItem(item) {
         site: freshProduct.site || item.site,
         url: item.url,
 
-        // Beden listesi tazeleniyor (satıcı beden eklemiş ya da çıkarmış
-        // olabilir); kullanıcının seçtiği beden satırın kimliği olduğu için
-        // yukarıdaki ...item'dan geliyor ve burada değiştirilmiyor.
-        sizes: freshProduct.sizes?.length ? freshProduct.sizes : item.sizes || [],
+        // Seçenek listeleri tazeleniyor (satıcı beden ya da renk eklemiş,
+        // çıkarmış olabilir); kullanıcının seçtikleri satırın kimliği olduğu
+        // için korunuyor.
+        options: OrtakSepetCart.mergeOptions(
+          OrtakSepetCart.readOptions(item),
+          OrtakSepetCart.readOptions(freshProduct),
+        ),
 
         currency,
         currencySymbol: freshProduct.currencySymbol || item.currencySymbol || OrtakSepetCart.currencySymbolForCurrency(currency),
