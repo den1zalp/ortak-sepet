@@ -98,6 +98,16 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Düzeltilenler
 
+* **Columbia Türkiye kendi parser'ına taşındı.** Sayfasında `h1`, JSON-LD ve
+  `og:` etiketi yok; sınıf adları MUI/emotion tarafından derlemede üretiliyor
+  ("muirtl-1juxlzk") ve her sürümde değişiyor. Jenerik okuma bu yüzden ürün adı
+  yerine sayfa başlığını ("Columbia Türkiye Online Shop") sepete yazıyordu.
+  Ürün adı, ödenecek tutar, görsel ve bedenler artık Next.js'in sayfaya gömdüğü
+  `__NEXT_DATA__` verisinden okunuyor — o veri ilk HTML'le geldiği için fiyat
+  için render beklemek de gerekmiyor. Sayfadaki Insider öneri widget'ları başka
+  ürünlerin indirimli fiyatlarını basıyor ve DOM'dan fiyat aramak o tutarları
+  verebiliyordu; artık o riske hiç girilmiyor. Stoğu biten bedenler listeye
+  alınmıyor, varyantın varsayılan bedeni de sepete seçilmiş gibi yazılmıyor.
 * **Calvin Klein'da fiyat hiç okunamıyordu.** Ürünün JSON-LD'sinde `offers`
   boş geliyor, yani fiyat sayfadan okunmak zorunda; sınıf adları ise derlemede
   hash'leniyor ("PriceDisplay_PriceDisplay__FIRRe") ve tutunacak bir şey
@@ -145,17 +155,14 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Bilinen sınırlar
 
-* **Yeni eklenen 54 mağazanın 52'si canlı ürün sayfasında doğrulandı.**
+* **Yeni eklenen 54 mağazanın 53'ü canlı ürün sayfasında doğrulandı.**
   Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs
   live/platform-sites` hepsini tek seferde sınıyor: site adı tanınıyor mu, ad ve
   fiyat okunuyor mu, tutar sayfada gerçekten yazıyor mu ve üstü çizili liste
   fiyatı değil mi, görsel yükleniyor mu, kaç beden okunuyor.
-* **İki mağaza doğrulanmadı.** Levi's UK otomasyonla sürülen tarayıcıya sayfayı
-  hiç vermiyor ("Access Denied"); kullanıcının kendi tarayıcısında sorun yok ama
-  canlı test o mağazayı atlıyor. Columbia TR'nin ürün sayfasında ne `h1` ne
-  JSON-LD var, sayfa yalnızca öneri widget'larını render ediyor ve orada üç ayrı
-  tutar dönüyor; okunan fiyatın doğruluğu doğrulanamadığı için o mağaza teste
-  alınmadı — kendi parser'ını hak ediyor.
+* **Levi's UK doğrulanmadı.** Otomasyonla sürülen tarayıcıya sayfayı hiç
+  vermiyor ("Access Denied") ve boş HTML döndürüyor; kullanıcının kendi
+  tarayıcısında sorun yok ama canlı test o mağazayı atlıyor.
 * **Bazı mağazalarda fiyat sayfada metin olarak hiç görünmüyor** (SuperStep,
   Under Armour TR, Rossmann, English Home); tutar yapılandırılmış veriden
   okunuyor ve canlı test o mağazalarda "karşılaştırılamadı" diye not düşüyor.

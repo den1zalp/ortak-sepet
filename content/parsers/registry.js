@@ -342,11 +342,13 @@
       waitForPrice: true,
     },
     {
+      // Sayfada h1, JSON-LD ve og: etiketleri yok, sınıf adları da derlemede
+      // üretiliyor; ürün verisi __NEXT_DATA__'dan okunuyor (bkz. columbia-tr.js).
+      // O veri ilk HTML'le geldiği için fiyat beklemeye gerek yok.
       id: "columbia-tr",
       label: "Columbia TR",
       matches: hostIs("columbia.com.tr"),
-      parse: () => parsePlatformProduct({ site: "Columbia" }),
-      waitForPrice: true,
+      parse: () => parseColumbiaTr(),
     },
     {
       id: "desa",

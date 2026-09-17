@@ -244,6 +244,7 @@
         "content/parsers/nike-tr.js",
         "content/parsers/adidas-tr.js",
         "content/parsers/platform-shared.js",
+        "content/parsers/columbia-tr.js",
         "content/parsers/registry.js",
         "content.js"
       ],
