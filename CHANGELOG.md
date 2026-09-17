@@ -4,8 +4,6 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ## 1.12.0 — yayımlanmadı
 
-## 1.11.0 — 17 Eylül 2026
-
 ### Eklenenler
 
 * **Beden seçimi.** Ürün sepete eklenirken sayfadaki beden seçenekleri de
@@ -19,15 +17,13 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   çalışıyor, fiyat yoklama döngüsünün içinde değil. Fiyat güncellemesi beden
   listesini tazeliyor ama kullanıcının seçtiği bedene dokunmuyor: o satır o
   bedene ait.
-* **Yeni siteler (Türkiye):** Vans, Boyner, Nike, Adidas, Mavi, LTB, Koton,
-  Levi's, LC Waikiki, Colin's,
+* **Yeni siteler (Türkiye):** Mavi, LTB, Koton, Levi's, LC Waikiki, Colin's,
   Tudors, DeFacto, Jack & Jones, Gratis, Watsons, Rossmann, Apple, Atasun Optik,
   Beymen, Calvin Klein, Champion, Columbia, Desa, Karaca, Konyalı Saat, Lacoste,
   LEGO, Marks & Spencer, Mi Store, Mudo, Oysho, Pandora, Penti, Pull & Bear,
   Saat&Saat, Stradivarius, SuperStep, Supplementler.com, Swatch, Under Armour,
   Zuhal Müzik, Madame Coco, English Home.
-* **Yeni siteler (İngiltere):** Vans UK, Nike UK, Adidas UK, Levi's UK,
-  Jack & Jones UK, Apple UK, Calvin
+* **Yeni siteler (İngiltere):** Levi's UK, Jack & Jones UK, Apple UK, Calvin
   Klein UK, Champion, Columbia UK, Lacoste UK, LEGO UK, Marks & Spencer UK,
   Mi Store UK, Pandora UK, Pull & Bear UK, Stradivarius UK, Swatch UK,
   Under Armour UK.
@@ -66,39 +62,6 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   Ölçüt şu: renk seçicisi hiç okunmuyor, sayı bedeni makul aralıkta ve başında
   sıfır olmadan kabul ediliyor, kot bedeninde ("29/32") iki sayı da yirminin
   üstünde olmalı.
-* **Vans Türkiye'de indirimli tutar okunuyor.** Ürün sayfası indirim varken iki
-  fiyat basıyor: üstü çizili liste fiyatı ve ödenecek tutar. Fiyat kutusunun
-  tamamını okumak ikisini birden veriyor, bu yüzden ödenecek tutarı taşıyan
-  sınıf ayrıca aranıyor. Vans başlığı da yalnızca model adını verdiği için
-  ("KNU SKOOL AYAKKABI") renk başlığa ekleniyor.
-* **Boyner'de sepette uygulanan indirim doğru okunuyor.** Ürünün üstünde
-  "Sepette11.058,99 TL" gibi bir tutar duruyor ve aynı fiyat sayfada üç kez
-  basılıyor — ürün bilgisinde, yukarı kaydırınca çıkan yapışkan başlıkta ve
-  alttaki öneri kartlarında. Öneri kartındaki tutar başka bir ürüne ait
-  olduğundan okuma ürün bilgisi bloğuyla sınırlandı. Marka adı başlığın
-  dışında ayrı bir satırda durduğu için ("Converse" + "x Coca-Cola Beyaz Omuz
-  Çanta") sepette markasız görünmesin diye ikisi birleştiriliyor.
-* **Vans UK'de fiyatın tutunacak bir sınıfı yok.** Sayfa Tailwind yardımcı
-  sınıflarıyla kurulmuş, JSON-LD'de Product düğümü yok ve og: etiketleri
-  sunucudan gelen HTML'de bulunmuyor. Fiyat, ürün başlığının bulunduğu
-  kutunun içindeki ilk tutar olarak bulunuyor; sayfanın altındaki öneri
-  şeritleri onlarca fiyat daha bastığı için kutuyla sınırlamak şart.
-  İndirimli üründe kutuda iki tutar oluyor — "Initial price: £125.00" üstü
-  çizili, "Discounted price: £81.25" ödenecek olan — ve üstü çizili eleniyor.
-* **Nike ve Adidas'ta indirimli tutar okunuyor.** Dört sayfada da JSON-LD
-  yalnızca "ProductGroup" düğümü basıyor ve içinde fiyat yok, yani okunacak tek
-  yer görünen DOM. İki sitede de ödenecek tutar ile üstü çizili liste fiyatı
-  ayrı işaretlerde duruyor — Nike'ta "currentPrice-container" /
-  "initialPrice-container", Adidas'ta "main-price" / "original-price" — bu
-  yüzden fiyat kutusunun tamamı değil doğrudan ödenecek tutar okunuyor.
-  Aramanın ürün kutusuyla sınırlanması şart: Adidas'ta sayfadaki ilk fiyat
-  bileşeni alttaki öneri kartına ait (ürün 10.199 TL iken o kutu 2.049 TL
-  diyordu), Nike'ta ise öneri şeritleri onlarca fiyat daha basıyor.
-* **Nike'ta renk, Adidas'ta marka başlığa ekleniyor.** Nike'ın h1'i kısaltılmış
-  model adını veriyor ("Nike Vomero 18") ve rengi hiç taşımıyor; tam ad
-  og:title'dan, renk ürün açıklamasının ilk maddesinden alınıp birleştiriliyor.
-  Adidas'ta h1 marka ve renk taşımıyor ("Samba OG Shoes"), og:title üçünü
-  birden veriyor.
 
 ### Düzeltilenler
 
@@ -178,20 +141,6 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   kullanıcı bedeni elle girer. Bu bilinçli: sayfadaki her düğmeyi beden adayı
   saymak renk adlarını ve adet düğmelerini de beden diye sepete yazıyordu.
 
-* **Vans'in İngiltere mağazası ayrı bir alan adında değil**, global
-  `vans.com` adresinin `/en-gb/` yolunda; `vans.co.uk` oraya yönleniyor.
-  Eklenti yalnızca o yola giriyor, sitenin diğer ülke sayfaları
-  desteklenmiyor — oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
-  Site otomasyonla sürülen tarayıcıya ürün sayfasını vermediği için canlı
-  test bu siteyi atlıyor; parser gerçek sayfalarda elle doğrulandı.
-* **Nike'ın iki mağazası da global alan adının yolunda:** Türkiye
-  `nike.com/tr`, İngiltere `nike.com/gb` (nike.com.tr birincisine yönleniyor).
-  Eklenti yalnızca bu iki yola giriyor; sitenin diğer ülke sayfaları
-  desteklenmiyor, çünkü oradaki fiyat yanlış bölgeyle damgalanırdı.
-* **Adidas otomasyonla sürülen tarayıcıya sayfa vermiyor**, kendi engel
-  sayfasını basıyor. Kullanıcının tarayıcısında sorun yok ama canlı test iki
-  Adidas sitesini de atlıyor; parserlar gerçek sayfalarda elle doğrulandı.
-
 ### Geliştirme
 
 * `test/live/platform-sites.test.mjs` ortak platform parser'ını kullanan
@@ -210,6 +159,65 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   verdiğini doğruluyor: ikisi ayrışırsa "bu tutar üstü çizili mi" sorusunun
   cevabı sessizce yanlış çıkıyor. TR çekirdeğinin nokta/virgül ondalık okuması da
   burada.
+
+## 1.11.0 — yayımlandı
+
+### Eklenenler
+
+* **Yeni siteler:** Vans Türkiye, Vans UK, Boyner, Nike Türkiye, Nike UK,
+  Adidas Türkiye, Adidas UK.
+* **Vans Türkiye'de indirimli tutar okunuyor.** Ürün sayfası indirim varken iki
+  fiyat basıyor: üstü çizili liste fiyatı ve ödenecek tutar. Fiyat kutusunun
+  tamamını okumak ikisini birden veriyor, bu yüzden ödenecek tutarı taşıyan
+  sınıf ayrıca aranıyor. Vans başlığı da yalnızca model adını verdiği için
+  ("KNU SKOOL AYAKKABI") renk başlığa ekleniyor.
+* **Boyner'de sepette uygulanan indirim doğru okunuyor.** Ürünün üstünde
+  "Sepette11.058,99 TL" gibi bir tutar duruyor ve aynı fiyat sayfada üç kez
+  basılıyor — ürün bilgisinde, yukarı kaydırınca çıkan yapışkan başlıkta ve
+  alttaki öneri kartlarında. Öneri kartındaki tutar başka bir ürüne ait
+  olduğundan okuma ürün bilgisi bloğuyla sınırlandı. Marka adı başlığın
+  dışında ayrı bir satırda durduğu için ("Converse" + "x Coca-Cola Beyaz Omuz
+  Çanta") sepette markasız görünmesin diye ikisi birleştiriliyor.
+* **Vans UK'de fiyatın tutunacak bir sınıfı yok.** Sayfa Tailwind yardımcı
+  sınıflarıyla kurulmuş, JSON-LD'de Product düğümü yok ve og: etiketleri
+  sunucudan gelen HTML'de bulunmuyor. Fiyat, ürün başlığının bulunduğu
+  kutunun içindeki ilk tutar olarak bulunuyor; sayfanın altındaki öneri
+  şeritleri onlarca fiyat daha bastığı için kutuyla sınırlamak şart.
+  İndirimli üründe kutuda iki tutar oluyor — "Initial price: £125.00" üstü
+  çizili, "Discounted price: £81.25" ödenecek olan — ve üstü çizili eleniyor.
+* **Nike ve Adidas'ta indirimli tutar okunuyor.** Dört sayfada da JSON-LD
+  yalnızca "ProductGroup" düğümü basıyor ve içinde fiyat yok, yani okunacak tek
+  yer görünen DOM. İki sitede de ödenecek tutar ile üstü çizili liste fiyatı
+  ayrı işaretlerde duruyor — Nike'ta "currentPrice-container" /
+  "initialPrice-container", Adidas'ta "main-price" / "original-price" — bu
+  yüzden fiyat kutusunun tamamı değil doğrudan ödenecek tutar okunuyor.
+  Aramanın ürün kutusuyla sınırlanması şart: Adidas'ta sayfadaki ilk fiyat
+  bileşeni alttaki öneri kartına ait (ürün 10.199 TL iken o kutu 2.049 TL
+  diyordu), Nike'ta ise öneri şeritleri onlarca fiyat daha basıyor.
+* **Nike'ta renk, Adidas'ta marka başlığa ekleniyor.** Nike'ın h1'i kısaltılmış
+  model adını veriyor ("Nike Vomero 18") ve rengi hiç taşımıyor; tam ad
+  og:title'dan, renk ürün açıklamasının ilk maddesinden alınıp birleştiriliyor.
+  Adidas'ta h1 marka ve renk taşımıyor ("Samba OG Shoes"), og:title üçünü
+  birden veriyor.
+
+### Bilinen sınırlar
+
+* **Vans'in İngiltere mağazası ayrı bir alan adında değil**, global
+  `vans.com` adresinin `/en-gb/` yolunda; `vans.co.uk` oraya yönleniyor.
+  Eklenti yalnızca o yola giriyor, sitenin diğer ülke sayfaları
+  desteklenmiyor — oradaki euro fiyatı "İngiltere" bölgesiyle damgalanırdı.
+  Site otomasyonla sürülen tarayıcıya ürün sayfasını vermediği için canlı
+  test bu siteyi atlıyor; parser gerçek sayfalarda elle doğrulandı.
+* **Nike'ın iki mağazası da global alan adının yolunda:** Türkiye
+  `nike.com/tr`, İngiltere `nike.com/gb` (nike.com.tr birincisine yönleniyor).
+  Eklenti yalnızca bu iki yola giriyor; sitenin diğer ülke sayfaları
+  desteklenmiyor, çünkü oradaki fiyat yanlış bölgeyle damgalanırdı.
+* **Adidas otomasyonla sürülen tarayıcıya sayfa vermiyor**, kendi engel
+  sayfasını basıyor. Kullanıcının tarayıcısında sorun yok ama canlı test iki
+  Adidas sitesini de atlıyor; parserlar gerçek sayfalarda elle doğrulandı.
+
+### Geliştirme
+
 * `test/live/vans-boyner.test.mjs` iki siteyi de canlı sayfalarda doğruluyor
   ve parser'ın döndürdüğü tutarı sayfadaki tutarla ayrıca karşılaştırıyor;
   site geç render etmeye başlarsa parser sessizce jenerik yedeğe düşüp testi
