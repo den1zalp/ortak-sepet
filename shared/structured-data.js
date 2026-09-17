@@ -491,6 +491,30 @@ const OPTION_LABEL_PATTERNS = {
 
 const OPTION_AXIS_ORDER = ["size", "colour", "length", "storage"];
 
+// "Tek beden" bir seçim değil: ürünün bedeni yok demek. Sayfa bunu "OS"
+// (Levi's), "UNI" (Champion), "Tek Ebat" ya da "Standart" diye işaretliyor ve
+// sepette "Beden: OS" satırı çıkıyordu. Tek değerli beden ekseni bundan
+// ibaretse eksen hiç gösterilmiyor; birden fazla değer arasında geçiyorsa
+// ("Tek Ebat" ile "S" bir arada) gerçek bir seçenektir ve kalır.
+const ONE_SIZE_PATTERN =
+  /^(os|uni|u|std|tek|onesize|one size|tek ebat|tek beden|tek boy|standart|standard|universal|beden yok)$/i;
+
+function isOneSizeOnlyAxis(axis) {
+  const values = axis?.values || [];
+
+  return (
+    axis?.key === "size" &&
+    values.length === 1 &&
+    ONE_SIZE_PATTERN.test(normalizeOptionWords(values[0]))
+  );
+}
+
+// Parser kendi seçeneklerini okuduğunda tarama hiç çalışmıyor; aynı eleme
+// oradan gelen listeye de uygulansın diye ayrı bir kapı.
+function dropOneSizeAxes(options) {
+  return (options || []).filter((axis) => !isOneSizeOnlyAxis(axis));
+}
+
 // Sayfadaki etiket metni popup'ta olduğu gibi gösterilmiyor; bilinen eksenlerde
 // kullanıcının dili kullanılıyor. Yine de saklanıyor: bilinmeyen bir eksen
 // çıkarsa gösterilecek tek şey o.
@@ -622,6 +646,10 @@ function looksLikeOptionText(text, axis) {
     // giriyordu.
     if (/^[\d.,\/-]+$/.test(value)) return false;
 
+    // Renk kodu rengin adı değil: Mi UK'de swatch'ın "#000000" değeri listeye
+    // "Black"in yanına ayrı bir renk gibi giriyordu.
+    if (/^#[0-9a-f]{3,8}$/i.test(value)) return false;
+
     // Cinsiyet bağlantıları ve bölüm başlıkları renk kutusunun yanında duruyor
     // (LTB "female/male", Lacoste "Ürün Özellikleri").
     if (/^(male|female|erkek|kadin|unisex|cocuk)$/i.test(normalized)) return false;
@@ -649,6 +677,12 @@ function looksLikeOptionText(text, axis) {
   // Önek atıldıktan sonra hâlâ iki nokta taşıyan metin seçenek değil, bir
   // etiket-değer satırı: Levi's TR'de "Fit Referance : Ribcage" giriyordu.
   if (value.includes(":")) return false;
+
+  // Milimetre bir beden değil, ürünün ölçüsü: Atasun'da gözlüğün çerçeve
+  // ölçüleri ("54 MM", "21 MM", "145 MM") beden seçici gibi okunuyordu, oysa
+  // gözlükte seçilecek bir beden yok. Santimetre eleniyor değil; nevresim ve
+  // tencere gerçekten "200x220 Cm" diye seçiliyor.
+  if (axis === "size" && /^\d+([.,]\d+)?\s*mm$/i.test(normalized)) return false;
 
   // Sıfır bir beden değil.
   if (/^0+([.,]0+)?$/.test(value)) return false;
@@ -1020,6 +1054,8 @@ function findProductOptions() {
       : values.length === 1
         ? values[0]
         : "";
+
+    if (isOneSizeOnlyAxis({ key: axis, values })) continue;
 
     axes.push({
       key: axis,

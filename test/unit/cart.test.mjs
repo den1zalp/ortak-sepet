@@ -185,6 +185,23 @@ const legacyProduct = await Cart.addProduct({
 check("eski biçim seçeneğe çevrildi", legacyProduct.item.options[0].key, "size");
 check("eski biçim seçimi korundu", legacyProduct.item.options[0].selected, "M");
 
+// Depoda "Beden: OS" diye kaydedilmiş satırlar var; okurken düşmeliler, yoksa
+// tazeleme bile onları silmiyor (mergeOptions kullanıcının eksenini korur).
+for (const marker of ["OS", "UNI", "Tek Ebat"]) {
+  check(
+    "depodaki tek beden işareti okunmuyor: " + marker,
+    Cart.readOptions({ options: [{ key: "size", label: "Beden", values: [marker], selected: marker }] }).length,
+    0,
+  );
+}
+
+// Elle yazılan beden değer listesi taşımaz; ona dokunulmamalı.
+check(
+  "elle yazılan beden korunuyor",
+  Cart.readOptions({ options: [{ key: "size", label: "Beden", values: [], selected: "OS" }] })[0]?.selected,
+  "OS",
+);
+
 // Depoda eski biçimde duran kayıt da tek eksenli listeye çevrilmeli.
 const legacyStored = Cart.readOptions({ size: "L", sizes: ["S", "M", "L"] });
 check("eski kayıt okunuyor", legacyStored[0].selected, "L");

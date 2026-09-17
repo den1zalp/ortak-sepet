@@ -35,11 +35,32 @@ var OrtakSepetCart = (function () {
     return cleanText(size).toLocaleLowerCase("tr-TR");
   }
 
+  // Sayfadan okunmuş "tek beden" işareti (Levi's "OS", Champion "UNI", "Tek
+  // Ebat") bir seçim değil: ürünün bedeni yok demek. Depoda bu eleme
+  // gelmeden önce kaydedilmiş satırlar var ve sepette "Beden: OS" diye
+  // görünüyorlardı; okurken düşürülüyorlar. Parser tarafındaki aynı eleme
+  // shared/structured-data.js içinde. Kullanıcının elle yazdığı beden değer
+  // listesi taşımaz, o yüzden buradan etkilenmez.
+  const ONE_SIZE_PATTERN =
+    /^(os|uni|u|std|tek|onesize|one size|tek ebat|tek beden|tek boy|standart|standard|universal|beden yok)$/i;
+
+  function isOneSizeOnlyAxis(option) {
+    const values = option?.values || [];
+
+    return (
+      option?.key === "size" &&
+      values.length === 1 &&
+      ONE_SIZE_PATTERN.test(normalizeSize(values[0]).replace(/ı/g, "i"))
+    );
+  }
+
   // Ürün eskiden yalnızca beden taşıyordu. Depoda o dönemden kalan kayıtlar var;
   // okurken tek eksenli bir seçenek listesine çevriliyorlar ki sepet, dışa
   // aktarma ve fiyat güncellemesi tek bir yapı görsün.
   function readOptions(item) {
-    if (Array.isArray(item?.options)) return item.options;
+    if (Array.isArray(item?.options)) {
+      return item.options.filter((option) => !isOneSizeOnlyAxis(option));
+    }
 
     if (item?.size || item?.sizes?.length) {
       return [
@@ -49,7 +70,7 @@ var OrtakSepetCart = (function () {
           values: item.sizes || [],
           selected: item.size || "",
         },
-      ];
+      ].filter((option) => !isOneSizeOnlyAxis(option));
     }
 
     return [];

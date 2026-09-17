@@ -6,6 +6,23 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Düzeltilenler
 
+* **Bedeni olmayan ürüne beden satırı çıkıyordu.** Kullanıcı Levi's'ta bildirdi:
+  aksesuarlarda "Beden: OS" yazıyordu. "OS", "UNI", "Tek Ebat", "Standart" bir
+  seçim değil, ürünün bedeni yok demek; tek değerli beden ekseni bundan
+  ibaretse artık satır hiç çizilmiyor. Champion UK'in çantasındaki "UNI" de
+  aynı sınıftı ve canlı taramada kayboldu. Gerçek bedenler etkilenmiyor: stokta
+  tek beden kalmışsa ("24" — Levi's TR) o bilgi duruyor, "Tek Ebat" gerçek
+  bedenlerin arasında geçiyorsa seçenek olarak kalıyor. Eleme üç kapıda birden
+  yapılıyor — sayfa taraması, kendi seçeneklerini okuyan parser'lar ve depodan
+  okuma; sonuncusu olmasaydı kullanıcının sepetinde duran eski satırlar
+  tazelendikten sonra bile "Beden: OS" göstermeye devam ederdi. Kullanıcının
+  elle yazdığı beden değer listesi taşımadığı için bu elemeden etkilenmez.
+* **Gözlüğün çerçeve ölçüsü beden sanılıyordu.** Atasun'da "54 MM", "21 MM",
+  "145 MM" beden seçici gibi okunuyordu; gözlükte seçilecek beden yok.
+  Milimetre artık beden sayılmıyor, santimetre sayılıyor — nevresim ve tencere
+  gerçekten "200x220 Cm" diye seçiliyor.
+* **Renk kodu renk adının yanına giriyordu.** Mi UK'de swatch'ın "#000000"
+  değeri "Black"ten ayrı bir renk gibi listeye düşüyordu.
 * **Beden listesine sayfanın başka parçaları giriyordu.** Kullanıcı on yedi
   mağazada ekran görüntüsüyle bildirdi; her biri için ayrı bir eleme kuralı ve
   birim testi eklendi: listeleme filtresinin seçenekleri ("29/30 bedeninde 40

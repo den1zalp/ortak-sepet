@@ -49,11 +49,13 @@ function normalizeProduct(product) {
     region: product?.region || "UK",
 
     // A parser may supply its own options; otherwise the generic scan wins.
-    options: product?.options?.length
-      ? product.options
-      : product?.sizes?.length
-        ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
-        : productOptions,
+    options: dropOneSizeAxes(
+      product?.options?.length
+        ? product.options
+        : product?.sizes?.length
+          ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
+          : productOptions,
+    ),
 
     installmentAvailable: financeInfo.installmentAvailable,
     installmentText: financeInfo.installmentText,

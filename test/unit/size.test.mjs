@@ -221,7 +221,7 @@ const labelledByHeading = element("div", {
     element("span", { text: "Beden" }),
     element("div", {
       attrs: { class: "options" },
-      children: [element("button", { text: "Tek Ebat" })],
+      children: [element("button", { text: "36" })],
     }),
   ],
 });
@@ -231,7 +231,7 @@ labelledByHeading.children[1].previousElementSibling = labelledByHeading.childre
 check(
   "başlıktan tanınan kap",
   runScan({ containers: [labelledByHeading.children[1]] }).sizes.join(","),
-  "Tek Ebat",
+  "36",
 );
 
 // İşaretsiz kapta kırktan fazla çocuk varsa bu bir beden seçicisi değil: ağır
@@ -353,7 +353,23 @@ const variantId = element("div", {
   ],
 });
 
-check("varyant kimliği elendi", runScan({ containers: [variantId] }).sizes.join(","), "UNI");
+// Geriye kalan "UNI" tek beden işareti olduğu için eksen hiç açılmıyor;
+// kimliğin elendiğini gerçek bedenli bir kapla ayrıca ölçüyoruz.
+check("varyant kimliği elendi", runScan({ containers: [variantId] }).sizes.length, 0);
+
+const variantIdWithSize = element("div", {
+  attrs: { class: "size-options" },
+  children: [
+    element("button", { text: "S" }),
+    element("button", { text: "55342174437720" }),
+  ],
+});
+
+check(
+  "varyant kimliği gerçek bedenin yanında da elendi",
+  runScan({ containers: [variantIdWithSize] }).sizes.join(","),
+  "S",
+);
 
 // Renk seçicisi beden seçicisi değil; renk kodları sayı gibi görünüyor.
 // (Under Armour UK: 001, 513, 738)
@@ -642,6 +658,81 @@ check(
   runScanAxes({ containers: [colourJunk] }).find((a) => a.key === "colour")?.values.join(","),
   "Antrasit",
 );
+
+// Renk kodu renk adı değil. (Mi UK)
+const hexSwatches = element("div", {
+  attrs: { class: "colour-options" },
+  children: [
+    element("button", { text: "Black" }),
+    element("button", { text: "#000000" }),
+  ],
+});
+
+check(
+  "renk kodu listeye girmiyor",
+  runScanAxes({ containers: [hexSwatches] })
+    .find((axis) => axis.key === "colour")
+    ?.values.join(","),
+  "Black",
+);
+
+// Gözlüğün çerçeve ölçüsü beden değil. (Atasun)
+const frameSpecs = element("div", {
+  attrs: { class: "size-options" },
+  children: [
+    element("button", { text: "54 MM" }),
+    element("button", { text: "21 MM" }),
+    element("button", { text: "145 MM" }),
+  ],
+});
+
+check("milimetre ölçüsü beden sayılmıyor", runScan({ containers: [frameSpecs] }).sizes.length, 0);
+
+// Santimetre gerçek bir seçim olabiliyor. (Madame Coco, Karaca)
+const cmSizes = element("div", {
+  attrs: { class: "size-options" },
+  children: [
+    element("button", { text: "200x220 Cm" }),
+    element("button", { text: "240x260 Cm" }),
+  ],
+});
+
+check(
+  "santimetre ölçüsü beden kalıyor",
+  runScan({ containers: [cmSizes] }).sizes.join(","),
+  "200x220 Cm,240x260 Cm",
+);
+
+// "Tek beden" işareti bir seçim değil, bedeni olmayan ürün demek; sepette
+// "Beden: OS" satırı çıkmamalı. (Levi's "OS", Champion UK "UNI")
+for (const marker of ["OS", "UNI", "Tek Ebat", "Standart"]) {
+  const box = element("div", {
+    attrs: { class: "size-box" },
+    children: [element("button", { text: marker })],
+  });
+
+  check(`tek beden isareti eksen acmiyor: ${marker}`, runScan({ containers: [box] }).sizes.length, 0);
+}
+
+// Gerçek bedenlerin arasında geçiyorsa seçenektir ve kalır.
+const mixed = element("div", {
+  attrs: { class: "size-box" },
+  children: [
+    element("button", { text: "Tek Ebat" }),
+    element("button", { text: "S" }),
+    element("button", { text: "M" }),
+  ],
+});
+
+check("karışık listede tek ebat kalıyor", runScan({ containers: [mixed] }).sizes.join(","), "Tek Ebat,S,M");
+
+// Stokta tek gerçek beden kalmışsa o bilgi değerli, eksen durmalı.
+const lastOne = element("div", {
+  attrs: { class: "size-box" },
+  children: [element("button", { text: "38" })],
+});
+
+check("tek gerçek beden kalıyor", runScan({ containers: [lastOne] }).sizes.join(","), "38");
 
 // --- yapılandırılmış veri yedeği ---
 const fromJsonLd = runScan({

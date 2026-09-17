@@ -64,11 +64,13 @@ function normalizeProduct(product) {
     region: product?.region || "TR",
 
     // Parser kendi seçeneklerini verebilir; vermediyse jenerik tarama.
-    options: product?.options?.length
-      ? product.options
-      : product?.sizes?.length
-        ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
-        : productOptions,
+    options: dropOneSizeAxes(
+      product?.options?.length
+        ? product.options
+        : product?.sizes?.length
+          ? [{ key: "size", label: "Beden", values: product.sizes, selected: "" }]
+          : productOptions,
+    ),
 
     installmentAvailable: installmentInfo.installmentAvailable,
     installmentText: installmentInfo.installmentText,
