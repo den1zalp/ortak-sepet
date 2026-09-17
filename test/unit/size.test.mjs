@@ -396,6 +396,36 @@ const labelledValues = element("div", {
 
 check("etiket öneki atıldı", runScan({ containers: [labelledValues] }).sizes.join(","), "3,3.5");
 
+// Beden kutusunun yanındaki eylem düğmeleri ve form alanları seçenek değil.
+// (Levi's TR: "Favorilerime Ekle", "Paylaş" · Under Armour TR: "E-posta Adresi *"
+// · Marks & Spencer UK: işaretlenmemiş onay kutusunun "on" değeri.)
+const noise = element("div", {
+  attrs: { class: "product-size" },
+  children: [
+    element("button", { text: "Favorilerime Ekle" }),
+    element("button", { text: "Paylaş" }),
+    element("label", { text: "E-posta Adresi *" }),
+    element("input", { attrs: { type: "radio", value: "on" }, text: "on" }),
+    element("button", { text: "28-30" }),
+    element("button", { text: "29-32" }),
+  ],
+});
+
+check("eylem ve form metinleri elendi", runScan({ containers: [noise] }).sizes.join(","), "28-30,29-32");
+
+// Etiketin kendisi ve etiket-değer satırı seçenek değil. (Levi's TR)
+const labelNoise = element("div", {
+  attrs: { class: "size-box" },
+  children: [
+    element("span", { text: "Beden" }),
+    element("button", { text: "Fit Referance : Ribcage" }),
+    element("button", { text: "24" }),
+    element("button", { text: "26" }),
+  ],
+});
+
+check("etiket satırları elendi", runScan({ containers: [labelNoise] }).sizes.join(","), "24,26");
+
 // --- yapılandırılmış veri yedeği ---
 const fromJsonLd = runScan({
   jsonLd: [

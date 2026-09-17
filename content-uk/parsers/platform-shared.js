@@ -47,6 +47,44 @@ function findUkPlatformStructuredPrice(structured) {
   };
 }
 
+// Sayfadaki başlıklardan ürün adını seçer.
+//
+// "İlk h1'i al" yetmiyor: Pandora'nın sayfasında iki h1 var ve ilki logo, yani
+// sepete ürün adı yerine "Pandora" yazılıyordu. Yapılandırılmış veride ürün adı
+// varsa ona en çok benzeyen başlık seçiliyor; hiçbiri benzemiyorsa (başlıklar
+// logo ya da menüyse) doğrudan yapılandırılmış ad kullanılıyor.
+//
+// Başlık, yapılandırılmış adın kısaltılmışı olabiliyor ve o hâliyle daha
+// okunaklı; bu yüzden yeterince uzun olduğu sürece başlık tercih ediliyor
+// (Supplementler'in JSON-LD adı sonunda tire taşıyor).
+function pickPlatformTitle(structuredName, titleSelectors) {
+  const headings = [];
+
+  for (const selector of [...titleSelectors, "h1"]) {
+    for (const element of document.querySelectorAll(selector)) {
+      const text = cleanText(element.textContent);
+      if (text) headings.push(text);
+    }
+  }
+
+  const normalize = (text) => cleanText(text).toLocaleLowerCase("en-GB");
+  const name = cleanText(structuredName);
+
+  if (name) {
+    const normalizedName = normalize(name);
+
+    const matching = headings.find(
+      (heading) =>
+        normalizedName.includes(normalize(heading)) &&
+        heading.length >= name.length * 0.6,
+    );
+
+    return matching || name;
+  }
+
+  return headings[0] || "";
+}
+
 function parsePlatformProduct(options = {}) {
   const {
     site,
@@ -59,8 +97,7 @@ function parsePlatformProduct(options = {}) {
   const structuredPrice = findUkPlatformStructuredPrice(structured);
 
   const title =
-    getTextBySelectors([...titleSelectors, "h1"]) ||
-    cleanText(structured?.title) ||
+    pickPlatformTitle(structured?.title, titleSelectors) ||
     cleanText(getAttr("meta[property='og:title']", "content")) ||
     cleanText(document.title);
 

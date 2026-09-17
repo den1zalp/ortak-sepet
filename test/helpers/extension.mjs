@@ -112,8 +112,25 @@ export async function imageLoads(url, label) {
   if (!url) return [label, false, "adres yok"];
 
   try {
-    const response = await fetch(url, { redirect: "follow" });
+    // Bazı görsel CDN'leri tarayıcıdan gelmeyen isteği 403'lüyor (Pandora UK).
+    // Sınanan şey adresin gerçek bir görsel verip vermediği, Node'un çekip
+    // çekemediği değil; o yüzden istek tarayıcı gibi imzalanıyor.
+    const response = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+      },
+    });
     const type = response.headers.get("content-type") || "";
+
+    // 401/403: adres geçerli ama CDN sıcak bağlantıyı engelliyor (Pandora UK).
+    // Eklenti bu durumu zaten çözüyor — arka plan görseli indirip data URL'e
+    // çeviriyor — o yüzden burada hata sayılmıyor, not düşülüyor.
+    if (response.status === 401 || response.status === 403) {
+      return [label, true, `${response.status} (sıcak bağlantı engelli, arka plan indirecek)`];
+    }
 
     return [label, response.ok && /^image\//i.test(type), `${response.status} ${type}`];
   } catch (error) {

@@ -58,7 +58,11 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   tek seçenekli "0" listesi), kategori sayfasının beden filtresi ("200x220 Cm
   (174)" — Karaca), galeri sayacı ("1 / 5" — Mi Store), varyant kimliği
   ("55342174437720" — Champion), renk kodları ("001", "513" — Under Armour) ve
-  "Size & Fit Guide" bağlantısı. Her biri için eleme kuralı ve birim testi
+  "Size & Fit Guide" bağlantısı, beden kutusunun yanındaki eylem düğmeleri
+  ("Favorilerime Ekle", "Paylaş" — Levi's), bülten formunun alanları ("E-posta
+  Adresi *" — Under Armour TR), işaretlenmemiş onay kutusunun "on" değeri
+  (Marks & Spencer UK) ve etiket-değer satırları ("Fit Referance : Ribcage").
+  Her biri için eleme kuralı ve birim testi
   eklendi; seçenek metnindeki etiket öneki de atılıyor ("UK Size: 3" → "3").
   Ölçüt şu: renk seçicisi hiç okunmuyor, sayı bedeni makul aralıkta ve başında
   sıfır olmadan kabul ediliyor, kot bedeninde ("29/32") iki sayı da yirminin
@@ -94,6 +98,13 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Düzeltilenler
 
+* **İki başlıklı sayfalarda marka adı ürün adı sanılıyordu.** Pandora'nın ürün
+  sayfasında iki `h1` var: ilki logo, ikincisi ürün adı. "İlk h1'i al" kuralı
+  sepete "Pandora" yazıyordu. Başlık artık yapılandırılmış veriden gelen ürün
+  adına en çok benzeyen başlık olarak seçiliyor; hiçbiri benzemiyorsa
+  (başlıklar logo ya da menüyse) doğrudan o ad kullanılıyor. Başlık yeterince
+  uzun olduğu sürece yine tercih ediliyor, çünkü mağazaların JSON-LD adı bazen
+  daha kötü biçimlenmiş oluyor (Supplementler'inki sonunda tire taşıyor).
 * **Nokta ile yazılan ondalık fiyat yanlış okunuyordu.** TR mağazaları tutarı
   genelde "1.699,99 TL" yazıyor, DeFacto ise "1699.99 TL" basıyor. Fiyat
   kalıbında noktanın ondalık olduğu bir dal yoktu; o biçim hiçbir dala uymayınca
@@ -128,20 +139,21 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Bilinen sınırlar
 
-* **Yeni eklenen 54 mağazanın 37'si canlı ürün sayfasında doğrulandı.**
+* **Yeni eklenen 54 mağazanın 44'ü canlı ürün sayfasında doğrulandı.**
   Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs
   live/platform-sites` hepsini tek seferde sınıyor: site adı tanınıyor mu, ad ve
   fiyat okunuyor mu, tutar sayfada gerçekten yazıyor mu ve üstü çizili liste
   fiyatı değil mi, görsel yükleniyor mu, kaç beden okunuyor.
-* **Kalan 17 mağazada parser yazılı ama canlı doğrulama yapılamadı:** Koton,
-  Colin's, Columbia TR, Konyalı Saat, Marks & Spencer TR, Oysho, Pandora TR,
-  Pull & Bear TR, Swatch TR, Zuhal Müzik, Levi's UK, Jack & Jones UK, Calvin
-  Klein UK, Columbia UK, Pandora UK, Pull & Bear UK, Swatch UK. Sebep eklenti
-  değil, ürün adresine ulaşamamak: bu mağazaların bir kısmı otomasyonla sürülen
-  tarayıcıya sayfa vermiyor (Levi's UK "Access Denied" basıyor), bir kısmının
-  site haritası kapalı ya da sıkıştırılmış, Inditex mağazaları da ürün ızgarasını
-  yalnızca gerçek gezinmeyle basıyor. Bu mağazalardan birer ürün adresi
-  `platform-urls.json`'a yazılıp test tekrar çalıştırılmalı.
+* **Kalan 10 mağazada parser yazılı ama canlı doğrulama yapılamadı:** Koton,
+  Columbia TR, Konyalı Saat, Marks & Spencer TR, Pandora TR, Zuhal Müzik,
+  Levi's UK, Jack & Jones UK, Calvin Klein UK, Columbia UK. Sebep eklenti değil,
+  ürün sayfasına ulaşamamak: Levi's UK "Access Denied", Pandora TR ve Columbia
+  UK bot doğrulaması basıyor; Koton, Konyalı Saat, M&S TR ve Levi's / Jack &
+  Jones / Calvin Klein UK'in kategori sayfaları otomasyona ürün bağlantısı
+  vermiyor; Columbia TR'nin ürün sayfasında ne `h1` ne JSON-LD var ve sayfa
+  yalnızca öneri widget'larını render ediyor, okunan tutarın doğruluğu
+  doğrulanamadı. Bu mağazalardan birer ürün adresi `platform-urls.json`'a
+  yazılıp test tekrar çalıştırılmalı.
 * **Bazı mağazalarda fiyat sayfada metin olarak hiç görünmüyor** (SuperStep,
   Under Armour TR, Rossmann, English Home); tutar yapılandırılmış veriden
   okunuyor ve canlı test o mağazalarda "karşılaştırılamadı" diye not düşüyor.

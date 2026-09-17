@@ -443,8 +443,12 @@ const SIZE_TOKEN_PATTERN = new RegExp(
 
 // "Beden seçiniz" gibi yer tutucular listeye girmemeli: seçilmemiş hâli
 // anlatıyorlar, satın alınabilir bir beden değiller.
+// Beden seçicisinin içinde ya da yanında duran ama seçenek olmayan metinler:
+// yer tutucular, beden rehberi bağlantıları, eylem düğmeleri ("Favorilerime
+// Ekle", "Paylaş" — Levi's) ve bülten formunun alanları ("E-posta Adresi *" —
+// Under Armour TR). Hepsi gerçek sayfalarda sepete beden diye yazılmıştı.
 const SIZE_PLACEHOLDER_PATTERN =
-  /seçin|secin|seçiniz|seciniz|choose|select|please|lütfen|lutfen|tablo|rehber|guide|chart|bedenimi bul|find my|stokta yok|out of stock|tükendi|tukendi|bildir|notify/i;
+  /seçin|secin|seçiniz|seciniz|choose|select|please|lütfen|lutfen|tablo|rehber|guide|chart|bedenimi bul|bedenini bul|find my|stokta yok|out of stock|tükendi|tukendi|bildir|notify|ekle|paylaş|paylas|favori|karşılaştır|karsilastir|e-posta|e-mail|email|telefon|adres|share/i;
 
 // Bazı mağazalar seçeneğin metnine etiketi de koyuyor: Under Armour'da her
 // beden "UK Size: 3" diye geliyor ve açılır listede tekrar tekrar "UK Size:"
@@ -476,6 +480,20 @@ function looksLikeSizeText(text) {
 
   // Seçeneğin değil, başlığın kendisi: "Beden:" (Penti'de yakalandı).
   if (/:$/.test(value)) return false;
+
+  // Form alanı etiketi: zorunlu alanlar yıldızla işaretleniyor (Under Armour TR).
+  if (value.includes("*")) return false;
+
+  // İşaretlenmemiş onay kutusunun tarayıcı varsayılanı; Marks & Spencer UK'de
+  // beden listesine "on" diye giriyordu.
+  if (/^(on|off)$/i.test(value)) return false;
+
+  // Etiketin kendisi ("Beden", "Size") seçenek değil.
+  if (/^(beden|size|numara|ebat|talla)$/i.test(value)) return false;
+
+  // Önek atıldıktan sonra hâlâ iki nokta taşıyan metin beden değil, bir
+  // etiket-değer satırı: Levi's TR'de "Fit Referance : Ribcage" giriyordu.
+  if (value.includes(":")) return false;
 
   // Üç haneden uzun sayı beden değil, varyant kimliği: Champion'da seçenek
   // listesine "55342174437720" düşüyordu.
