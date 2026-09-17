@@ -87,6 +87,10 @@ cartItemsEl.addEventListener("click", async (event) => {
     await editItemPrice(target.dataset.editPrice);
   }
 
+  if (target.dataset.editSize) {
+    await editItemSize(target.dataset.editSize);
+  }
+
   if (target.dataset.remove) {
     await removeItem(target.dataset.remove);
   }
@@ -106,6 +110,15 @@ cartItemsEl.addEventListener("click", async (event) => {
   if (target.dataset.purchase) {
     await markItemPurchased(target.dataset.purchase);
   }
+});
+
+// Beden açılır listesi tıklamayla değil seçimle çalışır; delegasyon da ayrı.
+cartItemsEl.addEventListener("change", async (event) => {
+  const target = event.target;
+
+  if (!target || !target.dataset || !target.dataset.setSize) return;
+
+  await setItemSize(target.dataset.setSize, target.value);
 });
 
 purchasedItemsEl.addEventListener("click", async (event) => {

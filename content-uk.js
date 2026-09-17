@@ -19,6 +19,9 @@ function normalizeProduct(product) {
   const fallback = parseGenericProduct();
   const financeInfo = findFinanceInfo();
   const shippingInfo = findShippingInfo();
+  // The size scan walks the whole page like the finance and shipping ones do:
+  // it runs once here, never inside the waitForPrice loop.
+  const sizeInfo = findSizeOptions();
 
   const price =
     product?.price ||
@@ -44,6 +47,10 @@ function normalizeProduct(product) {
     currency: product?.currency || fallbackCurrency || null,
     currencySymbol: product?.currencySymbol || null,
     region: product?.region || "UK",
+
+    // A parser may supply its own size list; otherwise the generic scan wins.
+    sizes: product?.sizes?.length ? product.sizes : sizeInfo.sizes,
+    size: product?.size || sizeInfo.size || "",
 
     installmentAvailable: financeInfo.installmentAvailable,
     installmentText: financeInfo.installmentText,

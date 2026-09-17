@@ -107,6 +107,50 @@ const removed = { ...target, id: "silinmis-id" };
 check("silinmiş ürün geri yazılmadı", await Cart.saveRefreshedItem(removed), false);
 check("kalem sayısı değişmedi", store.ortakSepetItems.length, 3);
 
+// --- beden ürün kimliğinin parçası ---
+const jean = {
+  title: "Mavi Marcus Jean",
+  price: "1.299,90 TL",
+  url: "https://www.mavi.com/marcus-jean/p/123",
+  site: "Mavi",
+  region: "TR",
+  sizes: ["29/32", "30/32", "31/32"],
+};
+
+const jeanSmall = await Cart.addProduct({ ...jean, size: "30/32" });
+check("bedenli ürün eklendi", jeanSmall.status, "added");
+check("beden kaydedildi", jeanSmall.item.size, "30/32");
+check("beden listesi kaydedildi", jeanSmall.item.sizes.length, 3);
+
+const jeanLarge = await Cart.addProduct({ ...jean, size: "31/32" });
+check("farklı beden ayrı satır", jeanLarge.status, "added");
+
+const jeanAgain = await Cart.addProduct({ ...jean, size: "30/32" });
+check("aynı beden adet artırdı", jeanAgain.status, "increased");
+check("aynı bedende adet 2", jeanAgain.item.quantity, 2);
+
+const jeanLines = store.ortakSepetItems.filter((item) => item.site === "Mavi");
+check("iki beden iki satır", jeanLines.length, 2);
+
+// Büyük/küçük harf ve boşluk farkı aynı beden sayılmalı.
+const jeanSpaced = await Cart.addProduct({ ...jean, size: " 30/32 " });
+check("boşluklu beden aynı satır", jeanSpaced.status, "increased");
+
+// Bedensiz eklenen ürün de kendi satırı; eski kayıtlar böyle duruyor.
+const jeanNoSize = await Cart.addProduct(jean);
+check("bedensiz ürün ayrı satır", jeanNoSize.status, "added");
+
+// Fiyat güncellemesi kullanıcının bedenini değiştirmemeli: sayfa o an başka
+// bir bedeni seçili gösterse bile satır kullanıcının seçtiği bedene ait.
+const sizedTarget = store.ortakSepetItems.find((item) => item.size === "30/32");
+await Cart.saveRefreshedItem({ ...sizedTarget, size: "31/32", price: "1.199,90 TL" });
+const afterRefresh = store.ortakSepetItems.find((item) => item.id === sizedTarget.id);
+check("beden güncellemede korundu", afterRefresh.size, "30/32");
+check("fiyat güncellemede yazıldı", afterRefresh.price, "1.199,90 TL");
+
+check("isSameCartLine: aynı URL + aynı beden", Cart.isSameCartLine({ url: jean.url, size: "M" }, Cart.normalizeUrl(jean.url), "m"), true);
+check("isSameCartLine: aynı URL + farklı beden", Cart.isSameCartLine({ url: jean.url, size: "M" }, Cart.normalizeUrl(jean.url), "L"), false);
+
 // --- kategori kuralları ---
 check("kategori: iPhone kılıf şarj kablosu", categorize({ title: "iPhone kılıf şarj kablosu", site: "Trendyol" }), "Telefon & Aksesuar");
 check("kategori: Samsung çamaşır makinesi", categorize({ title: "Samsung çamaşır makinesi", site: "Teknosa" }), "Diğer");

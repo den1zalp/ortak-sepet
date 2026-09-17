@@ -28,6 +28,19 @@ var OrtakSepetCart = (function () {
     return String(text).replace(/\s+/g, " ").trim();
   }
 
+  // Beden ürün kimliğinin parçası: aynı pantolonun 30 ve 32 bedeni sepette iki
+  // ayrı satır, ayrı adet. Karşılaştırma büyük/küçük harf ve boşluk farkını
+  // yok sayar, bedensiz eklenmiş eski ürünler de ("" ile) buraya düşer.
+  function normalizeSize(size) {
+    return cleanText(size).toLocaleLowerCase("tr-TR");
+  }
+
+  function isSameCartLine(item, url, size) {
+    return (
+      normalizeUrl(item.url) === url && normalizeSize(item.size) === normalizeSize(size)
+    );
+  }
+
   function normalizeUrl(url) {
     if (!url) return "";
 
@@ -294,6 +307,12 @@ var OrtakSepetCart = (function () {
 
     existingItem.image = product.image || existingItem.image;
 
+    // Bedenin kendisi zaten eşleşti (kimliğin parçası); tazelenen yalnızca
+    // sayfadaki seçenek listesi, satıcı beden eklemiş ya da çıkarmış olabilir.
+    if (product.sizes?.length) {
+      existingItem.sizes = product.sizes;
+    }
+
     const currency = product.currency || detectCurrencyFromPrice(existingItem.price);
     existingItem.currency = currency;
     existingItem.currencySymbol = product.currencySymbol || currencySymbolForCurrency(currency);
@@ -329,6 +348,8 @@ var OrtakSepetCart = (function () {
       currency,
       currencySymbol: product.currencySymbol || currencySymbolForCurrency(currency),
       region: resolveRegion(product, currency),
+      sizes: product.sizes || [],
+      size: cleanText(product.size),
       quantity: 1,
       selected: true,
       category: null,
@@ -350,8 +371,8 @@ var OrtakSepetCart = (function () {
     const items = await getItems();
     const productUrl = normalizeUrl(product.url);
 
-    const existingItem = items.find(
-      (item) => normalizeUrl(item.url) === productUrl,
+    const existingItem = items.find((item) =>
+      isSameCartLine(item, productUrl, product.size),
     );
 
     if (existingItem) {
@@ -394,6 +415,9 @@ var OrtakSepetCart = (function () {
       quantity: items[index].quantity,
       selected: items[index].selected,
       category: items[index].category,
+      // The size is the user's pick and part of this line's identity: a refresh
+      // that read a different size off the page must not move the item onto it.
+      size: items[index].size,
     };
 
     await setItems(items);
@@ -415,9 +439,11 @@ var OrtakSepetCart = (function () {
     getQuantity,
     getViewMode,
     hasUnavailableMainPrice,
+    isSameCartLine,
     isUnknownInstallmentInfo,
     mergeInstallmentAvailable,
     mergeInstallmentText,
+    normalizeSize,
     normalizeUrl,
     regionForCurrency,
     resolveRegion,

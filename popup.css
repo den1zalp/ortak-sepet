@@ -439,6 +439,27 @@ button:disabled {
   color: #111827;
 }
 
+/* Beden seçici. Satır düzenini bozmasın diye detay değeri genişliğinde
+   kalıyor; sepette yan yana çok sayıda ürün olduğunda listeyi uzatmamak için
+   yüksekliği detay satırıyla aynı. */
+.size-select {
+  max-width: 100%;
+  padding: 2px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.size-select:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
 .cart-actions {
   display: flex;
   flex-wrap: wrap;
@@ -871,6 +892,12 @@ body.dark-mode .cart-image {
 
 body.dark-mode .cart-title,
 body.dark-mode .line-total,
+body.dark-mode .size-select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
 body.dark-mode .detail-value-strong,
 body.dark-mode .category-title {
   color: #f8fafc;

@@ -265,6 +265,61 @@ async function editItemPrice(id) {
   await renderCart();
 }
 
+// Beden değiştirmek satırın kimliğini değiştiriyor: aynı üründen o bedeni
+// taşıyan başka bir satır varsa ikisi tek satırda birleşiyor. Yoksa sepette
+// birbirinin aynısı iki satır kalır ve "Bu Ürünü Ekle" hangisine yazacağını
+// bilemezdi.
+async function setItemSize(id, newSize) {
+  const items = await getCartItems();
+  const item = items.find((cartItem) => cartItem.id === id);
+
+  if (!item) return;
+
+  const size = OrtakSepetCart.cleanText(newSize);
+
+  if (OrtakSepetCart.normalizeSize(item.size) === OrtakSepetCart.normalizeSize(size)) {
+    return;
+  }
+
+  const itemUrl = OrtakSepetCart.normalizeUrl(item.url);
+
+  const twin = items.find(
+    (cartItem) =>
+      cartItem.id !== id && OrtakSepetCart.isSameCartLine(cartItem, itemUrl, size),
+  );
+
+  if (twin) {
+    twin.quantity = getQuantity(twin) + getQuantity(item);
+    twin.updatedAt = new Date().toISOString();
+
+    await saveCartItems(items.filter((cartItem) => cartItem.id !== id));
+    setStatus(translate("sizeMerged"));
+    await renderCart();
+    return;
+  }
+
+  item.size = size;
+  item.updatedAt = new Date().toISOString();
+
+  await saveCartItems(items);
+  setStatus(translate("sizeUpdated"));
+  await renderCart();
+}
+
+// Sayfadan beden okunamayan sitelerde kullanıcı kendi yazıyor.
+async function editItemSize(id) {
+  const items = await getCartItems();
+  const item = items.find((cartItem) => cartItem.id === id);
+
+  if (!item) return;
+
+  const input = window.prompt(translate("promptNewSize"), item.size || "");
+
+  if (input === null) return;
+
+  await setItemSize(id, input);
+}
+
 async function removeItem(id) {
   const items = await getCartItems();
   const updatedItems = items.filter((item) => item.id !== id);
@@ -290,6 +345,7 @@ function createPurchaseRecord(item) {
     image: item.image || "",
     category: item.category || null,
     price: item.price || null,
+    size: item.size || "",
     quantity: getQuantity(item),
     currency: getItemCurrency(item),
     currencySymbol: item.currencySymbol || null,
@@ -354,6 +410,7 @@ async function restorePurchase(id) {
     image: record.image,
     category: record.category || null,
     price: record.price,
+    size: record.size || "",
     currency: record.currency,
     currencySymbol: record.currencySymbol,
     region: record.region,

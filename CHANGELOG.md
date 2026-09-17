@@ -41,8 +41,117 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   og:title'dan, renk ürün açıklamasının ilk maddesinden alınıp birleştiriliyor.
   Adidas'ta h1 marka ve renk taşımıyor ("Samba OG Shoes"), og:title üçünü
   birden veriyor.
+* **Beden seçimi.** Ürün sepete eklenirken sayfadaki beden seçenekleri de
+  okunuyor ve sepette her ürünün altında bir açılır liste çıkıyor: kot için
+  "29/32", tişört için "M", kozmetikte "50 ml". Beden ürünün kimliğinin parçası
+  — aynı ürünü iki farklı bedende eklemek sepette iki ayrı satır oluşturuyor,
+  aynı bedeni tekrar eklemek adedi artırıyor. Sayfadan beden okunamayan
+  sitelerde "Beden Gir" düğmesiyle elle yazılabiliyor. Seçilen beden CSV'ye,
+  panoya kopyalanan listeye ve "Alındı" kaydına da geçiyor. Beden taraması
+  taksit ve kargo taraması gibi pahalı olduğu için ürün oturduktan sonra bir kez
+  çalışıyor, fiyat yoklama döngüsünün içinde değil. Fiyat güncellemesi beden
+  listesini tazeliyor ama kullanıcının seçtiği bedene dokunmuyor: o satır o
+  bedene ait.
+* **Beden taraması gerçek sayfalarda kalibre edildi.** İlk sürüm beden
+  seçicisine benzeyen her kabı okuyordu ve canlı doğrulamada sepete beden diye
+  şunlar yazıldı: Tailwind'in `size-4`/`size-6` yardımcı sınıfları (Lacoste'ta
+  tek seçenekli "0" listesi), kategori sayfasının beden filtresi ("200x220 Cm
+  (174)" — Karaca), galeri sayacı ("1 / 5" — Mi Store), varyant kimliği
+  ("55342174437720" — Champion), renk kodları ("001", "513" — Under Armour) ve
+  "Size & Fit Guide" bağlantısı. Her biri için eleme kuralı ve birim testi
+  eklendi; seçenek metnindeki etiket öneki de atılıyor ("UK Size: 3" → "3").
+  Ölçüt şu: renk seçicisi hiç okunmuyor, sayı bedeni makul aralıkta ve başında
+  sıfır olmadan kabul ediliyor, kot bedeninde ("29/32") iki sayı da yirminin
+  üstünde olmalı.
+* **Yeni siteler (Türkiye):** Mavi, LTB, Koton, Levi's, LC Waikiki, Colin's,
+  Tudors, DeFacto, Jack & Jones, Gratis, Watsons, Rossmann, Apple, Atasun Optik,
+  Beymen, Calvin Klein, Champion, Columbia, Desa, Karaca, Konyalı Saat, Lacoste,
+  LEGO, Marks & Spencer, Mi Store, Mudo, Oysho, Pandora, Penti, Pull & Bear,
+  Saat&Saat, Stradivarius, SuperStep, Supplementler.com, Swatch, Under Armour,
+  Zuhal Müzik, Madame Coco, English Home.
+* **Yeni siteler (İngiltere):** Levi's UK, Jack & Jones UK, Apple UK, Calvin
+  Klein UK, Champion, Columbia UK, Lacoste UK, LEGO UK, Marks & Spencer UK,
+  Mi Store UK, Pandora UK, Pull & Bear UK, Stradivarius UK, Swatch UK,
+  Under Armour UK.
+* **Ortak platform parser'ı.** Yeni eklenen mağazaların hemen hepsi ürün
+  sayfasında schema.org Product verisi yayımlıyor (Akinon, Ticimax, SFCC,
+  Shopify, T-Soft ve kendi altyapısını yazanların çoğu). Bu yüzden her siteye
+  ayrı bir dosya yazmak yerine `content/parsers/platform-shared.js` ve
+  `content-uk/parsers/platform-shared.js` eklendi: fiyatı önce yapılandırılmış
+  veriden, o okunamazsa altyapıya göre seçici listesinden alıyorlar. Sıra
+  bilinçli — indirimli üründe sayfada hem ödenecek tutar hem üstü çizili liste
+  fiyatı duruyor ve `offers.price` ödenecek olanı veriyor. Oysho, Pull & Bear ve
+  Stradivarius Zara/Bershka ile aynı Inditex altyapısında olduğu için fiyatı
+  konumundan bulan ortak yola bağlandı.
+* **Aynı alan adını paylaşan mağazalar.** Apple, Mi Store, Lacoste, LEGO,
+  Levi's, Jack & Jones, Pull & Bear, Stradivarius, Swatch ve Pandora'nın iki
+  bölgedeki mağazası aynı alan adında; hangi content script'in yükleneceğini
+  manifest'teki yol (`apple.com/tr/` ↔ `apple.com/uk/`) ya da alt alan adı
+  (`tr.pandora.net` ↔ `uk.pandora.net`) belirliyor. İngiltere tarafındaki site
+  adı tespiti de parça aramasından alan adı eşleşmesine çevrildi:
+  "marksandspencer.com" parça olarak "marksandspencer.com.tr" içinde de geçiyor
+  ve Türkiye mağazasına İngiltere adını verirdi.
+
+### Düzeltilenler
+
+* **Nokta ile yazılan ondalık fiyat yanlış okunuyordu.** TR mağazaları tutarı
+  genelde "1.699,99 TL" yazıyor, DeFacto ise "1699.99 TL" basıyor. Fiyat
+  kalıbında noktanın ondalık olduğu bir dal yoktu; o biçim hiçbir dala uymayınca
+  yalnızca sondaki "99 TL" eşleşiyor ve sepete 1.699,99 yerine **99 TL**
+  yazılıyordu. Bu DeFacto'ya özel bir düzeltme değil, TR çekirdeğinin fiyat
+  okumasındaki boşluktu; eklenen dal para birimi şart koşuyor ki "4.5 yıldız"
+  gibi ondalıklar fiyat sanılmasın.
+* **Mağaza yapılandırılmış veriye liste fiyatını yazdığında indirimli tutar
+  okunuyor.** Supplementler'in JSON-LD'si 5499 derken sayfada o tutar üstü
+  çizili ve ödenecek olan 4299; sepete indirimsiz fiyat yazılıyordu. Artık
+  yapılandırılmış veriden gelen tutarın sayfada üstü çizili gösterilip
+  gösterilmediğine bakılıyor, öyleyse yanındaki ödenecek tutar okunuyor. Karar
+  sınıf adına değil hesaplanmış stile bakarak ve yalnızca ürün alanında
+  veriliyor: "original"/"old" sınıfları indirimsiz üründe de bulunuyor ve
+  sayfanın altındaki öneri kartlarında üstü çizili tutarlar var — ikisi de
+  indirimsiz ürünü (Champion) indirimli sanmaya yol açıyordu.
+* **Görseli olmayan mağazalarda sepette boş kare çıkıyordu.** LC Waikiki ürün
+  sayfasında ne JSON-LD ne og:image var; ortak platform parser'ı ikisi de yoksa
+  artık sayfadaki ürün görselini tarıyor. Tarama hâlâ son çare — kampanya
+  afişini ürün sanmamak için önce yapılandırılmış veriye bakılıyor.
+* **JSON-LD görseli iç içe dizi olduğunda sepete kırık adres yazılıyordu.**
+  schema.org görseli dört ayrı biçimde gelebiliyor ve LTB `[[adres1, adres2…]]`
+  biçimini kullanıyor; `image[0]` yine bir dizi olduğu için adres alanına bütün
+  galeri virgülle birleşmiş tek metin olarak düşüyor ve sepette ürün görseli
+  boş kare çıkıyordu. Bu biçime özel bir mağaza düzeltmesi değil: görsel artık
+  hangi biçimde gelirse gelsin düzleştirilip ilk kullanılabilir adres alınıyor.
+* **Mağazanın bozuk yazdığı görsel adresi kullanılmıyor.** Champion'ın
+  yapılandırılmış verisi `https:files/CHPEU_806020_KK001_Full.jpg` basıyor —
+  şema var, host yok — ve o adres hiçbir yere çıkmıyor. Adres kullanılabilir
+  görünmüyorsa sayfanın `og:image`'ine düşülüyor; Champion'da doğru görsel
+  zaten orada duruyordu.
 
 ### Bilinen sınırlar
+
+* **Yeni eklenen 54 mağazanın 37'si canlı ürün sayfasında doğrulandı.**
+  Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs
+  live/platform-sites` hepsini tek seferde sınıyor: site adı tanınıyor mu, ad ve
+  fiyat okunuyor mu, tutar sayfada gerçekten yazıyor mu ve üstü çizili liste
+  fiyatı değil mi, görsel yükleniyor mu, kaç beden okunuyor.
+* **Kalan 17 mağazada parser yazılı ama canlı doğrulama yapılamadı:** Koton,
+  Colin's, Columbia TR, Konyalı Saat, Marks & Spencer TR, Oysho, Pandora TR,
+  Pull & Bear TR, Swatch TR, Zuhal Müzik, Levi's UK, Jack & Jones UK, Calvin
+  Klein UK, Columbia UK, Pandora UK, Pull & Bear UK, Swatch UK. Sebep eklenti
+  değil, ürün adresine ulaşamamak: bu mağazaların bir kısmı otomasyonla sürülen
+  tarayıcıya sayfa vermiyor (Levi's UK "Access Denied" basıyor), bir kısmının
+  site haritası kapalı ya da sıkıştırılmış, Inditex mağazaları da ürün ızgarasını
+  yalnızca gerçek gezinmeyle basıyor. Bu mağazalardan birer ürün adresi
+  `platform-urls.json`'a yazılıp test tekrar çalıştırılmalı.
+* **Bazı mağazalarda fiyat sayfada metin olarak hiç görünmüyor** (SuperStep,
+  Under Armour TR, Rossmann, English Home); tutar yapılandırılmış veriden
+  okunuyor ve canlı test o mağazalarda "karşılaştırılamadı" diye not düşüyor.
+* **Mavi otomasyonla sürülen tarayıcıya sayfa vermiyor**, "Sorry, you have been
+  blocked" basıyor. Kullanıcının kendi tarayıcısında sorun yok ama canlı test
+  bu siteyi göremiyor; Adidas ve Vans'te de durum aynı.
+* **Beden listesi sayfanın markup'ına bağlı.** Beden seçicisini "beden"/"size"
+  işareti taşıyan kaplardan okuyoruz; işareti olmayan sitede liste boş kalır ve
+  kullanıcı bedeni elle girer. Bu bilinçli: sayfadaki her düğmeyi beden adayı
+  saymak renk adlarını ve adet düğmelerini de beden diye sepete yazıyordu.
 
 * **Vans'in İngiltere mağazası ayrı bir alan adında değil**, global
   `vans.com` adresinin `/en-gb/` yolunda; `vans.co.uk` oraya yönleniyor.
@@ -60,6 +169,22 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Geliştirme
 
+* `test/live/platform-sites.test.mjs` ortak platform parser'ını kullanan
+  mağazaları canlı sayfalarda doğruluyor. Adresler koda gömülü değil,
+  `test/live/platform-urls.json` içinde: elli küsur mağazanın ürün adresi
+  kampanya bitince ölüyor ve her ölen adres testi eklentiyle ilgisi olmayan bir
+  sebeple kırmızıya çevirirdi. Adresi yazılı olmayan mağaza atlanıyor, böylece
+  eldeki adreslerle kısmi koşu yapılabiliyor.
+* `test/unit/size.test.mjs` beden taramasını sahte DOM'da sınıyor; içindeki
+  elemelerin çoğu gerçek sayfalarda yakalanan hatalardan geldi ve her birinin
+  yorumunda hangi mağazada çıktığı yazıyor.
+* `test/unit/structured-image.test.mjs` JSON-LD görselinin dört biçimini ve
+  bozuk adres yedeğini sınıyor.
+* `test/unit/price-number.test.mjs` fiyat metninin sayıya çevrilmesini sınıyor ve
+  `shared/cart.js` ile `shared/structured-data.js` kurallarının aynı sonucu
+  verdiğini doğruluyor: ikisi ayrışırsa "bu tutar üstü çizili mi" sorusunun
+  cevabı sessizce yanlış çıkıyor. TR çekirdeğinin nokta/virgül ondalık okuması da
+  burada.
 * `test/live/vans-boyner.test.mjs` iki siteyi de canlı sayfalarda doğruluyor
   ve parser'ın döndürdüğü tutarı sayfadaki tutarla ayrıca karşılaştırıyor;
   site geç render etmeye başlarsa parser sessizce jenerik yedeğe düşüp testi

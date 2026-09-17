@@ -34,6 +34,9 @@ function normalizeProduct(product) {
   const fallback = parseGenericProduct();
   const installmentInfo = findInstallmentInfo();
   const shippingInfo = findShippingInfo();
+  // Beden taraması da taksit/kargo gibi tüm sayfayı geziyor; burada bir kez
+  // çalışır, waitForPrice döngüsünün içinde asla.
+  const sizeInfo = findSizeOptions();
 
   const price =
     product?.price ||
@@ -59,6 +62,10 @@ function normalizeProduct(product) {
     currency: product?.currency || fallbackCurrency || null,
     currencySymbol: product?.currencySymbol || null,
     region: product?.region || "TR",
+
+    // Parser kendi beden listesini verebilir; vermediyse jenerik tarama.
+    sizes: product?.sizes?.length ? product.sizes : sizeInfo.sizes,
+    size: product?.size || sizeInfo.size || "",
 
     installmentAvailable: installmentInfo.installmentAvailable,
     installmentText: installmentInfo.installmentText,

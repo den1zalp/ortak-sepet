@@ -165,6 +165,62 @@ function applyCategoryAccent(element, categoryName) {
   element.style.setProperty("--category-color", getCategoryColor(categoryName));
 }
 
+// Beden satırı. Sayfadan okunmuş seçenek varsa açılır liste, yoksa elle
+// girilmiş bedenin kendisi gösterilir.
+//
+// Kullanıcının seçtiği beden listede olmayabilir: satıcı o bedeni kaldırmış ya
+// da ürün sayfası bu kez seçenekleri geç render etmiş olabilir. Sepetteki satır
+// o bedene ait olduğu için listeye başa ekleniyor; yoksa seçim sessizce
+// kaybolurdu.
+function createSizeRow(item, fullTitle) {
+  const row = document.createElement("div");
+  row.className = "detail-row";
+
+  const label = document.createElement("span");
+  label.className = "detail-label";
+  label.textContent = `${translate("size")}:`;
+  row.appendChild(label);
+
+  const options = Array.isArray(item.sizes) ? item.sizes : [];
+
+  if (!options.length) {
+    const value = document.createElement("span");
+    value.className = item.size
+      ? "detail-value detail-value-strong"
+      : "detail-value";
+    value.textContent = item.size || translate("sizeUnknown");
+    row.appendChild(value);
+
+    return row;
+  }
+
+  const select = document.createElement("select");
+  select.className = "size-select";
+  select.dataset.setSize = item.id;
+  select.setAttribute("aria-label", translate("sizeLabel", { title: fullTitle }));
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = translate("sizePlaceholder");
+  placeholder.selected = !item.size;
+  select.appendChild(placeholder);
+
+  const values =
+    item.size && !options.includes(item.size) ? [item.size, ...options] : options;
+
+  for (const size of values) {
+    const option = document.createElement("option");
+    option.value = size;
+    option.textContent = size;
+    option.selected = size === item.size;
+    select.appendChild(option);
+  }
+
+  row.appendChild(select);
+
+  return row;
+}
+
 function createCartItemElement(item) {
   const wrapper = document.createElement("div");
   wrapper.className = isSelected(item)
@@ -238,6 +294,13 @@ function createCartItemElement(item) {
   details.appendChild(
     createDetailRow(translate("price"), getPriceDisplayText(item), Boolean(item.price)),
   );
+
+  // Beden satırı yalnızca bedeni olan üründe: sepette televizyonun altında
+  // "Beden: Belirtilmedi" yazması gereksiz gürültüydü. Bedeni sonradan yazmak
+  // isteyen için "Beden Gir" düğmesi eylem satırında duruyor.
+  if (item.size || (Array.isArray(item.sizes) && item.sizes.length)) {
+    details.appendChild(createSizeRow(item, fullTitle));
+  }
 
   const stockDisplayText = getStockDisplayText(item);
   if (stockDisplayText) {
@@ -322,6 +385,14 @@ function createCartItemElement(item) {
   editPriceButton.dataset.editPrice = item.id;
   editPriceButton.setAttribute("aria-label", translate("manualPriceLabel", { title: fullTitle }));
 
+  // Sayfadan beden okunabildiyse seçim açılır listeden yapılıyor; düğme
+  // yalnızca liste boşken gerekiyor.
+  const editSizeButton = document.createElement("button");
+  editSizeButton.className = "small-button";
+  editSizeButton.textContent = translate("editSize");
+  editSizeButton.dataset.editSize = item.id;
+  editSizeButton.setAttribute("aria-label", translate("editSizeLabel", { title: fullTitle }));
+
   const removeButton = document.createElement("button");
   removeButton.className = "small-button";
   removeButton.textContent = translate("remove");
@@ -331,6 +402,11 @@ function createCartItemElement(item) {
   actions.appendChild(purchaseButton);
   actions.appendChild(openButton);
   actions.appendChild(editPriceButton);
+
+  if (!Array.isArray(item.sizes) || !item.sizes.length) {
+    actions.appendChild(editSizeButton);
+  }
+
   actions.appendChild(removeButton);
 
   if (itemNeedsPermission(item)) {
@@ -588,6 +664,10 @@ function createPurchaseElement(record) {
   details.appendChild(
     createDetailRow(translate("price"), getPriceDisplayText(record), Boolean(record.price)),
   );
+  if (record.size) {
+    details.appendChild(createDetailRow(translate("size"), record.size, true));
+  }
+
   details.appendChild(
     createDetailRow(translate("csvQuantity"), String(getQuantity(record)), false),
   );

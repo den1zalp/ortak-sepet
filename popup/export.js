@@ -28,6 +28,7 @@ function buildCsvContent(items) {
     translate("csvProductName"),
     translate("csvSite"),
     translate("csvPrice"),
+    translate("csvSize"),
     translate("csvQuantity"),
     translate("csvSubtotal"),
     translate("csvCurrency"),
@@ -48,6 +49,7 @@ function buildCsvContent(items) {
       item.title || "",
       item.site || "",
       item.price || "",
+      item.size || "",
       getQuantity(item),
       itemTotal === null ? "" : formatPriceByCurrency(itemTotal, currency),
       currency,
@@ -81,8 +83,11 @@ function buildCartText(items) {
     const price = getPriceDisplayText(item);
     const quantityPart = quantity > 1 ? ` x ${quantity}` : "";
     const sitePart = item.site ? ` (${item.site})` : "";
+    // Beden ürün adının hemen ardında: paylaşılan listede hangi bedenden
+    // bahsedildiği fiyattan önce okunsun.
+    const sizePart = item.size ? ` [${item.size}]` : "";
 
-    lines.push(`• ${item.title || translate("noProductTitle")} — ${price}${quantityPart}${sitePart}`);
+    lines.push(`• ${item.title || translate("noProductTitle")}${sizePart} — ${price}${quantityPart}${sitePart}`);
 
     if (item.url) {
       lines.push(`  ${item.url}`);
