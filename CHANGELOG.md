@@ -2,7 +2,7 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.11.0 — yayımlanmadı
+## 1.11.0 — 31 Ağustos 2026
 
 ### Eklenenler
 
