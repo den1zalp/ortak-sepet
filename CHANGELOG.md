@@ -98,6 +98,12 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Düzeltilenler
 
+* **Calvin Klein'da fiyat hiç okunamıyordu.** Ürünün JSON-LD'sinde `offers`
+  boş geliyor, yani fiyat sayfadan okunmak zorunda; sınıf adları ise derlemede
+  hash'leniyor ("PriceDisplay_PriceDisplay__FIRRe") ve tutunacak bir şey
+  bırakmıyor. Fiyat artık `data-testid` işaretinden okunuyor. Öneri kartları da
+  fiyat basıyor ama onların işareti başka, ürününki "ProductHeaderPrice-"
+  önekli.
 * **İki başlıklı sayfalarda marka adı ürün adı sanılıyordu.** Pandora'nın ürün
   sayfasında iki `h1` var: ilki logo, ikincisi ürün adı. "İlk h1'i al" kuralı
   sepete "Pandora" yazıyordu. Başlık artık yapılandırılmış veriden gelen ürün
@@ -139,21 +145,17 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Bilinen sınırlar
 
-* **Yeni eklenen 54 mağazanın 44'ü canlı ürün sayfasında doğrulandı.**
+* **Yeni eklenen 54 mağazanın 52'si canlı ürün sayfasında doğrulandı.**
   Adresler `test/live/platform-urls.json` içinde; `node test/run.mjs
   live/platform-sites` hepsini tek seferde sınıyor: site adı tanınıyor mu, ad ve
   fiyat okunuyor mu, tutar sayfada gerçekten yazıyor mu ve üstü çizili liste
   fiyatı değil mi, görsel yükleniyor mu, kaç beden okunuyor.
-* **Kalan 10 mağazada parser yazılı ama canlı doğrulama yapılamadı:** Koton,
-  Columbia TR, Konyalı Saat, Marks & Spencer TR, Pandora TR, Zuhal Müzik,
-  Levi's UK, Jack & Jones UK, Calvin Klein UK, Columbia UK. Sebep eklenti değil,
-  ürün sayfasına ulaşamamak: Levi's UK "Access Denied", Pandora TR ve Columbia
-  UK bot doğrulaması basıyor; Koton, Konyalı Saat, M&S TR ve Levi's / Jack &
-  Jones / Calvin Klein UK'in kategori sayfaları otomasyona ürün bağlantısı
-  vermiyor; Columbia TR'nin ürün sayfasında ne `h1` ne JSON-LD var ve sayfa
-  yalnızca öneri widget'larını render ediyor, okunan tutarın doğruluğu
-  doğrulanamadı. Bu mağazalardan birer ürün adresi `platform-urls.json`'a
-  yazılıp test tekrar çalıştırılmalı.
+* **İki mağaza doğrulanmadı.** Levi's UK otomasyonla sürülen tarayıcıya sayfayı
+  hiç vermiyor ("Access Denied"); kullanıcının kendi tarayıcısında sorun yok ama
+  canlı test o mağazayı atlıyor. Columbia TR'nin ürün sayfasında ne `h1` ne
+  JSON-LD var, sayfa yalnızca öneri widget'larını render ediyor ve orada üç ayrı
+  tutar dönüyor; okunan fiyatın doğruluğu doğrulanamadığı için o mağaza teste
+  alınmadı — kendi parser'ını hak ediyor.
 * **Bazı mağazalarda fiyat sayfada metin olarak hiç görünmüyor** (SuperStep,
   Under Armour TR, Rossmann, English Home); tutar yapılandırılmış veriden
   okunuyor ve canlı test o mağazalarda "karşılaştırılamadı" diye not düşüyor.

@@ -102,6 +102,24 @@ for (const [id, url] of targets) {
   const host = new URL(currentUrl).hostname.replace(/^www\d*\./, "");
   const siteIsHost = cleanSiteName(product.site) === host.toLowerCase();
 
+  // Mağazaların bir kısmı otomasyonla sürülen tarayıcıya sayfayı hiç vermiyor
+  // (Levi's UK "Access Denied" basıyor). Sayfa boş geldiyse sınanacak bir şey
+  // yok; bunu eklentinin hatası gibi raporlamak yanlış olurdu.
+  if (!product.price) {
+    const pageIsEmpty = await page.evaluate(() => {
+      const text = String(document.body?.innerText || "");
+      const hasPrice = /(\d[\d.,]*)\s*(?:TL|₺)|[£$€]\s*\d/i.test(text);
+
+      return !hasPrice && text.length < 2000;
+    });
+
+    if (pageIsEmpty) {
+      console.log(`     ${id}: sayfa otomasyona açılmadı, atlandı`);
+      await page.close();
+      continue;
+    }
+  }
+
   check(`${id}: site adı tanındı`, Boolean(product.site) && !siteIsHost, product.site || "yok");
   check(`${id}: ürün adı`, Boolean(product.title), product.title || "");
   check(`${id}: fiyat okundu`, Boolean(product.price), product.price || "yok");

@@ -198,8 +198,19 @@
       id: "calvinklein-uk",
       label: "Calvin Klein UK",
       matches: hostIs("calvinklein.co.uk"),
+      // Ürünün JSON-LD'sinde offers boş geliyor, yani fiyat sayfadan okunmalı.
+      // Sınıf adları derlemede hash'leniyor ("PriceDisplay_PriceDisplay__FIRRe"),
+      // data-testid ise sabit. Öneri kartları da fiyat basıyor ama onların
+      // işareti başka ("PriceText"), ürününki "ProductHeaderPrice-" önekli.
       parse: () =>
-        parsePlatformProduct({ site: "Calvin Klein UK", priceSelectors: UK_SFCC_PRICE_SELECTORS }),
+        parsePlatformProduct({
+          site: "Calvin Klein UK",
+          priceSelectors: [
+            "[data-testid='ProductHeaderPrice-PriceText']",
+            "[data-testid='ProductHeaderPrice-PriceDisplay']",
+            ...UK_SFCC_PRICE_SELECTORS,
+          ],
+        }),
       waitForPrice: true,
     },
     {

@@ -321,7 +321,17 @@
       id: "calvinklein-tr",
       label: "Calvin Klein TR",
       matches: hostIs("calvinklein.com"),
-      parse: () => parsePlatformProduct({ site: "Calvin Klein", priceSelectors: SFCC_PRICE_SELECTORS }),
+      parse: () =>
+        parsePlatformProduct({
+          site: "Calvin Klein",
+          // İngiltere mağazasıyla aynı markup; orada JSON-LD'de offers boş
+          // geliyor ve fiyat yalnızca bu işaretten okunabiliyor.
+          priceSelectors: [
+            "[data-testid='ProductHeaderPrice-PriceText']",
+            "[data-testid='ProductHeaderPrice-PriceDisplay']",
+            ...SFCC_PRICE_SELECTORS,
+          ],
+        }),
       waitForPrice: true,
     },
     {
