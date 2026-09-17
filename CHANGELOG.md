@@ -2,7 +2,7 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.12.0 — yayımlanmadı
+## 1.13.0 — yayımlanmadı
 
 ### Düzeltilenler
 
