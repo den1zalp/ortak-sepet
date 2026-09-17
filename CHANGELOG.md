@@ -2,12 +2,70 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.11.0 — yayımlanmadı
+## 1.12.0 — yayımlanmadı
+
+## 1.11.0 — 17 Eylül 2026
 
 ### Eklenenler
 
-* **Yeni siteler:** Vans Türkiye, Vans UK, Boyner, Nike Türkiye, Nike UK,
-  Adidas Türkiye, Adidas UK.
+* **Beden seçimi.** Ürün sepete eklenirken sayfadaki beden seçenekleri de
+  okunuyor ve sepette her ürünün altında bir açılır liste çıkıyor: kot için
+  "29/32", tişört için "M", kozmetikte "50 ml". Beden ürünün kimliğinin parçası
+  — aynı ürünü iki farklı bedende eklemek sepette iki ayrı satır oluşturuyor,
+  aynı bedeni tekrar eklemek adedi artırıyor. Sayfadan beden okunamayan
+  sitelerde "Beden Gir" düğmesiyle elle yazılabiliyor. Seçilen beden CSV'ye,
+  panoya kopyalanan listeye ve "Alındı" kaydına da geçiyor. Beden taraması
+  taksit ve kargo taraması gibi pahalı olduğu için ürün oturduktan sonra bir kez
+  çalışıyor, fiyat yoklama döngüsünün içinde değil. Fiyat güncellemesi beden
+  listesini tazeliyor ama kullanıcının seçtiği bedene dokunmuyor: o satır o
+  bedene ait.
+* **Yeni siteler (Türkiye):** Vans, Boyner, Nike, Adidas, Mavi, LTB, Koton,
+  Levi's, LC Waikiki, Colin's,
+  Tudors, DeFacto, Jack & Jones, Gratis, Watsons, Rossmann, Apple, Atasun Optik,
+  Beymen, Calvin Klein, Champion, Columbia, Desa, Karaca, Konyalı Saat, Lacoste,
+  LEGO, Marks & Spencer, Mi Store, Mudo, Oysho, Pandora, Penti, Pull & Bear,
+  Saat&Saat, Stradivarius, SuperStep, Supplementler.com, Swatch, Under Armour,
+  Zuhal Müzik, Madame Coco, English Home.
+* **Yeni siteler (İngiltere):** Vans UK, Nike UK, Adidas UK, Levi's UK,
+  Jack & Jones UK, Apple UK, Calvin
+  Klein UK, Champion, Columbia UK, Lacoste UK, LEGO UK, Marks & Spencer UK,
+  Mi Store UK, Pandora UK, Pull & Bear UK, Stradivarius UK, Swatch UK,
+  Under Armour UK.
+* **Ortak platform parser'ı.** Yeni eklenen mağazaların hemen hepsi ürün
+  sayfasında schema.org Product verisi yayımlıyor (Akinon, Ticimax, SFCC,
+  Shopify, T-Soft ve kendi altyapısını yazanların çoğu). Bu yüzden her siteye
+  ayrı bir dosya yazmak yerine `content/parsers/platform-shared.js` ve
+  `content-uk/parsers/platform-shared.js` eklendi: fiyatı önce yapılandırılmış
+  veriden, o okunamazsa altyapıya göre seçici listesinden alıyorlar. Sıra
+  bilinçli — indirimli üründe sayfada hem ödenecek tutar hem üstü çizili liste
+  fiyatı duruyor ve `offers.price` çoğu mağazada ödenecek olanı veriyor
+  (vermeyenler için aşağıdaki üstü çizili tutar düzeltmesine bakın). Oysho,
+  Pull & Bear ve
+  Stradivarius Zara/Bershka ile aynı Inditex altyapısında olduğu için fiyatı
+  konumundan bulan ortak yola bağlandı.
+* **Aynı alan adını paylaşan mağazalar.** Apple, Mi Store, Lacoste, LEGO,
+  Levi's, Jack & Jones, Pull & Bear, Stradivarius, Swatch ve Pandora'nın iki
+  bölgedeki mağazası aynı alan adında; hangi content script'in yükleneceğini
+  manifest'teki yol (`apple.com/tr/` ↔ `apple.com/uk/`) ya da alt alan adı
+  (`tr.pandora.net` ↔ `uk.pandora.net`) belirliyor. İngiltere tarafındaki site
+  adı tespiti de parça aramasından alan adı eşleşmesine çevrildi:
+  "marksandspencer.com" parça olarak "marksandspencer.com.tr" içinde de geçiyor
+  ve Türkiye mağazasına İngiltere adını verirdi.
+* **Beden taraması gerçek sayfalarda kalibre edildi.** İlk sürüm beden
+  seçicisine benzeyen her kabı okuyordu ve canlı doğrulamada sepete beden diye
+  şunlar yazıldı: Tailwind'in `size-4`/`size-6` yardımcı sınıfları (Lacoste'ta
+  tek seçenekli "0" listesi), kategori sayfasının beden filtresi ("200x220 Cm
+  (174)" — Karaca), galeri sayacı ("1 / 5" — Mi Store), varyant kimliği
+  ("55342174437720" — Champion), renk kodları ("001", "513" — Under Armour) ve
+  "Size & Fit Guide" bağlantısı, beden kutusunun yanındaki eylem düğmeleri
+  ("Favorilerime Ekle", "Paylaş" — Levi's), bülten formunun alanları ("E-posta
+  Adresi *" — Under Armour TR), işaretlenmemiş onay kutusunun "on" değeri
+  (Marks & Spencer UK) ve etiket-değer satırları ("Fit Referance : Ribcage").
+  Her biri için eleme kuralı ve birim testi eklendi; seçenek metnindeki etiket
+  öneki de atılıyor ("UK Size: 3" → "3").
+  Ölçüt şu: renk seçicisi hiç okunmuyor, sayı bedeni makul aralıkta ve başında
+  sıfır olmadan kabul ediliyor, kot bedeninde ("29/32") iki sayı da yirminin
+  üstünde olmalı.
 * **Vans Türkiye'de indirimli tutar okunuyor.** Ürün sayfası indirim varken iki
   fiyat basıyor: üstü çizili liste fiyatı ve ödenecek tutar. Fiyat kutusunun
   tamamını okumak ikisini birden veriyor, bu yüzden ödenecek tutarı taşıyan
@@ -41,60 +99,6 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   og:title'dan, renk ürün açıklamasının ilk maddesinden alınıp birleştiriliyor.
   Adidas'ta h1 marka ve renk taşımıyor ("Samba OG Shoes"), og:title üçünü
   birden veriyor.
-* **Beden seçimi.** Ürün sepete eklenirken sayfadaki beden seçenekleri de
-  okunuyor ve sepette her ürünün altında bir açılır liste çıkıyor: kot için
-  "29/32", tişört için "M", kozmetikte "50 ml". Beden ürünün kimliğinin parçası
-  — aynı ürünü iki farklı bedende eklemek sepette iki ayrı satır oluşturuyor,
-  aynı bedeni tekrar eklemek adedi artırıyor. Sayfadan beden okunamayan
-  sitelerde "Beden Gir" düğmesiyle elle yazılabiliyor. Seçilen beden CSV'ye,
-  panoya kopyalanan listeye ve "Alındı" kaydına da geçiyor. Beden taraması
-  taksit ve kargo taraması gibi pahalı olduğu için ürün oturduktan sonra bir kez
-  çalışıyor, fiyat yoklama döngüsünün içinde değil. Fiyat güncellemesi beden
-  listesini tazeliyor ama kullanıcının seçtiği bedene dokunmuyor: o satır o
-  bedene ait.
-* **Beden taraması gerçek sayfalarda kalibre edildi.** İlk sürüm beden
-  seçicisine benzeyen her kabı okuyordu ve canlı doğrulamada sepete beden diye
-  şunlar yazıldı: Tailwind'in `size-4`/`size-6` yardımcı sınıfları (Lacoste'ta
-  tek seçenekli "0" listesi), kategori sayfasının beden filtresi ("200x220 Cm
-  (174)" — Karaca), galeri sayacı ("1 / 5" — Mi Store), varyant kimliği
-  ("55342174437720" — Champion), renk kodları ("001", "513" — Under Armour) ve
-  "Size & Fit Guide" bağlantısı, beden kutusunun yanındaki eylem düğmeleri
-  ("Favorilerime Ekle", "Paylaş" — Levi's), bülten formunun alanları ("E-posta
-  Adresi *" — Under Armour TR), işaretlenmemiş onay kutusunun "on" değeri
-  (Marks & Spencer UK) ve etiket-değer satırları ("Fit Referance : Ribcage").
-  Her biri için eleme kuralı ve birim testi
-  eklendi; seçenek metnindeki etiket öneki de atılıyor ("UK Size: 3" → "3").
-  Ölçüt şu: renk seçicisi hiç okunmuyor, sayı bedeni makul aralıkta ve başında
-  sıfır olmadan kabul ediliyor, kot bedeninde ("29/32") iki sayı da yirminin
-  üstünde olmalı.
-* **Yeni siteler (Türkiye):** Mavi, LTB, Koton, Levi's, LC Waikiki, Colin's,
-  Tudors, DeFacto, Jack & Jones, Gratis, Watsons, Rossmann, Apple, Atasun Optik,
-  Beymen, Calvin Klein, Champion, Columbia, Desa, Karaca, Konyalı Saat, Lacoste,
-  LEGO, Marks & Spencer, Mi Store, Mudo, Oysho, Pandora, Penti, Pull & Bear,
-  Saat&Saat, Stradivarius, SuperStep, Supplementler.com, Swatch, Under Armour,
-  Zuhal Müzik, Madame Coco, English Home.
-* **Yeni siteler (İngiltere):** Levi's UK, Jack & Jones UK, Apple UK, Calvin
-  Klein UK, Champion, Columbia UK, Lacoste UK, LEGO UK, Marks & Spencer UK,
-  Mi Store UK, Pandora UK, Pull & Bear UK, Stradivarius UK, Swatch UK,
-  Under Armour UK.
-* **Ortak platform parser'ı.** Yeni eklenen mağazaların hemen hepsi ürün
-  sayfasında schema.org Product verisi yayımlıyor (Akinon, Ticimax, SFCC,
-  Shopify, T-Soft ve kendi altyapısını yazanların çoğu). Bu yüzden her siteye
-  ayrı bir dosya yazmak yerine `content/parsers/platform-shared.js` ve
-  `content-uk/parsers/platform-shared.js` eklendi: fiyatı önce yapılandırılmış
-  veriden, o okunamazsa altyapıya göre seçici listesinden alıyorlar. Sıra
-  bilinçli — indirimli üründe sayfada hem ödenecek tutar hem üstü çizili liste
-  fiyatı duruyor ve `offers.price` ödenecek olanı veriyor. Oysho, Pull & Bear ve
-  Stradivarius Zara/Bershka ile aynı Inditex altyapısında olduğu için fiyatı
-  konumundan bulan ortak yola bağlandı.
-* **Aynı alan adını paylaşan mağazalar.** Apple, Mi Store, Lacoste, LEGO,
-  Levi's, Jack & Jones, Pull & Bear, Stradivarius, Swatch ve Pandora'nın iki
-  bölgedeki mağazası aynı alan adında; hangi content script'in yükleneceğini
-  manifest'teki yol (`apple.com/tr/` ↔ `apple.com/uk/`) ya da alt alan adı
-  (`tr.pandora.net` ↔ `uk.pandora.net`) belirliyor. İngiltere tarafındaki site
-  adı tespiti de parça aramasından alan adı eşleşmesine çevrildi:
-  "marksandspencer.com" parça olarak "marksandspencer.com.tr" içinde de geçiyor
-  ve Türkiye mağazasına İngiltere adını verirdi.
 
 ### Düzeltilenler
 
