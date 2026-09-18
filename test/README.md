@@ -50,6 +50,7 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 | `unit/permissions.test.mjs` | ürün adresi ↔ manifest origin eşlemesi ve eksik izin tespiti |
 | `unit/shipping.test.mjs` | ücretsiz kargo ifadesi sepet eşiğine bağlı mı (TR + UK) |
 | `unit/zippo-image.test.mjs` | Zippo TR galeri görselinin adresi |
+| `unit/variant-parsers.test.mjs` | Under Armour UK ve Sports Direct: JSON-LD'deki ProductGroup içinden **seçili** varyantın seçilmesi (iki site de canlı testlere kapalı) |
 | `e2e/smoke.test.mjs` | service worker kaydoluyor mu, ortak modüller yükleniyor mu, popup hatasız açılıyor mu |
 | `e2e/features.test.mjs` | onay, geri alma, iptal, paralel fiyat güncellemesi |
 | `e2e/copy-a11y.test.mjs` | "Sepeti Kopyala" çıktısı ve erişilebilirlik etiketleri |
@@ -66,10 +67,25 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 | `live/ifixit.test.mjs` | iFixit UK: indirimli üründe liste fiyatı değil ödenecek tutar |
 | `live/vans-boyner.test.mjs` | Vans TR/UK ve Boyner: fiyat sayfadakiyle karşılaştırılır (Vans UK otomasyona kapalı, atlanır) |
 | `live/nike-adidas.test.mjs` | Nike TR/UK ve Adidas TR/UK: indirimli üründe üstü çizili tutar alınmıyor (Adidas otomasyona kapalı, atlanır) |
+| `live/tr-fashion.test.mjs` | Mavi, LTB, Koton, Levi's TR, LC Waikiki |
+| `live/tr-fashion-2.test.mjs` | Colin's, Tudors, DeFacto, Jack & Jones TR/UK, Gratis |
+| `live/stores-3.test.mjs` | Watsons, Rossmann, Atasun Optik, Apple TR/UK |
+| `live/stores-4.test.mjs` | Beymen, Calvin Klein TR/UK, Champion TR/UK, Desa |
+| `live/stores-5.test.mjs` | Karaca, Konyalı Saat, Lacoste TR/UK, Marks & Spencer TR/UK |
+| `live/stores-6.test.mjs` | Mi TR/UK, Mudo, Oysho TR/UK, Pandora TR/UK, Penti |
+| `live/stores-7.test.mjs` | Pull & Bear TR/UK, Stradivarius TR/UK, Swatch TR/UK, SuperStep, Saat & Saat, Zuhal Müzik, Under Armour TR |
 
 Ekran görüntüleri `test/screenshots/` altına düşer (.gitignore'da).
 
 ## Yeni test yazarken
+
+Bir mağazanın canlı testi `helpers/live-store.mjs` ile yazılıyor: mağaza başına
+listeleme sayfası (`listing`) ya da mağazanın sitemap adresi (`sitemap`)
+veriliyor, sürücü ürün adresini oradan buluyor — adresler koda gömülmüyor. Her
+üründe eklentinin okuduğu tutar sayfanın kendi yazdığı tutarla karşılaştırılıyor
+(`expectedPrice`); istenirse üstü çizili tutarın alınmadığı (`rejectPrice`) ve
+taksit beklentisi (`installment: "some" | "none"`) de doğrulanıyor. Bot
+korumasına takılan mağaza hata değil "ATLANDI" sayılıyor.
 
 `helpers/extension.mjs` ortak parçaları veriyor:
 

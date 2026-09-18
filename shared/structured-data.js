@@ -102,15 +102,16 @@ function parseJsonLdProduct() {
 
       const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
 
-      let image = "";
+      // Görsel alanı üç biçimde geliyor: düz adres, adres dizisi ve
+      // {"url": ...} nesnesi. LTB bir de diziyi iç içe basıyor ([[".."]]);
+      // ilk katmanı almak orada diziyi virgülle birleştirilmiş tek metne
+      // çeviriyordu ve sepette açılmayan bir adres kalıyordu.
+      const imageCandidate = [product.image]
+        .flat(Infinity)
+        .map((value) => (typeof value === "string" ? value : value?.url))
+        .find((value) => typeof value === "string" && value.trim());
 
-      if (Array.isArray(product.image)) {
-        image = product.image[0];
-      } else if (typeof product.image === "string") {
-        image = product.image;
-      } else if (product.image && product.image.url) {
-        image = product.image.url;
-      }
+      const image = imageCandidate ? imageCandidate.trim() : "";
 
       const rawPrice = offers?.price ?? offers?.lowPrice ?? offers?.highPrice;
       const currency = String(offers?.priceCurrency || "").toUpperCase();

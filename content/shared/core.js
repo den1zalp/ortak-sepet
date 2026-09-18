@@ -4,6 +4,18 @@ function cleanText(text) {
 }
 
 
+// Bazı siteler görsel adresini protokolsüz basıyor ("//cdn.site.com/a.jpg");
+// sepette o adres açılmıyor, sayfanın protokolüne göre tamamlıyoruz.
+function toAbsoluteUrl(url) {
+  if (!url) return "";
+
+  try {
+    return new URL(url, window.location.href).toString();
+  } catch {
+    return url;
+  }
+}
+
 function parseTryPriceNumber(priceText) {
   if (!priceText) return null;
 
@@ -45,7 +57,12 @@ function normalizeSplitTryPriceText(text) {
     // Same issue without thousand dots: "4 499 10 TL".
     .replace(/\b(\d{1,3})\s+(\d{3})\s+(\d{1,2})\s*(TL|₺)\b/gi, "$1.$2,$3 TL")
     // Split thousand group: "4 999 TL".
-    .replace(/\b(\d{1,3})\s+(\d{3})\s*(TL|₺)\b/gi, "$1.$2 TL");
+    .replace(/\b(\d{1,3})\s+(\d{3})\s*(TL|₺)\b/gi, "$1.$2 TL")
+    // Bazı mağazalar (DeFacto) kuruşu nokta ile yazıyor: "699.99 TL".
+    // Noktadan sonra üç hane gelirse binlik ayıracıdır, dokunulmuyor; bir ya
+    // da iki hane gelirse kuruştur. Dönüştürülmezse fiyat tarayıcısı yalnızca
+    // sondaki "99 TL"yi görüyor.
+    .replace(/(\d)\.(\d{1,2})(?!\d)/g, "$1,$2");
 }
 
 function extractTryPriceCandidates(rawPrice) {
@@ -108,6 +125,19 @@ function cleanPrice(rawPrice) {
   return candidates[0].text;
 }
 
+// Mağazalar tutarı farklı biçimlerde basıyor: "1.999,90 TL", "1999,90 TL",
+// "699.99 TL". Sepette hepsi yan yana göründüğü için tek biçime indiriyoruz.
+// Sayıya çevrilemeyen metinde cleanPrice'ın çıktısına dokunulmadan dönülüyor.
+function formatTryPriceText(rawText) {
+  const cleaned = cleanPrice(rawText);
+  if (!cleaned) return null;
+
+  const value = parseTryPriceNumber(cleaned);
+  if (value === null) return cleaned;
+
+  return formatStructuredPrice(String(value), "TRY") || cleaned;
+}
+
 function formatStructuredPrice(rawPrice, currency) {
   const number = parseStructuredPriceNumber(rawPrice);
   if (number === null) return null;
@@ -167,6 +197,40 @@ function getSiteName() {
   if (isSiteHost("boyner.com.tr")) return "Boyner";
   if (isSiteHost("nike.com")) return "Nike";
   if (isSiteHost("adidas.com.tr")) return "Adidas";
+  if (isSiteHost("mavi.com")) return "Mavi";
+  if (isSiteHost("ltbjeans.com")) return "LTB";
+  if (isSiteHost("koton.com")) return "Koton";
+  if (isSiteHost("levis.com.tr")) return "Levi's";
+  if (isSiteHost("lcw.com")) return "LC Waikiki";
+  if (isSiteHost("colins.com.tr")) return "Colin's";
+  if (isSiteHost("tudors.com")) return "Tudors";
+  if (isSiteHost("defacto.com.tr")) return "DeFacto";
+  if (isSiteHost("jackjones.com.tr")) return "Jack & Jones";
+  if (isSiteHost("gratis.com")) return "Gratis";
+  if (isSiteHost("watsons.com.tr")) return "Watsons";
+  if (isSiteHost("rossmann.com.tr")) return "Rossmann";
+  if (isSiteHost("atasunoptik.com.tr")) return "Atasun Optik";
+  if (isSiteHost("apple.com")) return "Apple";
+  if (isSiteHost("beymen.com")) return "Beymen";
+  if (isSiteHost("calvinklein.com")) return "Calvin Klein";
+  if (isSiteHost("championturkiye.com")) return "Champion";
+  if (isSiteHost("desa.com.tr")) return "Desa";
+  if (isSiteHost("karaca.com")) return "Karaca";
+  if (isSiteHost("konyalisaat.com.tr")) return "Konyalı Saat";
+  if (isSiteHost("lacoste.com.tr")) return "Lacoste";
+  if (isSiteHost("marksandspencer.com.tr")) return "Marks & Spencer";
+  if (isSiteHost("mi.com")) return "Mi";
+  if (isSiteHost("mudo.com.tr")) return "Mudo";
+  if (isSiteHost("oysho.com")) return "Oysho";
+  if (isSiteHost("pandora.net")) return "Pandora";
+  if (isSiteHost("penti.com")) return "Penti";
+  if (isSiteHost("pullandbear.com")) return "Pull & Bear";
+  if (isSiteHost("stradivarius.com")) return "Stradivarius";
+  if (isSiteHost("swatch.com")) return "Swatch";
+  if (isSiteHost("superstep.com.tr")) return "SuperStep";
+  if (isSiteHost("saatvesaat.com.tr")) return "Saat & Saat";
+  if (isSiteHost("zuhalmuzik.com")) return "Zuhal Müzik";
+  if (isSiteHost("underarmour.com.tr")) return "Under Armour";
 
   return window.location.hostname.replace(/^www\d*\./, "");
 }
@@ -584,8 +648,57 @@ function findSamsoniteTrInstallmentInfo() {
   };
 }
 
-function findInstallmentInfo() {
+// Pek çok mağaza (Colin's, Karaca, Beymen…) taksit seçeneklerini banka banka
+// bir tabloda yazıyor: "Taksit Sayısı / Taksit Miktarı / Toplam" ya da
+// "2 Taksit x 959,77 TL". Bu tablolar ürün adının 1000-3000 piksel altında
+// duruyor ve aşağıdaki konuma bakan taramanın penceresine hiç girmiyor.
+//
+// Tabloyu konumdan bağımsız arıyoruz, o yüzden kanıt yüksek tutuluyor:
+// ya tablo başlığı ("Taksit Sayısı / Taksit Tutarı") olacak, ya da en az iki
+// ayrı taksit satırı ("2 Taksit …", "3 Taksit …"); üstüne en az üç tutar.
+//
+// Eşik bilerek bu kadar yüksek: tek bir "Taksitlendirme Seçeneklerimiz"
+// bağlantısı (Jack & Jones) ya da "6500 TL ve üzeri alışverişlerde 6 taksit"
+// kampanya bandı (Levi's TR) ürüne ait taksit bilgisi değil ve bu eşiği
+// geçmiyor.
+function findInstallmentTableInfo() {
+  const candidates = Array.from(
+    document.querySelectorAll("table, ul, ol, div, section"),
+  );
 
+  for (const element of candidates) {
+    const text = cleanText(element.textContent);
+
+    if (!text || text.length > 4000) continue;
+
+    const normalized = normalizeTurkishText(text);
+
+    const hasTableHeading = /taksit\s*(sayisi|tutari|miktari|araligi)/i.test(normalized);
+
+    // Gerçek tabloda taksit sayıları farklı oluyor (2, 3, 4…). Aynı sayının
+    // tekrarı kampanya bandının slider kopyalarından geliyor: Levi's TR
+    // "6500 TL ve üzeri … 6 Taksit Fırsatı" cümlesini sayfada dört kez
+    // basıyor ve bu ürüne ait bir taksit tablosu değil.
+    const installmentCounts = new Set(
+      (normalized.match(/(\d+)\s*taksit/g) || []).map((row) => row.match(/\d+/)[0]),
+    );
+
+    if (!hasTableHeading && installmentCounts.size < 2) continue;
+
+    const amounts = text.match(/\d{1,3}(?:[.]\d{3})*(?:,\d{2})?\s*(?:TL|₺)/g) || [];
+
+    if (amounts.length < 3) continue;
+
+    return {
+      installmentAvailable: true,
+      installmentText: "Taksit var",
+    };
+  }
+
+  return null;
+}
+
+function findInstallmentInfo() {
   if (isSiteHost("samsonite.com.tr")) {
     const samsoniteInstallmentInfo = findSamsoniteTrInstallmentInfo();
     if (samsoniteInstallmentInfo) return samsoniteInstallmentInfo;
@@ -655,6 +768,9 @@ function findInstallmentInfo() {
       /pesin fiyatina\s*\d+\s*taksit/i.test(normalized) ||
       /pesin fiyatina\s*\d+\s*x/i.test(normalized) ||
       /\d+\s*aya?\s*varan\s*taksit/i.test(normalized) ||
+      // Apple "1.083,00 TL x 3 aya kadar taksit" diyor; "varan" kalıbı bunu
+      // tutmuyordu.
+      /\d+\s*aya?\s*kadar\s*taksit/i.test(normalized) ||
       /taksit\s*firsati/i.test(normalized) ||
       /aylik\s*[\d.,]+\s*tl'?den\s*basla/i.test(normalized) ||
       /\d+\s*taksit/i.test(normalized) ||
@@ -681,7 +797,10 @@ function findInstallmentInfo() {
       return false;
     }
 
-    return /taksit secenekleri|taksitli odeme|taksitle ode|taksitle al/i.test(
+    // "Bankalara Özel Ek Taksit İmkanı" (Mudo) ürün bilgisi bloğunda duran,
+    // rakamsız ama açık bir taksit ifadesi. Zayıf kalıplar yalnızca ürün adının
+    // yakınında aranıyor; sayfa üstündeki kampanya bantları buraya girmiyor.
+    return /taksit secenekleri|taksitli odeme|taksitle ode|taksitle al|taksit imkani|ek taksit/i.test(
       normalized,
     );
   }
@@ -749,6 +868,12 @@ function findInstallmentInfo() {
       installmentText: "Taksit var",
     };
   }
+
+  // Konuma bakan tarama bir şey bulamadıysa son çare: sayfanın aşağısındaki
+  // banka taksit tablosu. Yalnızca burada çağrılıyor, yani "taksit yok" diyen
+  // bir ifadeyi ya da yukarıdaki kesin eşleşmeleri hiçbir zaman ezmiyor.
+  const tableInfo = findInstallmentTableInfo();
+  if (tableInfo) return tableInfo;
 
   return {
     installmentAvailable: false,

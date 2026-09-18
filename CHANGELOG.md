@@ -2,6 +2,83 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.12.0 — 18 Eylül 2026
+
+### Eklenenler
+
+* **34 yeni Türkiye mağazası:** Mavi, LTB, Koton, LC Waikiki, Colin's, Tudors,
+  DeFacto, Mudo, Penti, Beymen, Desa, Karaca, SuperStep, Gratis, Watsons,
+  Rossmann, Atasun Optik, Konyalı Saat, Saat & Saat, Zuhal Müzik, Apple
+  Türkiye, Mi Türkiye, Levi's Türkiye, Jack & Jones Türkiye, Calvin Klein
+  Türkiye, Champion Türkiye, Lacoste Türkiye, Marks & Spencer Türkiye, Pandora
+  Türkiye, Oysho Türkiye, Pull & Bear Türkiye, Stradivarius Türkiye, Swatch
+  Türkiye, Under Armour Türkiye.
+* **15 yeni İngiltere mağazası:** Sports Direct, Apple UK, Mi UK, Levi's UK,
+  Jack & Jones UK, Calvin Klein UK, Champion UK, Lacoste UK, Marks & Spencer
+  UK, Pandora UK, Oysho UK, Pull & Bear UK, Stradivarius UK, Swatch UK, Under
+  Armour UK.
+* **Liste fiyatı yazan yapılandırılmış veriye güvenilmiyor.** DeFacto,
+  Rossmann ve Karaca ürün sayfasında indirimli tutarı gösterirken JSON-LD ya da
+  meta etiketinde liste fiyatını yayımlıyor: DeFacto'da sayfada 699,99 TL
+  ödenirken `offers.price` 999.99, Rossmann'da 159,00 TL'ye karşı 249, Karaca'da
+  `product:price:amount` 1999 iken ödenecek tutar 1.799 TL. Bu üç mağazada fiyat
+  yalnızca sayfadan okunuyor ve jenerik yedek kapatıldı, yoksa aynı yanlış tutar
+  oradan geri gelirdi.
+* **Üyeye, karta ve çoklu alıma bağlı tutarlar alınmıyor.** Tudors'ta üyelere
+  özel "Sepette 299,99 TL", Gratis'te "Gratis Kart Fiyatı", Beymen'de "2 ve
+  üzeri 5.180 TL", Desa'da "2. ürüne %50 indirim" tutarları ürünün tek başına
+  ödenecek fiyatı değil; sepet listesi herkesin ödeyeceği tutarı göstermeli. LC
+  Waikiki'deki "sepette indirim" ise herkese açık olduğu için o tutar alınıyor.
+* **Champion UK'de para birimi sayfadan okunuyor.** JSON-LD teklifi
+  `priceCurrency: "EUR"` diyor ama sayfa £ gösteriyor; teklife güvenmek ürünü
+  sepette euro sayıp sterlin toplamından düşürüyordu.
+* **Banka taksit tablosu artık konumdan bağımsız bulunuyor.** Colin's, Karaca,
+  Mudo ve Marks & Spencer Türkiye taksit seçeneklerini ürün adının 1000-3000
+  piksel altındaki bir tabloda yazıyor ve taksit taraması oraya hiç
+  bakmıyordu. Tablo, ya gerçek bir tablo başlığı ("Taksit Sayısı / Taksit
+  Tutarı") taşıyan ya da birbirinden farklı en az iki taksit satırı (2, 3,
+  4…) ve en az üç tutar içeren öge olarak aranıyor. Eşik bilerek yüksek:
+  Levi's Türkiye'nin "6500 TL ve üzeri … 6 taksit" kampanya bandını slider
+  dört kez basıyor, Jack & Jones'un altbilgisinde "Taksitlendirme
+  Seçeneklerimiz" bağlantısı var; ikisi de ürüne ait taksit bilgisi değil ve
+  bu eşiği geçmiyor. Tarama yalnızca konuma bakan arama boş döndüğünde
+  çalıştığı için "taksit yok" diyen bir ifadeyi de ezmiyor.
+* **Apple Türkiye'de taksit, Apple UK'de yanlış finansman düzeltildi.** Apple
+  "1.083,00 TL x 3 aya kadar taksit" yazıyor; tarama yalnızca "…aya **varan**
+  taksit" kalıbını tanıyordu. Apple UK'de ise her sayfanın altbilgisindeki
+  Barclays taksit sözleşmesi yüzünden 59 sterlinlik bir kumandada bile
+  "finansman var" çıkıyordu; artık yalnızca fiyat kutusuna bakılıyor.
+
+### Düzeltilenler
+
+* **İç içe dizi olarak yazılan JSON-LD görseli.** LTB görselleri `[[".."]]`
+  biçiminde basıyor; paylaşılan okuma ilk katmanı alıp adresleri virgülle
+  birleştiriyor ve sepette açılmayan bir adres bırakıyordu. Görsel alanı artık
+  düzleştiriliyor — dizi, dizi içinde dizi ve `{"url": …}` nesnesi dâhil.
+* **Kuruşu nokta ile yazan mağazalarda fiyat.** DeFacto "699.99 TL" yazıyor ve
+  fiyat tarayıcısı bunun yalnızca sonundaki "99 TL"yi görüyordu. Noktadan sonra
+  üç hane gelirse binlik ayıracı sayılıyor, bir ya da iki hane gelirse kuruş.
+* **Sepette karışık fiyat biçimi.** Colin's "1999,90 TL", DeFacto "1199.99 TL"
+  yazıyordu; tutarlar artık tek biçime ("1.999,90 TL") getiriliyor.
+
+### Geliştirme
+
+* Canlı testler için ortak sürücü (`test/helpers/live-store.mjs`): mağaza
+  başına listeleme ya da sitemap'ten ürün adresi topluyor, eklentinin okuduğu
+  tutarı sayfanın kendi yazdığı tutarla karşılaştırıyor, üstü çizili tutarın
+  alınmadığını ve taksit beklentisini doğruluyor. Bot korumasına takılan
+  mağazalar hata değil "atlandı" sayılıyor.
+* Yedi yeni canlı test dosyası (`live/tr-fashion`, `tr-fashion-2`,
+  `stores-3`…`stores-7`) yeni mağazaları kapsıyor.
+* `unit/variant-parsers.test.mjs`: Under Armour UK ve Sports Direct bot
+  korumasının arkasında olduğu için canlı testlere giremiyor. İkisinin de en
+  kırılgan yanı JSON-LD'deki ProductGroup içinden **seçili** varyantı
+  bulmak — Under Armour'da adresteki renk parametresi, Sports Direct'te
+  çapadaki renk kodu — ve bu tarayıcısız test onu sabitliyor.
+* `unit/registry.test.mjs` manifest kalıbından host çıkarırken yalnızca
+  `*://*.alan.com/*` biçimini tanıyordu; `*://tr.calvinklein.com/*` gibi tek bir
+  alt alan adına sabitlenmiş kalıplarda patlıyordu.
+
 ## 1.11.0 — 31 Ağustos 2026
 
 ### Eklenenler

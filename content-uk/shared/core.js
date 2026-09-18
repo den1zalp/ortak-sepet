@@ -189,6 +189,21 @@ function getSiteName() {
   if (host === "nike.com" || host.endsWith(".nike.com")) return "Nike UK";
   if (host.includes("adidas.co.uk")) return "Adidas UK";
   if (host.includes("ifixit.com")) return "iFixit UK";
+  if (host === "jackjones.com" || host.endsWith(".jackjones.com")) return "Jack & Jones UK";
+  if (host === "apple.com" || host.endsWith(".apple.com")) return "Apple UK";
+  if (host === "levi.com" || host.endsWith(".levi.com")) return "Levi's UK";
+  if (host === "calvinklein.co.uk" || host.endsWith(".calvinklein.co.uk")) return "Calvin Klein UK";
+  if (host === "championstore.com" || host.endsWith(".championstore.com")) return "Champion UK";
+  if (host === "lacoste.com" || host.endsWith(".lacoste.com")) return "Lacoste UK";
+  if (host === "marksandspencer.com" || host.endsWith(".marksandspencer.com")) return "Marks & Spencer UK";
+  if (host === "mi.com" || host.endsWith(".mi.com")) return "Mi UK";
+  if (host === "oysho.com" || host.endsWith(".oysho.com")) return "Oysho UK";
+  if (host === "pandora.net" || host.endsWith(".pandora.net")) return "Pandora UK";
+  if (host === "pullandbear.com" || host.endsWith(".pullandbear.com")) return "Pull & Bear UK";
+  if (host === "stradivarius.com" || host.endsWith(".stradivarius.com")) return "Stradivarius UK";
+  if (host === "swatch.com" || host.endsWith(".swatch.com")) return "Swatch UK";
+  if (host === "underarmour.co.uk" || host.endsWith(".underarmour.co.uk")) return "Under Armour UK";
+  if (host === "sportsdirect.com" || host.endsWith(".sportsdirect.com")) return "Sports Direct";
 
   return host;
 }
@@ -413,6 +428,31 @@ function findFinanceInfo() {
       installmentAvailable: false,
       installmentText: "Finance not available",
     };
+  }
+
+  // apple.com'un altbilgisi her sayfada Barclays taksit sözleşmesini anlatıyor
+  // ("monthly payment plan", "monthly instalments"); 59 sterlinlik bir kumanda
+  // için bile finansman varmış gibi görünüyordu. Apple'da ürüne ait taksit
+  // bilgisi fiyat kutusunda yazılı ("£X/mo."), yalnızca oraya bakıyoruz.
+  if (/(^|\.)apple\.com$/i.test(window.location.hostname.replace(/^www\d*\./, ""))) {
+    const priceBoxText = cleanText(
+      Array.from(document.querySelectorAll(".rf-pdp-prices, .rc-prices"))
+        .map((element) => element.textContent || "")
+        .join(" "),
+    );
+
+    const hasMonthlyOffer =
+      /\/mo\.|per month|monthly instal|monthly payment|apple card monthly/i.test(priceBoxText);
+
+    return hasMonthlyOffer
+      ? {
+          installmentAvailable: true,
+          installmentText: "Finance / pay later available",
+        }
+      : {
+          installmentAvailable: false,
+          installmentText: "Finance information not found",
+        };
   }
 
   if (window.location.hostname.includes("diesel")) {

@@ -162,6 +162,96 @@
       matches: hostIs("ifixit.com"),
       parse: () => parseIfixitUk(),
     },
+    {
+      id: "jackjones-uk",
+      label: "Jack & Jones UK",
+      matches: hostIs("jackjones.com"),
+      parse: () => parseJackJonesUk(),
+    },
+    {
+      id: "apple-uk",
+      label: "Apple UK",
+      matches: hostIs("apple.com"),
+      parse: () => parseAppleUk(),
+    },
+    {
+      id: "levis-uk",
+      label: "Levi's UK",
+      matches: hostIs("levi.com"),
+      parse: () => parseLevisUk(),
+    },
+    {
+      id: "calvinklein-uk",
+      label: "Calvin Klein UK",
+      matches: hostIs("calvinklein.co.uk"),
+      parse: () => parseCalvinKleinUk(),
+    },
+    {
+      id: "champion-uk",
+      label: "Champion UK",
+      matches: hostIs("championstore.com"),
+      parse: () => parseChampionUk(),
+    },
+    {
+      id: "lacoste-uk",
+      label: "Lacoste UK",
+      matches: hostIs("lacoste.com"),
+      parse: () => parseLacosteUk(),
+    },
+    {
+      id: "marksandspencer-uk",
+      label: "Marks & Spencer UK",
+      matches: hostIs("marksandspencer.com"),
+      parse: () => parseMarksAndSpencerUk(),
+    },
+    {
+      id: "mi-uk",
+      label: "Mi UK",
+      matches: hostIs("mi.com"),
+      parse: () => parseMiUk(),
+    },
+    {
+      id: "oysho-uk",
+      label: "Oysho UK",
+      matches: hostIs("oysho.com"),
+      parse: () => parseOyshoUk(),
+    },
+    {
+      id: "pandora-uk",
+      label: "Pandora UK",
+      matches: hostIs("pandora.net"),
+      parse: () => parsePandoraUk(),
+    },
+    {
+      id: "pullandbear-uk",
+      label: "Pull & Bear UK",
+      matches: hostIs("pullandbear.com"),
+      parse: () => parsePullAndBearUk(),
+    },
+    {
+      id: "stradivarius-uk",
+      label: "Stradivarius UK",
+      matches: hostIs("stradivarius.com"),
+      parse: () => parseStradivariusUk(),
+    },
+    {
+      id: "swatch-uk",
+      label: "Swatch UK",
+      matches: hostIs("swatch.com"),
+      parse: () => parseSwatchUk(),
+    },
+    {
+      id: "underarmour-uk",
+      label: "Under Armour UK",
+      matches: hostIs("underarmour.co.uk"),
+      parse: () => parseUnderArmourUk(),
+    },
+    {
+      id: "sportsdirect",
+      label: "Sports Direct",
+      matches: hostIs("sportsdirect.com"),
+      parse: () => parseSportsDirect(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

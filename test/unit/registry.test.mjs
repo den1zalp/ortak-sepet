@@ -59,8 +59,19 @@ function loadBlock(blockIndex, entryFile, hosts, registryGetter) {
   }
 }
 
-const trHosts = manifest.content_scripts[0].matches.map((m) => m.replace("*://*.", "").replace("/*", ""));
-const ukHosts = manifest.content_scripts[1].matches.map((m) => m.replace("*://*.", "").replace("/*", ""));
+// Kalıpların çoğu "*://*.alan.com/*" biçiminde ama hepsi değil: bazı mağazalar
+// yola ("*://*.nike.com/tr/*") ya da tek bir alt alan adına
+// ("*://tr.calvinklein.com/*") sabitlenmiş. Alt alan adı joker değilse de host
+// doğru çıkarılmalı, yoksa test kalıbı adres sanıp patlıyor.
+function hostFromMatch(pattern) {
+  return pattern
+    .replace(/^\*:\/\//, "")
+    .replace(/^\*\./, "")
+    .replace(/\/\*$/, "");
+}
+
+const trHosts = manifest.content_scripts[0].matches.map(hostFromMatch);
+const ukHosts = manifest.content_scripts[1].matches.map(hostFromMatch);
 
 console.log("--- TR ---");
 loadBlock(0, "content.js", trHosts, "getOrtakSepetParserForUrl");
