@@ -37,16 +37,17 @@ function findPandoraPriceText(scopeSelectors) {
   return "";
 }
 
-// Galerideki görselin adresinde boyut parametresi var (sw=384); sepette
-// büyüğünü göstermek için yükseltiyoruz.
+// Galerideki görselin adresi boyut parametresi taşıyor (sw=384) ve sayfa onu
+// zaten indirmiş oluyor. Adresi olduğu gibi kullanıyoruz: sepetteki kare 58
+// piksel, 384 fazlasıyla yetiyor ve tarayıcı önbellekten okuduğu için anında
+// görünüyor. Boyutu yükseltmek CDN'i o ölçüyü ilk istekte üretmeye zorluyor ve
+// görsel saniyelerce boş kalıyor.
 function findPandoraImage() {
   const image =
     document.querySelector("[data-testid='hero-container'] img") ||
     document.querySelector("img[itemprop='image']");
 
-  const source = image?.currentSrc || image?.getAttribute("src") || "";
-
-  return source.replace(/([?&]sw=)\d+/i, "$11000");
+  return image?.currentSrc || image?.getAttribute("src") || "";
 }
 
 // h1 iki tane: ilki sayfa başındaki "Pandora" logosu, ikincisi ürün adı.

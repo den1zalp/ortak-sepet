@@ -36,15 +36,20 @@ function findLevisUkPriceText() {
 }
 
 // Galeride, renk seçeneklerinde ve küçük önizleme şeridinde hep aynı CDN
-// kullanılıyor; ilk eşleşen görsel 155 piksellik bir küçük kare olabiliyor ve
-// sepette bulanık duruyor. En büyük görseli seçip Scene7 adresindeki boyut
-// parametrelerini yükseltiyoruz.
+// kullanılıyor; ilk eşleşen görsel 155 piksellik bir önizleme karesi olabiliyor
+// ve sepette bulanık duruyor. Sayfadaki en büyük görseli seçiyoruz.
+//
+// Adres yalnızca gerçekten küçükse büyütülüyor: sayfanın indirdiği ölçü
+// tarayıcı önbelleğinde hazır, başka bir ölçü istemek CDN'i yeni bir görsel
+// üretmeye zorluyor ve sepette saniyelerce boş kare kalıyor.
+const LEVIS_UK_MIN_IMAGE_WIDTH = 200;
+
 function upgradeLevisUkImageSize(url) {
   if (!url) return "";
 
   return String(url)
-    .replace(/([?&]wid=)\d+/i, "$11000")
-    .replace(/([?&]hei=)\d+/i, "$11000");
+    .replace(/([?&]wid=)\d+/i, "$1600")
+    .replace(/([?&]hei=)\d+/i, "$1600");
 }
 
 function findLevisUkImage() {
@@ -59,7 +64,11 @@ function findLevisUkImage() {
     candidates[0],
   );
 
-  return upgradeLevisUkImageSize(getImageUrl(biggest));
+  const source = getImageUrl(biggest);
+
+  return (biggest.naturalWidth || 0) >= LEVIS_UK_MIN_IMAGE_WIDTH
+    ? source
+    : upgradeLevisUkImageSize(source);
 }
 
 // JSON-LD'de ürün bir ProductGroup içinde: hasVariant dizisinin ilk ögesi

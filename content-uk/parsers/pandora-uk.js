@@ -53,11 +53,10 @@ function parsePandoraUk() {
     title: heading || cleanText(document.title).replace(/\s*\|\s*Pandora.*$/i, ""),
     price: cleanPrice(findPandoraUkPriceText()),
     currency: "GBP",
-    // Görsel adresinde boyut parametresi var (sw=384); büyüğünü istiyoruz.
-    image: String(hero?.currentSrc || hero?.getAttribute("src") || "").replace(
-      /([?&]sw=)\d+/i,
-      "$11000",
-    ),
+    // Adres olduğu gibi kullanılıyor: sayfa o boyutu zaten indirmiş oluyor ve
+    // sepetteki 58 piksellik kare için fazlasıyla yetiyor. Boyutu yükseltmek
+    // CDN'i yeni bir ölçü üretmeye zorluyor, görsel saniyelerce boş kalıyor.
+    image: String(hero?.currentSrc || hero?.getAttribute("src") || ""),
     url: window.location.href,
     preventPriceFallback: true,
   };
