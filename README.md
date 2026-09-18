@@ -210,7 +210,7 @@ polyfill'i güncellemek için tutulur.
 
 ## Marka ve Bağlantı Bildirimi
 
-Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Birkenstock, Crocs, Vans, Boyner, Nike, Adidas, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
+Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Birkenstock, Crocs, Vans, Boyner, Nike, Adidas, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark, iFixit veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
 
 Listelenen tüm marka adları, yalnızca eklentinin hangi sitelerde çalışmayı hedeflediğini açıklamak amacıyla kullanılmıştır. Tüm marka adları ve ticari markalar ilgili sahiplerine aittir.
 
