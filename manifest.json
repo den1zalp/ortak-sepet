@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Ortak Sepet",
-  "version": "1.13.0",
-  "description": "Türkiye ve Birleşik Krallık alışveriş siteleri için ortak alışveriş sepeti.",
+  "version": "1.13.1",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "permissions": [
     "storage",
     "activeTab",

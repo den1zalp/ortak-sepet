@@ -2,6 +2,25 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.13.1 — 22 Eylül 2026
+
+### Eklenenler
+
+* **Eklenti açıklaması artık iki dilde.** Tarayıcının eklenti listesinde ve
+  mağaza sayfasında görünen açıklama manifest'te tek bir Türkçe metindi, yani
+  İngilizce arayüz kullanan herkes Türkçe okuyordu. Açıklama `_locales` altına
+  taşındı; tarayıcı kendi arayüz diline göre seçiyor, tanımadığı dillerde
+  İngilizcesine düşüyor. Chrome'da her iki dille de ölçüldü.
+
+  Chrome Web Store listeleme sayfasındaki dil menüsü de paketteki `_locales`
+  klasörlerinden okunuyor; bu sürümden önce paket hiç çeviri taşımadığı için
+  mağaza açıklaması tek dilde girilebiliyordu. AMO'da listeleme metni panelde
+  tutulduğu için oradaki açıklamayı bu değişiklik etkilemiyor.
+
+  Çeviri dosyası pakete girmezse eklenti açıklaması "__MSG_…" olarak kalacağı —
+  Chrome'da ise eklenti hiç yüklenmeyeceği — için `tools/build.mjs` artık
+  paketi bu yönden de denetliyor.
+
 ## 1.13.0 — 22 Eylül 2026
 
 ### Eklenenler
