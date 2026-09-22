@@ -157,6 +157,11 @@ checkEqual("alınma tarihi korundu", sonuc.purchased[0].purchasedAt, "2026-08-14
 checkEqual("alınan adedi korundu", sonuc.purchased[0].quantity, 2);
 checkEqual("alınan para birimi korundu", sonuc.purchased[0].currency, "TRY");
 checkEqual("alınan kategorisi korundu", sonuc.purchased[0].category, "Ev & Yaşam");
+checkEqual(
+  "alınan görseli korundu",
+  sonuc.purchased[0].image,
+  "https://www.samsonite.com.tr/valiz-1.jpg",
+);
 
 check("geri alma anlık görüntüsü yazıldı", Boolean(sonuc.undo), JSON.stringify(sonuc.undo?.items));
 checkEqual("anlık görüntü eski sepeti taşıyor", sonuc.undo?.items?.[0]?.title, "Silinecek ürün");
@@ -172,7 +177,12 @@ const popup = await browser.newPage();
 const popupErrors = [];
 popup.on("pageerror", (error) => popupErrors.push(String(error.message)));
 popup.on("console", (message) => {
-  if (message.type() === "error") popupErrors.push(message.text());
+  // Yedekteki görsel adresleri uydurma; popup onları indirmeye çalışıp 404
+  // alıyor. Burada aranan betik hatası, ağdan dönen kayıp görsel değil —
+  // görselin yedekten doğru geldiği zaten kaydın alanlarıyla sınanıyor.
+  if (message.type() === "error" && !message.text().includes("Failed to load resource")) {
+    popupErrors.push(message.text());
+  }
 });
 
 await popup.goto(`chrome-extension://${extensionId}/popup.html`);

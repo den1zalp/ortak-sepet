@@ -8,9 +8,13 @@ Eklenti, desteklenen ürün sayfalarından ürün adı, fiyat, görsel, kargo/te
 
 Firefox Add-ons:
 
-https://addons.mozilla.org/en-US/firefox/addon/ortak-sepet/
+https://addons.mozilla.org/tr/firefox/addon/ortak-sepet/
 
-Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla paketlenmemiş olarak yüklenebilir.
+Chrome Web Store:
+
+https://chromewebstore.google.com/detail/ortak-sepet/amknllefdhkhbffnagnnmkmjebmnbanm
+
+Geliştirme için paketlenmemiş kurulum aşağıda anlatılıyor.
 
 ## Özellikler
 
@@ -227,13 +231,15 @@ ortak-sepet/
 - manifest.json          # tek manifest, iki tarayıcı
 - background.js          # Firefox event page / Chrome service worker
 - browser-polyfill.js
-- shared/                # background + popup ortak modülleri (cart, category)
+- shared/                # background + popup ortak modülleri (cart, category, backup)
 - content.js             # TR içerik script'i giriş noktası
 - content/               # TR: shared/core.js + parsers/
 - content-uk.js          # UK içerik script'i giriş noktası
 - content-uk/            # UK: shared/ + parsers/
 - popup.html / popup.css
 - popup/                 # popup modülleri (config, i18n, state, render, ...)
+                         # ve yedekten geri yükleme sayfası (restore.html)
+- _locales/              # eklenti açıklamasının TR/EN çevirisi
 - icons/
 - test/                  # unit / e2e / live testleri (pakete girmez)
 - tools/                 # mağaza paketleyici (pakete girmez)

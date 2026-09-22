@@ -37,7 +37,9 @@ const INCLUDE_FILES = [
   "popup.css",
 ];
 
-const INCLUDE_DIRS = ["icons", "shared", "popup", "content", "content-uk"];
+// _locales pakete girmezse eklenti adı ve açıklaması yerine "__MSG_..." yazar;
+// Chrome açıklaması çözülemeyen eklentiyi hiç yüklemiyor.
+const INCLUDE_DIRS = ["icons", "shared", "popup", "content", "content-uk", "_locales"];
 
 const TARGETS = {
   firefox: {
@@ -104,12 +106,60 @@ function verifyManifestReferences(manifest, files) {
   }
 }
 
+// Manifest'teki "__MSG_x__" karşılığı olmayan bir anahtara işaret ediyorsa
+// tarayıcı açıklamayı boş bırakıyor ya da eklentiyi hiç yüklemiyor. Çeviri
+// dosyası pakete girmiş mi, anahtar orada var mı, burada bakılıyor.
+function verifyLocaleMessages(manifest, files) {
+  const placeholders = new Set();
+
+  const collect = (value) => {
+    if (typeof value === "string") {
+      const match = value.match(/^__MSG_(\w+)__$/);
+      if (match) placeholders.add(match[1]);
+    } else if (value && typeof value === "object") {
+      Object.values(value).forEach(collect);
+    }
+  };
+
+  collect(manifest);
+
+  if (placeholders.size === 0) return;
+
+  const defaultLocale = manifest.default_locale;
+
+  if (!defaultLocale) {
+    throw new Error('Manifest "__MSG_" kullanıyor ama "default_locale" yok.');
+  }
+
+  const localeFiles = files.filter((file) => file.startsWith("_locales/"));
+
+  if (localeFiles.length === 0) {
+    throw new Error("Çeviri dosyaları pakete girmiyor; INCLUDE_DIRS içine _locales ekle.");
+  }
+
+  for (const file of localeFiles) {
+    const messages = JSON.parse(readFileSync(join(ROOT, file), "utf8"));
+    const missing = [...placeholders].filter((key) => !messages[key]?.message);
+
+    // Eksik anahtar yalnızca varsayılan dilde hataya düşürüyor; diğer diller
+    // eksikse tarayıcı varsayılana geriliyor, o yüzden uyarı yeterli.
+    if (missing.length === 0) continue;
+
+    const message = `${file}: eksik anahtar(lar): ${missing.join(", ")}`;
+
+    if (file === `_locales/${defaultLocale}/messages.json`) throw new Error(message);
+
+    console.log(`  uyarı: ${message}`);
+  }
+}
+
 function build(targetName, sourceManifest, files) {
   const target = TARGETS[targetName];
   const manifest = target.transform(JSON.parse(JSON.stringify(sourceManifest)));
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
 
   verifyManifestReferences(manifest, files);
+  verifyLocaleMessages(manifest, files);
 
   // Paketlenmemiş kopya: "Load unpacked" ve `web-ext lint --source-dir` için.
   const stageDir = join(DIST, targetName);
