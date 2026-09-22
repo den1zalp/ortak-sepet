@@ -2,6 +2,29 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.13.0 — 22 Eylül 2026
+
+### Eklenenler
+
+* **Sepet JSON olarak yedeklenip geri yüklenebiliyor.** Sepet tarayıcının
+  eklenti deposunda duruyor ve o depo eklentinin kimliğine bağlı. Kimlik
+  değişince sepet silinmiş gibi görünüyor — Chrome'da paketlenmemiş eklentinin
+  kimliği klasör yolundan türüyor, yani depo kökünden yüklenen eklenti ile
+  `dist/chrome`'dan yüklenen aynı eklenti iki ayrı depo kullanıyor
+  (`nojoonbol…` ve `iafegomf…`). Tarayıcı, profil ya da bilgisayar değişince de
+  aynı şey oluyor. **Yedekle** butonu sepeti ve "Aldıklarım" listesini tek bir
+  JSON dosyasına indiriyor, **Geri Yükle** o dosyadan okuyor. CSV dışa aktarma
+  bunun yerine geçmiyordu: o okunmak için üretiliyor, ürünün kimliğini,
+  kategorisini, taksit ve kargo alanlarını taşımıyor.
+
+  Geri yükleme ayrı bir sekmede açılıyor, çünkü dosya seçici açılınca popup
+  kapanıyor ve seçimi işleyecek kod da onunla birlikte gidiyor. Dosya önce
+  doğrulanıyor: bozuk JSON, başka bir uygulamanın dosyası ve boş yedek ayrı
+  ayrı anlatılıyor, adı olmayan kayıtlar eleniyor. Geri yükleme mevcut sepetin
+  yerine geçtiği için üzerine yazılan liste "Geri Al" anlık görüntüsüne
+  yazılıyor; yanlış dosya seçen kullanıcı beş dakika boyunca eski sepetine
+  dönebiliyor.
+
 ## 1.12.1 — 22 Eylül 2026
 
 ### Düzeltilenler
