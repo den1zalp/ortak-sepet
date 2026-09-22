@@ -2,6 +2,38 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.12.1 — 22 Eylül 2026
+
+### Düzeltilenler
+
+* **İzin verilmiş sitede "izin verilmemiş" uyarısı çıkıyordu.** Ülke mağazası
+  global alan adının bir yolunda olan sitelerde izin kalıbı da yola bağlı:
+  Vans UK için `*://*.vans.com/en-gb/*`. Tarayıcı ise izni yol bazında değil
+  host bazında tutuyor ve `permissions.getAll()` bunu `*://*.vans.com/*`
+  olarak veriyor. Eksik izin taraması manifest'teki kalıbın aynısını o listede
+  aradığı için izin verilmiş siteyi "izin yok" sayıyor, popup ürünü okumaya
+  hiç çalışmadan uyarı gösteriyordu. Uyarı, izin yeniden verildiğinde de
+  geçmiyordu: verilen izin yine host bazında kaydediliyor. Artık soru
+  tarayıcıya `permissions.contains` ile soruluyor — kapsamaya baktığı için
+  host bazında verilen izni de, kullanıcının tüm sitelere verdiği izni de
+  doğru yanıtlıyor. Arka plandaki fiyat güncellemesi bu yolu zaten
+  kullanıyordu, yani iki taraf aynı cevabı vermeye başladı.
+
+  Firefox'ta ölçüldü; Chrome hem yola bağlı kalıbı hem host kalıbını
+  döndürdüğü için orada görünmüyordu. Etkilenen 19 kalıp: Nike TR/UK, Vans UK,
+  Birkenstock UK, iFixit UK, Apple TR/UK, Levi's UK, Lacoste UK, Mi TR/UK,
+  Oysho TR/UK, Pull & Bear TR/UK, Stradivarius TR/UK, Swatch TR/UK.
+
+* **"Bu sayfada eklenti çalışmıyor olabilir" mesajı desteklenen sayfada da
+  çıkıyordu.** Content script sayfaya yalnızca yüklenirken giriyor; eklenti
+  sekme açıkken kurulduğunda ya da güncellendiğinde o sekmeye hiç girmiyor ve
+  popup'ın mesajı karşılıksız kalıyor. Eski metin kullanıcıyı yanlış yere
+  yönlendiriyordu: sayfa destekleniyor, yapılması gereken tek şey yenilemek.
+  Artık adres manifest'teki content script kalıplarıyla karşılaştırılıyor ve
+  destekleniyorsa "Sayfayı yenileyip tekrar dene" deniyor. Karşılaştırma tam
+  adres üzerinden: `vans.com/de-de` gerçekten desteklenmiyor, ona eski mesaj
+  çıkmaya devam ediyor.
+
 ## 1.12.0 — 18 Eylül 2026
 
 ### Eklenenler
