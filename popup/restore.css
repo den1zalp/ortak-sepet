@@ -1,0 +1,61 @@
+/* Geri yükleme sayfası popup'ın stilini kullanıyor; tek fark sekmede açılması.
+   popup.css genişliği popup'a göre sabitliyor, burada ortalanmış bir kutu
+   gerekiyor. */
+.restore-page {
+  width: auto;
+  max-width: 560px;
+  margin: 32px auto;
+}
+
+.restore-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.restore-file-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.restore-file-input {
+  padding: 10px;
+  border: 1px dashed #9ca3af;
+  border-radius: 10px;
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.restore-summary {
+  padding: 12px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.restore-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.restore-actions .action-button {
+  flex: 1;
+}
+
+.restore-note {
+  margin-top: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+body.dark-mode .restore-summary {
+  background: #1f2937;
+}
+
+body.dark-mode .restore-file-input {
+  border-color: #4b5563;
+}

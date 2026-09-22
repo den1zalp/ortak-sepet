@@ -20,6 +20,8 @@ const installmentProductsBtn = document.getElementById(
 );
 const updateAllPricesBtn = document.getElementById("updateAllPricesBtn");
 const exportCsvBtn = document.getElementById("exportCsvBtn");
+const backupCartBtn = document.getElementById("backupCartBtn");
+const restoreCartBtn = document.getElementById("restoreCartBtn");
 const copyCartBtn = document.getElementById("copyCartBtn");
 const undoBtn = document.getElementById("undoBtn");
 const compactViewBtn = document.getElementById("compactViewBtn");
@@ -66,6 +68,8 @@ const I18N = {
     cancelUpdate: "Güncellemeyi Durdur",
     pricesUpdateCancelled: "Güncelleme durduruldu. {changed} ürünün fiyatı değişti, {failed} ürün güncellenemedi.",
     exportCsv: "CSV / Excel",
+    backupCart: "Yedekle",
+    restoreCart: "Geri Yükle",
     tabPurchased: "Aldıklarım",
     markPurchased: "Alındı",
     markSelectedPurchased: "Seçilenleri Alındı İşaretle",
@@ -185,6 +189,8 @@ const I18N = {
     quantityZeroRemoved: "Adet 0 oldu, ürün silindi.",
     csvNoItems: "Dışa aktarılacak ürün yok.",
     csvExported: "Sepet CSV olarak dışa aktarıldı. Excel ile açabilirsiniz.",
+    backupNoData: "Yedeklenecek veri yok.",
+    backupSaved: "{count} kayıt JSON dosyasına yedeklendi. Geri yüklemek için \"Geri Yükle\" kullan.",
     cartCleared: "Sepet temizlendi.",
     yes: "Evet",
     no: "Hayır",
@@ -216,6 +222,8 @@ const I18N = {
     cancelUpdate: "Stop Refreshing",
     pricesUpdateCancelled: "Refresh stopped. {changed} product prices changed, {failed} products could not be refreshed.",
     exportCsv: "CSV / Excel",
+    backupCart: "Back Up",
+    restoreCart: "Restore",
     tabPurchased: "Purchased",
     markPurchased: "Bought",
     markSelectedPurchased: "Mark Selected as Bought",
@@ -335,6 +343,8 @@ const I18N = {
     quantityZeroRemoved: "Quantity reached 0, product removed.",
     csvNoItems: "There are no products to export.",
     csvExported: "Basket exported as CSV. You can open it with Excel.",
+    backupNoData: "There is nothing to back up.",
+    backupSaved: "{count} records backed up to a JSON file. Use \"Restore\" to bring them back.",
     cartCleared: "Basket cleared.",
     yes: "Yes",
     no: "No",

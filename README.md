@@ -32,6 +32,7 @@ Chrome için mağaza yayını henüz yok; aşağıdaki geliştirme adımlarıyla
 * Tek butonla tüm fiyatları güncelleme (paralel çalışır ve durdurulabilir)
 * Manuel fiyat girme
 * CSV / Excel dışa aktarma
+* Sepeti ve alınanları JSON olarak yedekleme, yedekten geri yükleme
 * Sepeti paylaşılabilir düz metin olarak panoya kopyalama
 * Sepeti temizlemede iki adımlı onay ve geri alma
 * Sağ tık menüsünden ürünü sepete ekleme
@@ -252,7 +253,6 @@ polyfill'i güncellemek için tutulur.
 * Daha fazla site desteği
 * Parser doğruluğunu artırma
 * Manuel kategori düzenleme
-* JSON export / import desteği
 * Stok durumu tespiti
 * Daha gelişmiş fiyat değişim takibi
 * Kategori kurallarını İngilizce ürün adları için genişletme

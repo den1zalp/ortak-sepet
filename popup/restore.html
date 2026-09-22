@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ortak Sepet</title>
+    <link rel="stylesheet" href="../popup.css" />
+    <link rel="stylesheet" href="restore.css" />
+  </head>
+  <body>
+    <main class="app restore-page">
+      <header class="header">
+        <div>
+          <h1 id="restoreTitle"></h1>
+          <p id="restoreSubtitle"></p>
+        </div>
+      </header>
+
+      <section class="restore-box">
+        <label id="fileLabel" class="restore-file-label" for="backupFile"></label>
+        <input id="backupFile" class="restore-file-input" type="file" accept="application/json,.json" />
+
+        <p id="restoreStatus" class="status" role="status" aria-live="polite"></p>
+
+        <div id="restoreSummary" class="restore-summary" hidden></div>
+
+        <div class="restore-actions">
+          <button id="restoreConfirmBtn" class="action-button action-button-primary" type="button" disabled>
+            <span class="action-label"></span>
+          </button>
+          <button id="restoreCloseBtn" class="secondary-button" type="button"></button>
+        </div>
+      </section>
+
+      <p id="restoreNote" class="restore-note"></p>
+    </main>
+
+    <script src="../browser-polyfill.js"></script>
+    <script src="../shared/backup.js"></script>
+    <script src="restore.js"></script>
+  </body>
+</html>

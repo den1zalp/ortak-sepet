@@ -6,6 +6,13 @@ categorizeProductsBtn.addEventListener("click", categorizeProducts);
 installmentProductsBtn.addEventListener("click", toggleInstallmentGrouping);
 updateAllPricesBtn.addEventListener("click", onUpdatePricesClick);
 exportCsvBtn.addEventListener("click", exportCartAsCsv);
+backupCartBtn.addEventListener("click", exportCartAsJson);
+
+// Geri yükleme ayrı bir sekmede: dosya seçici açılınca popup kapanıyor ve
+// seçimi işleyecek kod da onunla gidiyor.
+restoreCartBtn.addEventListener("click", () => {
+  browser.tabs.create({ url: browser.runtime.getURL("popup/restore.html") });
+});
 copyCartBtn.addEventListener("click", copyCartToClipboard);
 countryGroupingBtn.addEventListener("click", toggleCountryGrouping);
 compactViewBtn.addEventListener("click", toggleCompactMode);

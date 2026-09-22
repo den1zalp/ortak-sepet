@@ -168,6 +168,8 @@ function applyStaticTranslations() {
   setActionButtonLabel(addCurrentProductBtn, translate("addCurrentProduct"));
   setActionButtonLabel(updateAllPricesBtn, translate("updateAllPrices"));
   setActionButtonLabel(exportCsvBtn, translate("exportCsv"));
+  setActionButtonLabel(backupCartBtn, translate("backupCart"));
+  setActionButtonLabel(restoreCartBtn, translate("restoreCart"));
   copyCartBtn.textContent = translate("copyCart");
   clearCartBtn.textContent = translate("clearCart");
   markPurchasedBtn.textContent = translate("markSelectedPurchased");

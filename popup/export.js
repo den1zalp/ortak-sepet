@@ -23,6 +23,47 @@ function createExportFilename() {
   return `ortak-sepet-${datePart}.csv`;
 }
 
+// CSV de yedek de aynı yoldan iniyor: blob + bağlantı. İndirme izni
+// istemiyoruz, popup'ın kendi sayfasından tıklanan bir bağlantı yetiyor.
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Yedek, sepetin yanında "Aldıklarım" listesini de taşıyor: aylık harcama
+// dökümü orada duruyor ve sepetle birlikte kaybolması aynı derde giriyor.
+async function exportCartAsJson() {
+  const [items, purchased] = await Promise.all([getCartItems(), getPurchasedItems()]);
+
+  if (items.length === 0 && purchased.length === 0) {
+    setStatus(translate("backupNoData"));
+    return;
+  }
+
+  const backup = OrtakSepetBackup.createBackup(
+    items,
+    purchased,
+    browser.runtime.getManifest().version,
+  );
+
+  downloadFile(
+    JSON.stringify(backup, null, 2),
+    `ortak-sepet-yedek-${new Date().toISOString().slice(0, 10)}.json`,
+    "application/json;charset=utf-8",
+  );
+
+  setStatus(translate("backupSaved", { count: items.length + purchased.length }));
+}
+
 function buildCsvContent(items) {
   const headers = [
     translate("csvProductName"),
@@ -142,17 +183,6 @@ async function exportCartAsCsv() {
     return;
   }
 
-  const csvContent = buildCsvContent(items);
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = createExportFilename();
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile(buildCsvContent(items), createExportFilename(), "text/csv;charset=utf-8");
   setStatus(translate("csvExported"));
 }
