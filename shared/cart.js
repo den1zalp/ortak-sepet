@@ -86,30 +86,100 @@ var OrtakSepetCart = (function () {
     );
   }
 
+  function escapeRegExpText(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // Manifest kalıbını ("*://*.vans.com/en-gb/*") adrese uygulanabilir bir
+  // düzenli ifadeye çeviriyor. Alan adı büyük/küçük harf ayırmıyor, yol ise
+  // ayırıyor — tarayıcı da böyle eşleştiriyor ve manifest'te "/GB/" yazan bir
+  // kalıp var (Levi's UK).
+  function matchPatternToRegExp(pattern) {
+    const parts = String(pattern || "").match(/^(\*|https?):\/\/([^/]+)(\/.*)$/);
+
+    if (!parts) return null;
+
+    const [, scheme, host, path] = parts;
+    const lowerHost = host.toLowerCase();
+
+    const schemePart = scheme === "*" ? "https?" : scheme;
+    const hostPart = lowerHost.startsWith("*.")
+      ? `(?:[^/]+\\.)?${escapeRegExpText(lowerHost.slice(2))}`
+      : escapeRegExpText(lowerHost);
+    const pathPart = escapeRegExpText(path).replace(/\\\*/g, ".*");
+
+    return new RegExp(`^${schemePart}://${hostPart}${pathPart}$`);
+  }
+
+  function normalizeUrlForMatch(url) {
+    try {
+      const parsed = new URL(url);
+
+      return `${parsed.protocol}//${parsed.hostname.toLowerCase()}${parsed.pathname}${parsed.search}`;
+    } catch {
+      return "";
+    }
+  }
+
+  // Adres, content script'in enjekte edildiği bir sayfaya mı düşüyor? İzin
+  // verilmiş olmasına rağmen mesaj karşılıksız kalıyorsa sebebi ayırt etmek
+  // için gerekiyor: content script sayfaya yalnızca yüklenirken giriyor, yani
+  // eklenti sekme açıkken kurulduysa desteklenen sayfa da yanıt vermiyor.
+  // Alan adı değil tam adres bakılıyor; vans.com/de-de gerçekten desteklenmiyor.
+  function isContentScriptUrl(url) {
+    const target = normalizeUrlForMatch(url);
+
+    if (!target) return false;
+
+    const blocks = globalThis.browser?.runtime?.getManifest?.().content_scripts || [];
+
+    return blocks.some((block) =>
+      (block.matches || []).some((pattern) => {
+        const expression = matchPatternToRegExp(pattern);
+
+        return expression ? expression.test(target) : false;
+      }),
+    );
+  }
+
   // Verilmemiş izinleri tekilleştirip döndürür. Tarayıcı izin API'sini
   // vermiyorsa boş liste dönüyor: kullanıcıya düzeltemeyeceği bir uyarı
   // göstermektense hiç göstermemek doğru.
+  //
+  // Soru tarayıcıya `permissions.contains` ile soruluyor; `permissions.getAll`
+  // listesinde kalıbın aynısını aramak yanlış uyarı üretiyordu. Tarayıcı izni
+  // yol bazında değil host bazında tutuyor: manifest "*://*.vans.com/en-gb/*"
+  // ilan etse de verilen izin "*://*.vans.com/*" olarak geri geliyor ve dizgi
+  // karşılaştırması onu "verilmemiş" sayıyordu. Kullanıcının tüm sitelere izin
+  // vermesi de aynı sonucu doğuruyordu. `contains` kapsamaya baktığı için
+  // ikisini de doğru yanıtlıyor; arka plandaki fiyat güncellemesi de
+  // (background.js) zaten bunu kullanıyor.
   async function findMissingOrigins(items) {
-    let grantedOrigins = [];
-
-    try {
-      grantedOrigins = (await globalThis.browser.permissions.getAll()).origins || [];
-    } catch {
-      return [];
-    }
-
-    const granted = new Set(grantedOrigins);
-    const missing = new Set();
+    const declaredOrigins = new Set();
 
     for (const item of items || []) {
       const origin = getDeclaredOriginForItem(item);
 
-      if (origin && !granted.has(origin)) {
-        missing.add(origin);
-      }
+      if (origin) declaredOrigins.add(origin);
     }
 
-    return Array.from(missing);
+    if (declaredOrigins.size === 0) return [];
+
+    const missing = [];
+
+    try {
+      for (const origin of declaredOrigins) {
+        const hasOrigin = await globalThis.browser.permissions.contains({
+          origins: [origin],
+        });
+
+        if (!hasOrigin) missing.push(origin);
+      }
+    } catch {
+      return [];
+    }
+
+    return missing;
   }
 
   function detectCurrencyFromPrice(priceText) {
@@ -415,6 +485,7 @@ var OrtakSepetCart = (function () {
     getQuantity,
     getViewMode,
     hasUnavailableMainPrice,
+    isContentScriptUrl,
     isUnknownInstallmentInfo,
     mergeInstallmentAvailable,
     mergeInstallmentText,

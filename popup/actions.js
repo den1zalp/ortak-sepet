@@ -23,11 +23,27 @@ async function addCurrentProduct() {
     return;
   }
 
+  let response = null;
+
+  // Content script sayfaya yalnızca yüklenirken giriyor. Eklenti sekme açıkken
+  // kurulduysa ya da güncellendiyse mesaj karşılıksız kalıyor; bu, sayfanın
+  // desteklenmemesiyle aynı şey değil ve kullanıcının yapması gereken de farklı.
   try {
-    const response = await browser.tabs.sendMessage(activeTab.id, {
+    response = await browser.tabs.sendMessage(activeTab.id, {
       type: "GET_PRODUCT",
     });
+  } catch (error) {
+    setStatus(
+      translate(
+        OrtakSepetCart.isContentScriptUrl(activeTab.url)
+          ? "reloadPageHint"
+          : "unsupportedPage",
+      ),
+    );
+    return;
+  }
 
+  try {
     if (!response || !response.ok) {
       setStatus(response?.error || translate("productReadFailed"));
       return;

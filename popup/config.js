@@ -162,6 +162,8 @@ const I18N = {
     activeTabMissing: "Aktif sekme bulunamadı.",
     productReadFailed: "Bu sayfadan ürün okunamadı.",
     unsupportedPage: "Bu sayfada eklenti çalışmıyor olabilir. Desteklenen bir ürün sayfasında dene.",
+    reloadPageHint:
+      "Eklenti bu sekme açıkken yüklenmiş olabilir. Sayfayı yenileyip tekrar dene.",
     duplicateAdded: "Bu ürün zaten vardı, adedi artırıldı ve seçili yapıldı.",
     productAdded: "Ürün sepete eklendi.",
     noItemsToCategorize: "Kategorize edilecek ürün yok.",
@@ -310,6 +312,8 @@ const I18N = {
     activeTabMissing: "Active tab could not be found.",
     productReadFailed: "Product could not be read from this page.",
     unsupportedPage: "The extension may not work on this page. Try a supported product page.",
+    reloadPageHint:
+      "The extension may have been loaded while this tab was open. Reload the page and try again.",
     duplicateAdded: "This product was already in the basket, so its quantity was increased and selected.",
     productAdded: "Product added to basket.",
     noItemsToCategorize: "There are no products to categorise.",
