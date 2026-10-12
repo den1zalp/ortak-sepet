@@ -338,12 +338,58 @@ function findMainImage() {
 }
 
 
-function getElementSearchText(element) {
+// Site-wide chrome repeats on every page, so finance wording there says nothing
+// about the product: Amazon's footer links to "Monthly Payments" from every
+// listing, and footers commonly carry Klarna / Clearpay logos. A <header> or
+// <nav> inside the product's own <main>/<article> is content, not chrome.
+const PAGE_CHROME_SELECTOR = [
+  "header",
+  "footer",
+  "nav",
+  "[role='banner']",
+  "[role='contentinfo']",
+  "[role='navigation']",
+  "#navFooter",
+].join(", ");
+
+const NON_CONTENT_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "SVG"]);
+
+function isPageChrome(element) {
+  const chrome = element?.closest?.(PAGE_CHROME_SELECTOR);
+  return Boolean(chrome) && !chrome.closest("main, article, [role='main']");
+}
+
+// Text the shopper can read, without scripts, styles and site chrome.
+// body.textContent used to be scanned as well, and it carries inline scripts:
+// Amazon's page config names "installmentPayment_feature_div" on every product,
+// so every Amazon item came out as having finance.
+function getContentText(root) {
+  const parts = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) return NodeFilter.FILTER_ACCEPT;
+      if (NON_CONTENT_TAGS.has(node.tagName.toUpperCase()) || isPageChrome(node)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_SKIP;
+    },
+  });
+
+  while (walker.nextNode()) {
+    if (walker.currentNode.nodeType === Node.TEXT_NODE) parts.push(walker.currentNode.nodeValue);
+  }
+
+  return parts.join(" ");
+}
+
+// Markup names (class, id, data-*) are developer vocabulary: an empty
+// "installmentPayment" container is not an offer. Only a payment provider's
+// name in the markup is taken as a sign that its widget is on the page.
+function getElementMarkupText(element) {
   if (!element) return "";
 
   return cleanText(
     [
-      element.textContent || "",
       element.getAttribute?.("aria-label") || "",
       element.getAttribute?.("title") || "",
       element.getAttribute?.("data-testid") || "",
@@ -376,22 +422,20 @@ function getPaymentRelatedText() {
     "[data-client-id*='klarna']",
   ].join(", ");
 
-  const parts = [
-    document.body?.innerText || "",
-    document.body?.textContent || "",
-  ];
+  const textParts = [document.body ? getContentText(document.body) : ""];
+  const markupParts = [];
 
   function collectFromRoot(root, depth = 0) {
     if (!root || depth > 4) return;
 
     try {
       root.querySelectorAll(paymentSelector).forEach((element) => {
-        parts.push(getElementSearchText(element));
+        if (!isPageChrome(element)) markupParts.push(getElementMarkupText(element));
       });
 
       root.querySelectorAll("*").forEach((element) => {
-        if (element.shadowRoot) {
-          parts.push(element.shadowRoot.textContent || "");
+        if (element.shadowRoot && !isPageChrome(element)) {
+          textParts.push(getContentText(element.shadowRoot));
           collectFromRoot(element.shadowRoot, depth + 1);
         }
       });
@@ -402,23 +446,64 @@ function getPaymentRelatedText() {
 
   collectFromRoot(document);
 
-  const iframeText = Array.from(document.querySelectorAll("iframe"))
-    .map((iframe) =>
-      [
-        iframe.getAttribute("src") || "",
-        iframe.getAttribute("title") || "",
-        iframe.getAttribute("name") || "",
-      ].join(" "),
-    )
-    .join(" ");
+  Array.from(document.querySelectorAll("iframe"))
+    .filter((iframe) => !isPageChrome(iframe))
+    .forEach((iframe) => {
+      markupParts.push(
+        [
+          iframe.getAttribute("src") || "",
+          iframe.getAttribute("title") || "",
+          iframe.getAttribute("name") || "",
+        ].join(" "),
+      );
+    });
 
-  parts.push(iframeText);
+  return {
+    text: cleanText(textParts.join(" ")),
+    markupText: cleanText(markupParts.join(" ")),
+  };
+}
 
-  return cleanText(parts.join(" "));
+// Amazon has no finance widget of its own on most listings, while its product
+// columns still hold hidden monthly-plan templates ("Includes initial monthly
+// payment", class aok-hidden). innerText leaves hidden elements out, so only an
+// offer actually shown next to the price counts. The negative answer is a known
+// "no" rather than "not found": a refresh must be able to correct items that
+// were wrongly stored as having finance.
+// Amazon's offer sits under the price: "Or Spread the cost with Instalments.
+// Subject to financial status & eligibility. Credit broker: Amazon EU S.a.r.l,
+// Lender: Barclays. Select plan". Which container holds it is not something we
+// can rely on, so the whole product column and buy box are read, and only
+// wording that belongs to a credit offer counts — loose phrases such as
+// "a month" turn up in the description bullets of the same column.
+function findAmazonUkFinanceInfo() {
+  const zones = Array.from(document.querySelectorAll("#centerCol, #rightCol"));
+  if (zones.length === 0) return null;
+
+  const visibleText = cleanText(zones.map((zone) => zone.innerText || "").join(" "));
+  const hasOffer =
+    /spread the cost|instal?lments?|lender:|£\s?[\d.,]+\s*(\/|per|a)\s*mo(nth)?\b|monthly payments?|pay later|0%\s*interest|interest[-\s]free credit/i.test(
+      visibleText,
+    );
+
+  return hasOffer
+    ? {
+        installmentAvailable: true,
+        installmentText: "Finance / pay later available",
+      }
+    : {
+        installmentAvailable: false,
+        installmentText: "No finance offer on the product page",
+      };
 }
 
 function findFinanceInfo() {
-  const bodyText = getPaymentRelatedText();
+  if (/(^|\.)amazon\.co\.uk$/i.test(window.location.hostname)) {
+    const amazonFinanceInfo = findAmazonUkFinanceInfo();
+    if (amazonFinanceInfo) return amazonFinanceInfo;
+  }
+
+  const { text: bodyText, markupText } = getPaymentRelatedText();
   const normalized = normalizeForSearch(bodyText);
 
   const negativeFinance = /finance not available|credit not available|not eligible for finance|pay monthly unavailable/i.test(normalized);
@@ -464,7 +549,7 @@ function findFinanceInfo() {
       /pay\s+in\s+\d+/i.test(bodyText) ||
       /interest[-\s]?free\s+payments?/i.test(bodyText);
     const hasDieselKlarna =
-      (/klarna/i.test(bodyText) && hasDieselPaymentPlan) ||
+      (/klarna/i.test(`${bodyText} ${markupText}`) && hasDieselPaymentPlan) ||
       Boolean(dieselPaymentMatch);
 
     if (dieselPaymentMatch || hasDieselKlarna) {
@@ -493,7 +578,12 @@ function findFinanceInfo() {
     /spread the cost/i,
   ];
 
-  if (financePatterns.some((pattern) => pattern.test(bodyText))) {
+  const providerPattern = /klarna|clearpay|paypal\s*credit|pay\s*in\s*3/i;
+
+  if (
+    financePatterns.some((pattern) => pattern.test(bodyText)) ||
+    providerPattern.test(markupText)
+  ) {
     return {
       installmentAvailable: true,
       installmentText: "Finance / pay later available",
