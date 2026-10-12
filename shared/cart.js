@@ -323,6 +323,20 @@ var OrtakSepetCart = (function () {
       : freshProduct.installmentText;
   }
 
+  // Re-reading before a write only helps if nothing writes in between. The
+  // price refresh saves from several parallel workers: two that finish
+  // together both read the same snapshot, and the second write silently
+  // drops the first item's new price. Every read-modify-write in this context
+  // therefore runs one after another. (The popup is a separate context with
+  // its own queue; its writes are user actions and do not overlap like this.)
+  let writeQueue = Promise.resolve();
+
+  function withWriteLock(task) {
+    const result = writeQueue.then(task);
+    writeQueue = result.catch(() => {});
+    return result;
+  }
+
   async function getItems() {
     const result = await browser.storage.local.get(CART_STORAGE_KEY);
     return result[CART_STORAGE_KEY] || [];
@@ -416,6 +430,10 @@ var OrtakSepetCart = (function () {
       throw new Error("Ürün bilgisi okunamadı.");
     }
 
+    return withWriteLock(() => addProductUnlocked(product));
+  }
+
+  async function addProductUnlocked(product) {
     const viewMode = await getViewMode();
     const items = await getItems();
     const productUrl = normalizeUrl(product.url);
@@ -453,6 +471,10 @@ var OrtakSepetCart = (function () {
   async function saveRefreshedItem(refreshedItem) {
     if (!refreshedItem || !refreshedItem.id) return false;
 
+    return withWriteLock(() => saveRefreshedItemUnlocked(refreshedItem));
+  }
+
+  async function saveRefreshedItemUnlocked(refreshedItem) {
     const items = await getItems();
     const index = items.findIndex((item) => item.id === refreshedItem.id);
 
