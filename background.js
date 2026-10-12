@@ -412,7 +412,16 @@ async function updateSingleItem(item) {
         shippingSource: freshProduct.shippingSource,
         shippingConfidence: freshProduct.shippingConfidence,
 
-        previousPrice: productUnavailable && oldPrice ? oldPrice : priceChanged ? oldPrice : item.previousPrice,
+        // "Önceki" yalnızca bu güncellemede değişen fiyatı anlatır. Fiyat aynı
+        // kaldıysa eski referansı silmek gerekiyor; yoksa önceki turlarda
+        // değişmiş ürünler de değişmiş gibi görünüp bu turdakilerle karışıyor.
+        // Satıştan kalkan üründe son bilinen fiyat korunur, ürün geri gelince
+        // de o fiyat "önceki" olarak gösterilir.
+        previousPrice: productUnavailable
+          ? oldPrice || item.previousPrice || null
+          : priceChanged
+            ? oldPrice || item.previousPrice || null
+            : null,
         lastCheckedAt: new Date().toISOString(),
         lastUpdateStatus: productUnavailable && !keepManualPrice ? "unavailable" : keepManualPrice ? "manual-kept" : "success",
         lastUpdateError: null,
