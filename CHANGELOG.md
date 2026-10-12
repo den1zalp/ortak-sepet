@@ -2,6 +2,46 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.13.2 — 12 Ekim 2026
+
+### Düzeltilenler
+
+* **Amazon UK'de taksiti olmayan ürünler "Taksit: Var" görünüyordu.** UK
+  sitelerindeki taksit taraması sayfanın tamamında "installment", "klarna",
+  "monthly payments" gibi kelimeler arıyordu; buna sayfadaki script'ler ve
+  elemanların class/id adları da dahildi. Amazon her ürün sayfasında bu
+  kelimeleri taşıyor: sayfa yapılandırmasında `installmentPayment_feature_div`
+  adı geçiyor, altbilgide "Monthly Payments" linki var, gizli bir şablonda
+  "Includes initial monthly payment" yazıyor. Sonuçta taksit olsun olmasın her
+  Amazon UK ürünü taksitli sayılıyordu.
+
+  Artık yalnızca kullanıcının okuyabildiği metne bakılıyor: script, stil, sayfa
+  üstü, menü ve altbilgi aranmıyor. Elemanların adlarında yalnızca ödeme
+  sağlayıcısının adı (Klarna, Clearpay, PayPal Credit) bir işaret sayılıyor.
+  Amazon UK'de ürün sütunu ile satın alma kutusundaki görünür metne bakılıyor;
+  taksit teklifi fiyatın altında "Spread the cost with Instalments… Lender:
+  Barclays" biçiminde çıkıyor. Bu değişiklik bütün UK sitelerini kapsıyor:
+  altbilgideki ödeme logoları da artık taksit sayılmıyor.
+
+  Teklif bulunamayınca Amazon UK "bilinmiyor" yerine kesin "yok" diyor.
+  Bilinmeyen sonuç fiyat güncellemesinde eski değeri koruduğu için, sepette
+  yanlışlıkla "Var" kaydedilmiş Amazon UK ürünleri bir sonraki güncellemede
+  kendiliğinden düzeliyor.
+
+* **"Önceki" fiyat, fiyatı o güncellemede değişmeyen üründe de duruyordu.**
+  Fiyat aynı kaldığında eski "önceki" değeri silinmiyordu; birkaç güncelleme
+  sonra hangi ürünün fiyatının bu turda değiştiği anlaşılmıyordu. Artık
+  "Önceki" yalnızca son güncellemede fiyatı değişen üründe görünüyor. Satıştan
+  kalkan üründe son bilinen fiyat korunuyor ve ürün geri geldiğinde "önceki"
+  olarak gösteriliyor.
+
+* **Fiyat güncellemesinde bazı ürünlerin yeni fiyatı kayboluyordu.**
+  Güncelleme üç ürünü aynı anda yeniliyor ve her biri sonucunu sepeti okuyup
+  geri yazarak kaydediyor. İki ürün aynı anda bitince ikisi de sepetin aynı
+  hâlini okuyor, ikinci yazım birincinin yeni fiyatını siliyordu; ürün
+  güncellenmiş görünüp eski fiyatta kalıyordu. Sepete yazma adımları artık
+  sırayla çalışıyor.
+
 ## 1.13.1 — 22 Eylül 2026
 
 ### Eklenenler
