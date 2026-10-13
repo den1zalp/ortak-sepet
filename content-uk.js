@@ -89,6 +89,8 @@ async function waitForUkProductFromPage(maxWaitMs = 2200) {
   return normalizeProduct(latestProduct);
 }
 
+const AMAZON_FINANCE_SETTLE_MS = 10000;
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === "GET_PRODUCT") {
     (async () => {
@@ -118,12 +120,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         product.installmentText = dieselFinanceInfo.installmentText;
       }
 
-      // Amazon fills the monthly payment box after the page has loaded; in a
-      // freshly opened refresh tab it can still be empty on the first read.
+      // Amazon fills the monthly payment box seconds after the page has loaded,
+      // and later still in the background tab the price refresh opens (timers
+      // and requests are throttled there). A freshly opened page is given until
+      // it is AMAZON_FINANCE_SETTLE_MS old; one that has been open longer, as
+      // when the user adds from the popup, is read as it is.
       if (productParser?.id === "amazon-uk" && product.installmentAvailable === false) {
-        const startedAt = Date.now();
-
-        while (Date.now() - startedAt < 2000) {
+        while (performance.now() < AMAZON_FINANCE_SETTLE_MS) {
           await wait(400);
           const amazonFinanceInfo = findAmazonUkFinanceInfo();
 
