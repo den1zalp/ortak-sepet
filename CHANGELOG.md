@@ -2,6 +2,28 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.14.1 — 14 Ekim 2026
+
+### Düzeltilenler
+
+* **Fiyat güncellemesi 1.13.4'ten beri yavaştı.** 1.13.4'te Amazon UK'nin
+  sonradan dolan aylık ödeme kutusu kaçmasın diye, taksiti "Yok" görünen her
+  Amazon UK ürününün sayfası açıldıktan sonra on saniyeye kadar izlenmeye
+  başlandı. Bu bekleme, aynı anda açılabilen sekmelerden birini tutuyordu:
+  sepette birkaç taksitsiz Amazon ürünü varsa sekmelerin hepsi bekler hâle
+  geliyor, diğer ürünler sıra bekliyordu.
+
+  Beklemenin kendisi kaldırılamıyor: kutunun yeri her Amazon ürün sayfasında,
+  taksit hiç olmayan üründe bile boş duruyor, dolup dolmayacağı önceden
+  anlaşılamıyor. Artık fiyat güncellemesi Amazon sayfasını önce beklemeden
+  okuyor, taksit "Yok" çıkarsa sekme hakkını bırakıyor ve kutuyu arka planda
+  izlemeye devam ediyor. Beklemeler sırayla değil aynı anda geçiyor; yedi
+  Amazon UK ürünlük bir sepette güncelleme 25 saniyeden 11 saniyeye indi.
+  Sonradan dolan kutu yine yakalanıyor.
+* **Fiyat güncellemesi aynı anda 5 ürünü açıyor** (önceden 3). Sayfaların çoğu
+  birkaç saniyede bitiyor ve süreyi ağ gecikmesi belirliyor; sekiz Türk mağaza
+  ürününde güncelleme 10 saniyeden 7 saniyeye indi.
+
 ## 1.14.0 — 13 Ekim 2026
 
 ### Yenilikler
