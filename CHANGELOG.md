@@ -2,6 +2,26 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.13.3 — 13 Ekim 2026
+
+### Düzeltilenler
+
+* **Amazon UK'de aylık ödeme seçeneği olan ürünler "Taksit: Yok" görünüyordu.**
+  1.13.2'deki düzeltme, NZXT'deki "Spread the cost with Instalments… Lender:
+  Barclays" kutusunu tanıyordu ama Amazon'un ikinci tür teklifini tanımıyordu:
+  "Or £40.00/month (5 months) at no interest with Amazon Select plan". Bu
+  kutuyu yakalaması gereken kalıp, tutarın "/month" ile yan yana yazıldığını
+  varsayıyordu. Amazon ise fiyatı birkaç ayrı parçadan oluşturuyor, araya
+  bazen görünmez karakterler koyuyor. Kutu ayrıca sayfa açıldıktan sonra
+  doluyor; fiyat güncellemesi için açılan sekmede eklenti baktığında henüz
+  boş olabiliyordu.
+
+  Artık kutu tutardan bağımsız olarak kendi ifadelerinden tanınıyor ("/month",
+  "at no interest", "Select plan"), görünmez karakterler metinden
+  temizleniyor. İlk okumada teklif bulunmazsa eklenti kutunun dolması için iki
+  saniye daha bekleyip tekrar bakıyor. Yanlışlıkla "Yok" kaydedilmiş ürünler
+  bir sonraki fiyat güncellemesinde düzeliyor.
+
 ## 1.13.2 — 12 Ekim 2026
 
 ### Düzeltilenler
