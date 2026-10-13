@@ -124,8 +124,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // and later still in the background tab the price refresh opens (timers
       // and requests are throttled there). A freshly opened page is given until
       // it is AMAZON_FINANCE_SETTLE_MS old; one that has been open longer, as
-      // when the user adds from the popup, is read as it is.
-      if (productParser?.id === "amazon-uk" && product.installmentAvailable === false) {
+      // when the user adds from the popup, is read as it is. The price refresh
+      // first asks with skipFinanceSettle so that the wait does not hold one of
+      // its tab slots, then asks again without it.
+      if (
+        !message.skipFinanceSettle &&
+        productParser?.id === "amazon-uk" &&
+        product.installmentAvailable === false
+      ) {
         while (performance.now() < AMAZON_FINANCE_SETTLE_MS) {
           await wait(400);
           const amazonFinanceInfo = findAmazonUkFinanceInfo();

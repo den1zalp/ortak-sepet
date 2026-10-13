@@ -10,7 +10,10 @@ if (typeof importScripts === "function") {
 const CART_KEY = OrtakSepetCart.CART_STORAGE_KEY;
 const LANGUAGE_KEY = "ortakSepetLanguage";
 const IMAGE_CACHE_LIMIT = 40;
-const UPDATE_CONCURRENCY = 3;
+// Aynı anda açılan arka plan sekmesi. Sayfaların çoğu birkaç saniyede bitiyor
+// ve süre ağ gecikmesinden geliyor; 3 yerine 5 sekme 8 ürünlük bir güncellemeyi
+// ölçümde 10 saniyeden 7 saniyeye indirdi.
+const UPDATE_CONCURRENCY = 5;
 const imageDataCache = new Map();
 
 // Süren fiyat güncellemesi; popup buradan iptal edebiliyor.
@@ -185,14 +188,13 @@ async function readProductFromTabWithRetry(tabId, options = {}) {
     attempts = 10,
     waitMs = 900,
     acceptTitleOnly = false,
+    message = { type: "GET_PRODUCT" },
   } = options;
   let lastPartialProduct = null;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const response = await browser.tabs.sendMessage(tabId, {
-        type: "GET_PRODUCT",
-      });
+      const response = await browser.tabs.sendMessage(tabId, message);
 
       if (
         response &&
@@ -314,9 +316,38 @@ function getUpdateProfile(item) {
   };
 }
 
+// Amazon UK aylık ödeme kutusunu sayfa açıldıktan saniyeler sonra dolduruyor;
+// içerik script'i taksiti "Yok" okuduğu Amazon UK sayfasını yeni açılmışsa
+// bir süre izliyor (content-uk.js, AMAZON_FINANCE_SETTLE_MS). Fiyat güncellemesi
+// önce bu beklemeyi atlayarak okuyor, sekme hakkını bırakıyor, sonra bekleyerek
+// yeniden okuyor; böylece bekleme sıradaki ürünleri durdurmuyor.
+function needsAmazonFinanceSettle(item, product) {
+  return itemHostMatches(item, ["amazon.co.uk"]) && product.installmentAvailable === false;
+}
+
+async function settleAmazonFinance(tabId, product) {
+  try {
+    const response = await browser.tabs.sendMessage(tabId, { type: "GET_PRODUCT" });
+
+    if (response?.ok && response.product?.installmentAvailable === true) {
+      return {
+        ...product,
+        installmentAvailable: true,
+        installmentText: response.product.installmentText,
+      };
+    }
+  } catch {
+    // Sekme kapanmışsa ilk okuma geçerli.
+  }
+
+  return product;
+}
+
 // onPhase: popup ürünün kartını aşama aşama doldursun diye sekme açıldığında
 // ("loading") ve sayfa yüklenip okunmaya başlandığında ("reading") çağrılır.
-async function updateSingleItem(item, onPhase = () => {}) {
+// releaseSlot: ürünün sekme hakkını bırakır; sonrası yalnızca bekleme olduğunda
+// erken çağrılır (yukarıdaki Amazon UK beklemesi).
+async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}) {
   if (!item.url) {
     return {
       ok: false,
@@ -363,11 +394,17 @@ async function updateSingleItem(item, onPhase = () => {}) {
     await delay(updateProfile.initialDelayMs);
     onPhase("reading");
 
-    const freshProduct = await readProductFromTabWithRetry(tab.id, {
+    let freshProduct = await readProductFromTabWithRetry(tab.id, {
       attempts: updateProfile.attempts,
       waitMs: updateProfile.waitMs,
       acceptTitleOnly: updateProfile.acceptTitleOnly,
+      message: { type: "GET_PRODUCT", skipFinanceSettle: true },
     });
+
+    if (needsAmazonFinanceSettle(item, freshProduct)) {
+      releaseSlot();
+      freshProduct = await settleAmazonFinance(tab.id, freshProduct);
+    }
 
     const oldPrice = item.price || null;
     const keepManualPrice = item.manualPrice === true;
@@ -452,6 +489,29 @@ async function updateSingleItem(item, onPhase = () => {}) {
   }
 }
 
+// Aynı anda en fazla count iş; hak bırakılınca sıradaki (ilk bekleyen) başlıyor.
+function createSlots(count) {
+  let free = count;
+  const waiting = [];
+
+  return {
+    async acquire() {
+      if (free > 0) {
+        free -= 1;
+        return;
+      }
+
+      await new Promise((resolve) => waiting.push(resolve));
+    },
+    release() {
+      const next = waiting.shift();
+
+      if (next) next();
+      else free += 1;
+    },
+  };
+}
+
 async function updateAllPrices() {
   const initialItems = await OrtakSepetCart.getItems();
 
@@ -485,25 +545,33 @@ async function updateAllPrices() {
   let needsPermission = 0;
   let skipped = 0;
   let completed = 0;
-  let nextIndex = 0;
 
   // Ürünler sırayla değil, sınırlı sayıda paralel sekmede güncelleniyor.
   // Sekme açıp yüklenmesini beklemek işin neredeyse tamamı, bu yüzden
-  // eşzamanlılık süreyi doğrudan kısaltıyor.
-  async function runWorker() {
-    while (!run.cancelled) {
-      const index = nextIndex;
-      nextIndex += 1;
+  // eşzamanlılık süreyi doğrudan kısaltıyor. Sekme hakkı ürünün işi bitince,
+  // yalnızca beklemesi kaldıysa daha önce bırakılıyor.
+  const slots = createSlots(UPDATE_CONCURRENCY);
 
-      if (index >= targetIds.length) return;
+  async function updateTarget(targetId) {
+    await slots.acquire();
+
+    let released = false;
+    const releaseSlot = () => {
+      if (released) return;
+      released = true;
+      slots.release();
+    };
+
+    try {
+      if (run.cancelled) return;
 
       const items = await OrtakSepetCart.getItems();
-      const currentItem = items.find((item) => item.id === targetIds[index]);
+      const currentItem = items.find((item) => item.id === targetId);
 
       if (!currentItem) {
         skipped += 1;
         completed += 1;
-        continue;
+        return;
       }
 
       completed += 1;
@@ -525,7 +593,7 @@ async function updateAllPrices() {
 
       setPhase("opening");
 
-      const result = await updateSingleItem(currentItem, setPhase);
+      const result = await updateSingleItem(currentItem, setPhase, releaseSlot);
 
       // İptal edilse bile okunan veri geçerli; yazıp öyle çıkıyoruz.
       const saved = await OrtakSepetCart.saveRefreshedItem(result.item);
@@ -548,15 +616,13 @@ async function updateAllPrices() {
       }
 
       await delay(150);
+    } finally {
+      releaseSlot();
     }
   }
 
-  const workerCount = Math.min(UPDATE_CONCURRENCY, total);
-
   try {
-    await Promise.all(
-      Array.from({ length: workerCount }, () => runWorker()),
-    );
+    await Promise.all(targetIds.map(updateTarget));
   } finally {
     if (activePriceUpdate === run) {
       activePriceUpdate = null;
