@@ -118,6 +118,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         product.installmentText = dieselFinanceInfo.installmentText;
       }
 
+      // Amazon fills the monthly payment box after the page has loaded; in a
+      // freshly opened refresh tab it can still be empty on the first read.
+      if (productParser?.id === "amazon-uk" && product.installmentAvailable === false) {
+        const startedAt = Date.now();
+
+        while (Date.now() - startedAt < 2000) {
+          await wait(400);
+          const amazonFinanceInfo = findAmazonUkFinanceInfo();
+
+          if (amazonFinanceInfo?.installmentAvailable) {
+            product.installmentAvailable = true;
+            product.installmentText = amazonFinanceInfo.installmentText;
+            break;
+          }
+        }
+      }
+
       if (!product.title) {
         sendResponse({
           ok: false,

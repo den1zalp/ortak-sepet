@@ -480,9 +480,18 @@ function findAmazonUkFinanceInfo() {
   const zones = Array.from(document.querySelectorAll("#centerCol, #rightCol"));
   if (zones.length === 0) return null;
 
-  const visibleText = cleanText(zones.map((zone) => zone.innerText || "").join(" "));
+  // Amazon splits prices into several spans and sometimes puts zero-width
+  // characters between them, so "£16.00/month" is not always contiguous text.
+  // The monthly box ("Or £16.00/month (3 months) at no interest with Amazon
+  // Select plan") is matched on its wording, not on the amount next to it.
+  const visibleText = cleanText(
+    zones
+      .map((zone) => zone.innerText || "")
+      .join(" ")
+      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, ""),
+  );
   const hasOffer =
-    /spread the cost|instal?lments?|lender:|£\s?[\d.,]+\s*(\/|per|a)\s*mo(nth)?\b|monthly payments?|pay later|0%\s*interest|interest[-\s]free credit/i.test(
+    /spread the cost|instal?lments?|lender:|\/\s*mo(nth)?\b|monthly payments?|pay later|0%\s*interest|at no interest|interest[-\s]free credit|select plan/i.test(
       visibleText,
     );
 
