@@ -2,6 +2,26 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.13.4 — 13 Ekim 2026
+
+### Düzeltilenler
+
+* **Fiyat güncellemesi Amazon UK'de sonradan gelen taksit seçeneğini
+  yansıtmıyordu.** Sepette "Taksit: Yok" duran bir ürüne Amazon aylık ödeme
+  seçeneği ("Or £40.00/month… Select plan") eklediğinde, fiyatları güncellemek
+  bunu göstermiyordu; ürünü sepete yeniden eklemek gerekiyordu. Fiyat
+  güncellemesi ürünü arka plan sekmesinde açıyor. Amazon bu kutuyu sayfa
+  yüklendikten birkaç saniye sonra dolduruyor; arka plan sekmesinde tarayıcı
+  sayfanın zamanlayıcılarını ve isteklerini yavaşlattığı için daha da geç.
+  Eklenti en fazla iki saniye bekleyip kutuyu boş buluyordu.
+
+  Artık yeni açılmış bir Amazon sayfasında, sayfa on saniyelik olana kadar
+  kutunun dolması bekleniyor; kutu dolar dolmaz okunuyor. Uzun süredir açık bir
+  sayfadan sepete eklerken hiç beklenmiyor. 1.13.3'te taksiti olmayan bir
+  Amazon ürününü sepete eklemek her seferinde iki saniye gecikiyordu, bu
+  gecikme de kalktı. Taksiti olmayan Amazon ürünlerinin fiyat güncellemesi ise
+  birkaç saniye daha uzun sürüyor.
+
 ## 1.13.3 — 13 Ekim 2026
 
 ### Düzeltilenler
