@@ -6,6 +6,58 @@
 // bir kez hesaplanıp burada tutuluyor; işleyici hiçbir şey beklemeden okuyor.
 let missingPermissionOrigins = [];
 
+// Kartlardaki simgeler. Yol verisi sabit; innerHTML yerine createElementNS ile
+// çiziliyor.
+const ICON_PATHS = {
+  purchase: ["M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z", "M3 6h18", "m9 13 2 2 4-4"],
+  open: ["M15 3h6v6", "M10 14 21 3", "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"],
+  edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
+  remove: ["M3 6h18", "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"],
+  restore: ["M3 7v6h6", "M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"],
+  minus: ["M5 12h14"],
+  plus: ["M12 5v14", "M5 12h14"],
+  check: ["m5 12 5 5 9-10"],
+  key: ["M15 7a4 4 0 1 1-3.9 4.9L3 20v-3h3v-3h3l2.1-2.1A4 4 0 0 1 15 7Z"],
+};
+
+function createIcon(name) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "button-icon");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+
+  for (const d of ICON_PATHS[name] || []) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+  }
+
+  return svg;
+}
+
+// Kart düğmeleri: simge + metin. Metin sepet kartında görsel olarak gizli,
+// ekran okuyucu ve testler için yerinde duruyor (bkz. popup.css).
+function createItemButton({ icon, text, accessibleLabel, data, variant = "" }) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `small-button ${variant}`.trim();
+  button.title = text;
+  button.setAttribute("aria-label", accessibleLabel);
+
+  for (const [key, value] of Object.entries(data)) {
+    button.dataset[key] = value;
+  }
+
+  const label = document.createElement("span");
+  label.className = "button-text";
+  label.textContent = text;
+
+  button.appendChild(createIcon(icon));
+  button.appendChild(label);
+
+  return button;
+}
+
 function itemNeedsPermission(item) {
   if (missingPermissionOrigins.length === 0) return false;
 
@@ -16,6 +68,7 @@ function itemNeedsPermission(item) {
 
 function createGrantPermissionButton(origins, text, accessibleLabel) {
   const button = document.createElement("button");
+  button.type = "button";
   button.className = "small-button grant-permission-button";
   button.textContent = text;
   // İşleyici bu listeyi senkron okuyabilsin diye origin'ler düğmenin üstünde.
@@ -77,9 +130,9 @@ function truncateProductTitle(titleText, maxLength = 60) {
   return `${cleanedTitle.slice(0, maxLength).trim()}…`;
 }
 
-function createDetailRow(labelText, valueText, shouldBoldValue = false) {
-  const row = document.createElement("div");
-  row.className = "detail-row";
+function createDetailRow(labelText, valueText, shouldBoldValue = false, tone = "") {
+  const row = document.createElement("span");
+  row.className = tone ? `detail-row detail-row-${tone}` : "detail-row";
 
   const label = document.createElement("span");
   label.className = "detail-label";
@@ -132,68 +185,108 @@ function createProductImage(imageUrl) {
   return image;
 }
 
-function getCategoryColor(categoryName) {
-  const colors = {
-    "Anne & Bebek": "#f9a8d4",
-    "İçecek": "#38bdf8",
-    "Elektronik": "#60a5fa",
-    "Telefon & Aksesuar": "#818cf8",
-    "Bilgisayar": "#fb923c",
-    "Ev & Yaşam": "#34d399",
-    "Kişisel Bakım": "#c084fc",
-    "Giyim": "#f472b6",
-    "Kitap & Kırtasiye": "#a78bfa",
-    "Market": "#22c55e",
-    "Oyuncak": "#facc15",
-    "Otomotiv": "#94a3b8",
-    "Taksit Var": "#22c55e",
-    "Taksit / Finance Var": "#22c55e",
-    "Instalments / Finance Available": "#22c55e",
-    "Taksit Yok / Bilinmiyor": "#94a3b8",
-    "Taksit / Finance Yok / Bilinmiyor": "#94a3b8",
-    "No Instalments / Finance / Unknown": "#94a3b8",
-    "Türkiye": "#ef4444",
-    "İngiltere": "#2563eb",
-    "United Kingdom": "#2563eb",
-    "Diğer": "#d1d5db",
-  };
+// Kategori adları shared/category.js'teki Türkçe adlar; taksit ve ülke
+// grupları dilden bağımsız anahtar kullanıyor.
+const GROUP_COLORS = {
+  "Anne & Bebek": "#f9a8d4",
+  "İçecek": "#38bdf8",
+  "Elektronik": "#60a5fa",
+  "Telefon & Aksesuar": "#818cf8",
+  "Bilgisayar": "#fb923c",
+  "Ev & Yaşam": "#34d399",
+  "Kişisel Bakım": "#c084fc",
+  "Giyim": "#f472b6",
+  "Kitap & Kırtasiye": "#a78bfa",
+  "Market": "#22c55e",
+  "Oyuncak": "#facc15",
+  "Otomotiv": "#94a3b8",
+  "installment-yes": "#22c55e",
+  "installment-no": "#94a3b8",
+  TR: "#ef4444",
+  UK: "#2563eb",
+};
 
-  return colors[categoryName] || "#d1d5db";
+const DEFAULT_GROUP_COLOR = "#d1d5db";
+
+function applyCategoryAccent(element, groupKey) {
+  element.style.setProperty("--category-color", GROUP_COLORS[groupKey] || DEFAULT_GROUP_COLOR);
 }
 
-function applyCategoryAccent(element, categoryName) {
-  element.style.setProperty("--category-color", getCategoryColor(categoryName));
+// Ürün adı, altında site ve kategori. Sepet ve alınanlar aynı başlığı kullanıyor.
+function createTitleBlock(record, fullTitle) {
+  const titleContainer = document.createElement("div");
+  titleContainer.className = "title-container";
+
+  const title = document.createElement("div");
+  title.className = "cart-title";
+  title.textContent = truncateProductTitle(fullTitle, 90);
+  title.title = fullTitle;
+  titleContainer.appendChild(title);
+
+  const meta = document.createElement("div");
+  meta.className = "item-meta";
+
+  const site = document.createElement("span");
+  site.className = "item-site";
+  site.textContent = record.site || translate("unknownSite");
+  meta.appendChild(site);
+
+  if (record.category) {
+    const categoryBadge = document.createElement("span");
+    categoryBadge.className = "category-badge";
+    categoryBadge.textContent = translateCategory(record.category);
+    applyCategoryAccent(categoryBadge, record.category);
+    meta.appendChild(categoryBadge);
+  }
+
+  titleContainer.appendChild(meta);
+  return titleContainer;
 }
 
-function createCartItemElement(item) {
-  const wrapper = document.createElement("div");
-  wrapper.className = isSelected(item)
-    ? "cart-item"
-    : "cart-item cart-item-unselected";
+// Fiyat büyük yazılıyor; son güncellemede değiştiyse altında ne kadar değiştiği
+// ve üstü çizili eski fiyat.
+function createPriceRow(item) {
+  const row = document.createElement("div");
+  row.className = "price-row";
 
-  if (item.lastUpdateStatus === "failed") {
-    wrapper.classList.add("cart-item-update-failed");
+  const price = document.createElement("span");
+  price.className = item.price ? "item-price" : "item-price item-price-missing";
+  price.textContent = getPriceDisplayText(item);
+  row.appendChild(price);
+
+  if (!item.previousPrice || item.previousPrice === item.price) return row;
+
+  const change = document.createElement("span");
+  change.className = "price-change";
+  row.appendChild(change);
+
+  const current = extractNumberFromPrice(item.price);
+  const previous = extractNumberFromPrice(item.previousPrice);
+  const sameCurrency =
+    detectCurrencyFromPrice(item.previousPrice) === detectCurrencyFromPrice(item.price || "");
+
+  if (current !== null && previous !== null && sameCurrency && current !== previous) {
+    const dropped = current < previous;
+    const delta = document.createElement("span");
+    delta.className = `price-delta ${dropped ? "price-delta-down" : "price-delta-up"}`;
+    delta.textContent = `${dropped ? "↓" : "↑"} ${formatPriceByCurrency(
+      Math.abs(current - previous),
+      getItemCurrency(item),
+    )}`;
+    change.appendChild(delta);
   }
 
-  if (itemNeedsPermission(item)) {
-    wrapper.classList.add("cart-item-needs-permission");
-  }
+  const previousPrice = document.createElement("span");
+  previousPrice.className = "previous-price";
+  previousPrice.title = translate("previous");
+  previousPrice.setAttribute("aria-label", `${translate("previous")}: ${item.previousPrice}`);
+  previousPrice.textContent = item.previousPrice;
+  change.appendChild(previousPrice);
 
-  if (item.category) {
-    applyCategoryAccent(wrapper, item.category);
-    wrapper.classList.add("cart-item-with-category");
-  }
+  return row;
+}
 
-  const image = createProductImage(item.image);
-
-  const info = document.createElement("div");
-  info.className = "cart-info";
-
-  const titleRow = document.createElement("div");
-  titleRow.className = "title-row";
-
-  const fullTitle = item.title || translate("noProductTitle");
-
+function createSelectCheckbox(item, fullTitle) {
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.className = "select-checkbox";
@@ -204,27 +297,11 @@ function createCartItemElement(item) {
   // ait olduğunu söyleyebilmesi için her biri ürün adıyla adlandırılıyor.
   checkbox.setAttribute("aria-label", translate("selectItemLabel", { title: fullTitle }));
 
-  const titleContainer = document.createElement("div");
-  titleContainer.className = "title-container";
+  return checkbox;
+}
 
-  const title = document.createElement("div");
-  title.className = "cart-title";
-  title.textContent = truncateProductTitle(fullTitle, 60);
-  title.title = fullTitle;
-
-  titleContainer.appendChild(title);
-
-  if (item.category) {
-    const categoryBadge = document.createElement("span");
-    categoryBadge.className = "category-badge";
-    categoryBadge.textContent = translateCategory(item.category);
-    applyCategoryAccent(categoryBadge, item.category);
-    titleContainer.appendChild(categoryBadge);
-  }
-
-  titleRow.appendChild(checkbox);
-  titleRow.appendChild(titleContainer);
-
+// Taksit, kargo ve durum küçük etiketler; olağan dışı olanlar renkli.
+function createItemDetails(item) {
   const details = document.createElement("div");
   details.className = "product-details";
 
@@ -232,106 +309,134 @@ function createCartItemElement(item) {
   const shippingDisplay = getShippingDisplay(item);
 
   details.appendChild(
-    createDetailRow(translate("site"), item.site || translate("unknownSite"), true),
+    createDetailRow(
+      getPaymentLabel(item),
+      installmentDisplay.text,
+      installmentDisplay.bold,
+      item.installmentAvailable === true ? "positive" : "",
+    ),
   );
 
   details.appendChild(
-    createDetailRow(translate("price"), getPriceDisplayText(item), Boolean(item.price)),
+    createDetailRow(
+      translate("delivery"),
+      shippingDisplay.text,
+      shippingDisplay.bold,
+      item.freeShipping === true ? "positive" : "",
+    ),
   );
 
   const stockDisplayText = getStockDisplayText(item);
   if (stockDisplayText) {
-    details.appendChild(createDetailRow(translate("stockStatus"), stockDisplayText, false));
+    details.appendChild(createDetailRow(translate("stockStatus"), stockDisplayText, false, "warning"));
   }
 
   if (item.manualPrice === true) {
     details.appendChild(createDetailRow(translate("source"), translate("manual"), true));
   }
 
-  if (item.previousPrice && item.previousPrice !== item.price) {
-    details.appendChild(createDetailRow(translate("previous"), item.previousPrice, false));
-  }
-
-  details.appendChild(
-    createDetailRow(getPaymentLabel(item), installmentDisplay.text, installmentDisplay.bold),
-  );
-
-  details.appendChild(
-    createDetailRow(translate("delivery"), shippingDisplay.text, shippingDisplay.bold),
-  );
-
+  // Başarılı kontrol her üründe aynı; yalnızca dikkat isteyen sonuç gösteriliyor.
   const lastUpdateText = getLastUpdateText(item);
 
-  if (lastUpdateText) {
+  if (lastUpdateText && item.lastUpdateStatus !== "success") {
     details.appendChild(
-      createDetailRow(
-        translate("check"),
-        lastUpdateText,
-        item.lastUpdateStatus === "success" ||
-          item.lastUpdateStatus === "manual" ||
-          item.lastUpdateStatus === "manual-kept",
-      ),
+      createDetailRow(translate("check"), lastUpdateText, true, getUpdateStatusTone(item.lastUpdateStatus)),
     );
   }
 
-  const lineTotal = document.createElement("div");
-  lineTotal.className = "line-total";
-  lineTotal.textContent = getItemLineTotal(item);
+  return details;
+}
+
+function getUpdateStatusTone(status) {
+  if (status === "failed") return "danger";
+  if (status === "permission" || status === "unavailable") return "warning";
+  return "";
+}
+
+function createQuantityButton(direction, item, fullTitle) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "quantity-button";
+  button.dataset[direction] = item.id;
+  button.setAttribute(
+    "aria-label",
+    translate(direction === "increase" ? "increaseQuantityLabel" : "decreaseQuantityLabel", { title: fullTitle }),
+  );
+  button.appendChild(createIcon(direction === "increase" ? "plus" : "minus"));
+
+  return button;
+}
+
+function createItemFooter(item, fullTitle) {
+  const footer = document.createElement("div");
+  footer.className = "item-footer";
 
   const quantityRow = document.createElement("div");
   quantityRow.className = "quantity-row";
 
-  const decreaseButton = document.createElement("button");
-  decreaseButton.className = "small-button quantity-button";
-  decreaseButton.textContent = "-";
-  decreaseButton.dataset.decrease = item.id;
-  decreaseButton.setAttribute("aria-label", translate("decreaseQuantityLabel", { title: fullTitle }));
-
   const quantityText = document.createElement("span");
   quantityText.className = "quantity-text";
-  quantityText.textContent = translate("quantity", { quantity: getQuantity(item) });
+  quantityText.textContent = String(getQuantity(item));
+  quantityText.title = translate("quantity", { quantity: getQuantity(item) });
 
-  const increaseButton = document.createElement("button");
-  increaseButton.className = "small-button quantity-button";
-  increaseButton.textContent = "+";
-  increaseButton.dataset.increase = item.id;
-  increaseButton.setAttribute("aria-label", translate("increaseQuantityLabel", { title: fullTitle }));
-
-  quantityRow.appendChild(decreaseButton);
+  quantityRow.appendChild(createQuantityButton("decrease", item, fullTitle));
   quantityRow.appendChild(quantityText);
-  quantityRow.appendChild(increaseButton);
+  quantityRow.appendChild(createQuantityButton("increase", item, fullTitle));
+  footer.appendChild(quantityRow);
 
+  return footer;
+}
+
+// Ara toplam fiyatın yanında. Tek adette fiyatın aynısı olduğundan yalnızca
+// bir şey anlattığında yazılıyor: birden fazla adet ya da toplama girmeyen ürün.
+function createCartPriceRow(item) {
+  const row = createPriceRow(item);
+
+  if (getQuantity(item) > 1 || hasUnavailableMainPrice(item)) {
+    row.appendChild(createLineTotal(getItemLineTotal(item)));
+  }
+
+  return row;
+}
+
+function createLineTotal(text) {
+  const lineTotal = document.createElement("div");
+  lineTotal.className = "line-total";
+  lineTotal.textContent = text;
+
+  return lineTotal;
+}
+
+function createCartItemActions(item, fullTitle) {
   const actions = document.createElement("div");
   actions.className = "cart-actions";
 
-  const purchaseButton = document.createElement("button");
-  purchaseButton.className = "small-button";
-  purchaseButton.textContent = translate("markPurchased");
-  purchaseButton.dataset.purchase = item.id;
-  purchaseButton.setAttribute("aria-label", translate("markPurchasedLabel", { title: fullTitle }));
-
-  const openButton = document.createElement("button");
-  openButton.className = "small-button";
-  openButton.textContent = translate("goToLink");
-  openButton.dataset.open = item.id;
-  openButton.setAttribute("aria-label", translate("openLinkLabel", { title: fullTitle }));
-
-  const editPriceButton = document.createElement("button");
-  editPriceButton.className = "small-button";
-  editPriceButton.textContent = translate("manualPrice");
-  editPriceButton.dataset.editPrice = item.id;
-  editPriceButton.setAttribute("aria-label", translate("manualPriceLabel", { title: fullTitle }));
-
-  const removeButton = document.createElement("button");
-  removeButton.className = "small-button";
-  removeButton.textContent = translate("remove");
-  removeButton.dataset.remove = item.id;
-  removeButton.setAttribute("aria-label", translate("removeLabel", { title: fullTitle }));
-
-  actions.appendChild(purchaseButton);
-  actions.appendChild(openButton);
-  actions.appendChild(editPriceButton);
-  actions.appendChild(removeButton);
+  actions.appendChild(
+    createItemButton({
+      icon: "purchase",
+      text: translate("markPurchased"),
+      accessibleLabel: translate("markPurchasedLabel", { title: fullTitle }),
+      data: { purchase: item.id },
+      variant: "small-button-success",
+    }),
+  );
+  actions.appendChild(
+    createItemButton({
+      icon: "open",
+      text: translate("goToLink"),
+      accessibleLabel: translate("openLinkLabel", { title: fullTitle }),
+      data: { open: item.id },
+    }),
+  );
+  actions.appendChild(
+    createItemButton({
+      icon: "edit",
+      text: translate("manualPrice"),
+      accessibleLabel: translate("manualPriceLabel", { title: fullTitle }),
+      data: { editPrice: item.id },
+      variant: "icon-only",
+    }),
+  );
 
   if (itemNeedsPermission(item)) {
     actions.appendChild(
@@ -343,156 +448,148 @@ function createCartItemElement(item) {
     );
   }
 
-  info.appendChild(titleRow);
-  info.appendChild(details);
-  info.appendChild(lineTotal);
-  info.appendChild(quantityRow);
-  info.appendChild(actions);
+  actions.appendChild(
+    createItemButton({
+      icon: "remove",
+      text: translate("remove"),
+      accessibleLabel: translate("removeLabel", { title: fullTitle }),
+      data: { remove: item.id },
+      variant: "small-button-danger icon-only",
+    }),
+  );
 
-  wrapper.appendChild(image);
-  wrapper.appendChild(info);
+  return actions;
+}
 
-  return wrapper;
+// Sepet ve alınanlar kartının ortak iskeleti: görsel ve içerik parçaları.
+// Parçaların kartta nereye oturacağına CSS karar veriyor (grid alanları).
+function createItemCard(record, mediaExtras, infoParts) {
+  const card = document.createElement("article");
+  card.className = "cart-item";
+
+  if (record.category) {
+    applyCategoryAccent(card, record.category);
+    card.classList.add("cart-item-with-category");
+  }
+
+  const media = document.createElement("div");
+  media.className = "item-media";
+  media.appendChild(createProductImage(record.image));
+  mediaExtras.forEach((element) => media.appendChild(element));
+
+  const info = document.createElement("div");
+  info.className = "cart-info";
+  infoParts.forEach((element) => info.appendChild(element));
+
+  card.appendChild(media);
+  card.appendChild(info);
+
+  return card;
+}
+
+function createCartItemElement(item) {
+  const fullTitle = item.title || translate("noProductTitle");
+
+  const card = createItemCard(item, [createSelectCheckbox(item, fullTitle)], [
+    createTitleBlock(item, fullTitle),
+    createCartPriceRow(item),
+    createItemDetails(item),
+    createItemFooter(item, fullTitle),
+    createCartItemActions(item, fullTitle),
+  ]);
+
+  card.dataset.itemId = item.id;
+  card.classList.toggle("cart-item-unselected", !isSelected(item));
+  card.classList.toggle("cart-item-update-failed", item.lastUpdateStatus === "failed");
+  card.classList.toggle("cart-item-needs-permission", itemNeedsPermission(item));
+
+  return card;
+}
+
+// Gruplar { key, label, items } biçiminde: key rengi, label başlığı veriyor.
+function groupBy(items, getKey) {
+  const grouped = new Map();
+
+  for (const item of items) {
+    const key = getKey(item);
+
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(item);
+  }
+
+  return Array.from(grouped, ([key, groupItems]) => ({ key, items: groupItems }));
 }
 
 function groupItemsByInstallment(items) {
-  const withInstallment = [];
-  const withoutInstallment = [];
+  const order = ["installment-yes", "installment-no"];
 
-  for (const item of items) {
-    if (item.installmentAvailable === true) {
-      withInstallment.push(item);
-    } else {
-      withoutInstallment.push(item);
-    }
-  }
-
-  const groups = [];
-
-  if (withInstallment.length > 0) {
-    groups.push([translate("installmentAvailableGroup"), withInstallment]);
-  }
-
-  if (withoutInstallment.length > 0) {
-    groups.push([translate("installmentUnavailableGroup"), withoutInstallment]);
-  }
-
-  return groups;
+  return groupBy(items, (item) => (item.installmentAvailable === true ? order[0] : order[1]))
+    .sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
+    .map((group) => ({
+      ...group,
+      label: translate(group.key === order[0] ? "installmentAvailableGroup" : "installmentUnavailableGroup"),
+    }));
 }
 
 function groupItemsByCategory(items) {
-  const grouped = new Map();
+  const OTHER = "Diğer";
 
-  for (const item of items) {
-    const category = item.category || "Diğer";
-
-    if (!grouped.has(category)) {
-      grouped.set(category, []);
-    }
-
-    grouped.get(category).push(item);
-  }
-
-  return Array.from(grouped.entries()).sort(([categoryA], [categoryB]) => {
-    if (categoryA === "Diğer") return 1;
-    if (categoryB === "Diğer") return -1;
-
-    return categoryA.localeCompare(categoryB, "tr-TR");
-  });
+  return groupBy(items, (item) => item.category || OTHER)
+    .sort((a, b) => {
+      if (a.key === OTHER) return 1;
+      if (b.key === OTHER) return -1;
+      return a.key.localeCompare(b.key, "tr-TR");
+    })
+    .map((group) => ({ ...group, label: translateCategory(group.key) }));
 }
 
 function groupItemsByCountry(items) {
-  const grouped = new Map();
-
-  for (const item of items) {
-    const region = getItemRegion(item);
-
-    if (!grouped.has(region)) {
-      grouped.set(region, []);
-    }
-
-    grouped.get(region).push(item);
-  }
-
   const order = ["TR", "UK"];
-  return Array.from(grouped.entries()).sort(([regionA], [regionB]) => {
-    return order.indexOf(regionA) - order.indexOf(regionB);
-  });
+
+  return groupBy(items, getItemRegion)
+    .sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key))
+    .map((group) => ({ ...group, label: getRegionLabel(group.key) }));
 }
 
-function createCategoryGroupElement(categoryName, items) {
+function createGroupElement({ key, label, items }, createItem) {
   const group = document.createElement("section");
   group.className = "category-group";
-  applyCategoryAccent(group, categoryName);
+  if (key) applyCategoryAccent(group, key);
 
   const header = document.createElement("div");
   header.className = "category-header";
 
   const title = document.createElement("h3");
   title.className = "category-title";
-  title.textContent = translateCategory(categoryName);
+  title.textContent = label;
 
   const meta = document.createElement("span");
   meta.className = "category-meta";
-
-  const productCount = items.length;
-  const quantityCount = calculateTotalItemCount(items);
-  const categoryTotal = calculateCategoryTotal(items);
-
-  meta.textContent = translate("productMeta", { products: productCount, quantity: quantityCount, total: categoryTotal });
+  meta.textContent = translate("productMeta", {
+    products: items.length,
+    quantity: calculateTotalItemCount(items),
+    total: calculateCategoryTotal(items),
+  });
 
   header.appendChild(title);
   header.appendChild(meta);
-
   group.appendChild(header);
 
   for (const item of items) {
-    const itemElement = createCartItemElement(item);
-    group.appendChild(itemElement);
+    group.appendChild(createItem(item));
   }
 
   return group;
 }
 
-function shouldRenderCategorized(items) {
-  return items.some((item) => Boolean(item.category));
-}
-
-function renderFlatCart(items) {
-  for (const item of items) {
-    const element = createCartItemElement(item);
-    cartItemsEl.appendChild(element);
+function getCartGroups(items, viewMode) {
+  if (viewMode === "installment") return groupItemsByInstallment(items);
+  if (viewMode === "country") return groupItemsByCountry(items);
+  if (viewMode === "category" && items.some((item) => Boolean(item.category))) {
+    return groupItemsByCategory(items);
   }
-}
 
-function renderCategorizedCart(items) {
-  const groupedItems = groupItemsByCategory(items);
-
-  for (const [categoryName, categoryItems] of groupedItems) {
-    const groupElement = createCategoryGroupElement(
-      categoryName,
-      categoryItems,
-    );
-    cartItemsEl.appendChild(groupElement);
-  }
-}
-
-function renderInstallmentGroupedCart(items) {
-  const groupedItems = groupItemsByInstallment(items);
-
-  for (const [groupName, groupItems] of groupedItems) {
-    const groupElement = createCategoryGroupElement(groupName, groupItems);
-    cartItemsEl.appendChild(groupElement);
-  }
-}
-
-function renderCountryGroupedCart(items) {
-  const groupedItems = groupItemsByCountry(items);
-
-  for (const [region, groupItems] of groupedItems) {
-    const groupElement = createCategoryGroupElement(getRegionLabel(region), groupItems);
-    cartItemsEl.appendChild(groupElement);
-  }
+  return null;
 }
 
 function getPurchaseMonthKey(record) {
@@ -526,145 +623,85 @@ function formatPurchaseDate(record) {
 }
 
 function groupPurchasesByMonth(records) {
-  const grouped = new Map();
-
-  for (const record of records) {
-    const monthKey = getPurchaseMonthKey(record);
-
-    if (!grouped.has(monthKey)) {
-      grouped.set(monthKey, []);
-    }
-
-    grouped.get(monthKey).push(record);
-  }
-
   // En yeni ay üstte, ay içinde de en son alınan üstte.
-  for (const monthRecords of grouped.values()) {
-    monthRecords.sort(
-      (a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt),
-    );
-  }
-
-  return Array.from(grouped.entries()).sort(([a], [b]) => b.localeCompare(a));
+  return groupBy(records, getPurchaseMonthKey)
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .map((group) => ({
+      key: null,
+      label: formatMonthLabel(group.key),
+      items: group.items.sort((a, b) => new Date(b.purchasedAt) - new Date(a.purchasedAt)),
+    }));
 }
 
-function createPurchaseElement(record) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "cart-item";
+function createPurchaseActions(record, fullTitle) {
+  const actions = document.createElement("div");
+  actions.className = "cart-actions";
 
-  if (record.category) {
-    applyCategoryAccent(wrapper, record.category);
-    wrapper.classList.add("cart-item-with-category");
-  }
-
-  const image = createProductImage(record.image);
-
-  const info = document.createElement("div");
-  info.className = "cart-info";
-
-  const titleContainer = document.createElement("div");
-  titleContainer.className = "title-container";
-
-  const fullTitle = record.title || translate("noProductTitle");
-  const title = document.createElement("div");
-  title.className = "cart-title";
-  title.textContent = truncateProductTitle(fullTitle, 60);
-  title.title = fullTitle;
-  titleContainer.appendChild(title);
-
-  if (record.category) {
-    const categoryBadge = document.createElement("span");
-    categoryBadge.className = "category-badge";
-    categoryBadge.textContent = translateCategory(record.category);
-    applyCategoryAccent(categoryBadge, record.category);
-    titleContainer.appendChild(categoryBadge);
-  }
-
-  const details = document.createElement("div");
-  details.className = "product-details";
-  details.appendChild(
-    createDetailRow(translate("site"), record.site || translate("unknownSite"), true),
+  actions.appendChild(
+    createItemButton({
+      icon: "restore",
+      text: translate("restoreToCart"),
+      accessibleLabel: translate("restoreToCartLabel", { title: fullTitle }),
+      data: { restorePurchase: record.id },
+    }),
   );
-  details.appendChild(
-    createDetailRow(translate("price"), getPriceDisplayText(record), Boolean(record.price)),
+  actions.appendChild(
+    createItemButton({
+      icon: "open",
+      text: translate("goToLink"),
+      accessibleLabel: translate("openLinkLabel", { title: fullTitle }),
+      data: { openPurchase: record.id },
+    }),
   );
-  details.appendChild(
-    createDetailRow(translate("csvQuantity"), String(getQuantity(record)), false),
+  actions.appendChild(
+    createItemButton({
+      icon: "remove",
+      text: translate("deletePurchase"),
+      accessibleLabel: translate("deletePurchaseLabel", { title: fullTitle }),
+      data: { deletePurchase: record.id },
+      variant: "small-button-danger",
+    }),
   );
 
-  const lineTotal = document.createElement("div");
-  lineTotal.className = "line-total";
-  lineTotal.textContent = getItemLineTotal(record);
+  return actions;
+}
+
+function createPurchaseFooter(record) {
+  const footer = document.createElement("div");
+  footer.className = "item-footer";
 
   const purchaseDate = document.createElement("div");
   purchaseDate.className = "purchase-date";
   purchaseDate.textContent = `${translate("purchasedOn")}: ${formatPurchaseDate(record)}`;
+  footer.appendChild(purchaseDate);
 
-  const actions = document.createElement("div");
-  actions.className = "cart-actions";
-
-  const restoreButton = document.createElement("button");
-  restoreButton.className = "small-button";
-  restoreButton.textContent = translate("restoreToCart");
-  restoreButton.dataset.restorePurchase = record.id;
-  restoreButton.setAttribute("aria-label", translate("restoreToCartLabel", { title: fullTitle }));
-
-  const openButton = document.createElement("button");
-  openButton.className = "small-button";
-  openButton.textContent = translate("goToLink");
-  openButton.dataset.openPurchase = record.id;
-  openButton.setAttribute("aria-label", translate("openLinkLabel", { title: fullTitle }));
-
-  const deleteButton = document.createElement("button");
-  deleteButton.className = "small-button";
-  deleteButton.textContent = translate("deletePurchase");
-  deleteButton.dataset.deletePurchase = record.id;
-  deleteButton.setAttribute("aria-label", translate("deletePurchaseLabel", { title: fullTitle }));
-
-  actions.appendChild(restoreButton);
-  actions.appendChild(openButton);
-  actions.appendChild(deleteButton);
-
-  info.appendChild(titleContainer);
-  info.appendChild(details);
-  info.appendChild(lineTotal);
-  info.appendChild(purchaseDate);
-  info.appendChild(actions);
-
-  wrapper.appendChild(image);
-  wrapper.appendChild(info);
-
-  return wrapper;
+  return footer;
 }
 
-function createMonthGroupElement(monthKey, records) {
-  const group = document.createElement("section");
-  group.className = "category-group";
+function createPurchasePriceRow(record) {
+  const row = createPriceRow({ ...record, previousPrice: null });
 
-  const header = document.createElement("div");
-  header.className = "category-header";
-
-  const title = document.createElement("h3");
-  title.className = "category-title";
-  title.textContent = formatMonthLabel(monthKey);
-
-  const meta = document.createElement("span");
-  meta.className = "category-meta";
-  meta.textContent = translate("productMeta", {
-    products: records.length,
-    quantity: calculateTotalItemCount(records),
-    total: calculateCategoryTotal(records),
-  });
-
-  header.appendChild(title);
-  header.appendChild(meta);
-  group.appendChild(header);
-
-  for (const record of records) {
-    group.appendChild(createPurchaseElement(record));
+  if (getQuantity(record) > 1) {
+    row.appendChild(
+      createLineTotal(`${translate("quantity", { quantity: getQuantity(record) })} · ${getItemLineTotal(record)}`),
+    );
   }
 
-  return group;
+  return row;
+}
+
+function createPurchaseElement(record) {
+  const fullTitle = record.title || translate("noProductTitle");
+
+  const card = createItemCard(record, [], [
+    createTitleBlock(record, fullTitle),
+    createPurchasePriceRow(record),
+    createPurchaseFooter(record),
+    createPurchaseActions(record, fullTitle),
+  ]);
+
+  card.classList.add("cart-item-purchase");
+  return card;
 }
 
 function renderPurchasedSummary(records) {
@@ -706,8 +743,8 @@ async function renderPurchased() {
     return;
   }
 
-  for (const [monthKey, monthRecords] of groupPurchasesByMonth(records)) {
-    purchasedItemsEl.appendChild(createMonthGroupElement(monthKey, monthRecords));
+  for (const group of groupPurchasesByMonth(records)) {
+    purchasedItemsEl.appendChild(createGroupElement(group, createPurchaseElement));
   }
 }
 
@@ -732,6 +769,96 @@ async function setActiveTab(tab) {
   await refreshTabs();
 }
 
+// Liste her değişiklikte baştan çiziliyor; hangi kartın yeni geldiğini ya da
+// fiyatının az önce değiştiğini bilmek için bir önceki çizimde ne olduğu
+// burada tutuluyor. İlk çizimde hiçbir kart vurgulanmıyor.
+let renderedPrices = null;
+
+function highlightChangedItems(items) {
+  const nextPrices = new Map(items.map((item) => [item.id, item.price || ""]));
+
+  if (renderedPrices) {
+    for (const element of cartItemsEl.querySelectorAll("[data-item-id]")) {
+      const id = element.dataset.itemId;
+
+      if (!renderedPrices.has(id)) {
+        element.classList.add("is-new");
+      } else if (renderedPrices.get(id) !== nextPrices.get(id)) {
+        element.classList.add("is-updated");
+      }
+    }
+  }
+
+  renderedPrices = nextPrices;
+}
+
+// Fiyat güncellemesi sırasında o an güncellenen ürünlerin kartı aşama aşama
+// doluyor (sekme açılıyor → sayfa yükleniyor → okunuyor → bitti). Aşamalar
+// arka plandan UPDATE_PRICES_ITEM ile geliyor; liste yeniden çizilince
+// buradan kartlara tekrar uygulanıyor.
+const itemUpdatePhases = new Map();
+
+function applyItemUpdatePhases() {
+  for (const element of cartItemsEl.querySelectorAll("[data-item-id]")) {
+    const phase = itemUpdatePhases.get(element.dataset.itemId);
+
+    if (phase) element.dataset.updatePhase = phase;
+    else delete element.dataset.updatePhase;
+  }
+}
+
+function setItemUpdatePhase(id, phase) {
+  itemUpdatePhases.set(id, phase);
+  applyItemUpdatePhases();
+
+  // "Bitti" bir an dolu kalıyor, sonra dolgu kayboluyor.
+  if (phase === "done") {
+    setTimeout(() => {
+      if (itemUpdatePhases.get(id) !== "done") return;
+
+      itemUpdatePhases.delete(id);
+      applyItemUpdatePhases();
+    }, 900);
+  }
+}
+
+function clearItemUpdatePhases() {
+  itemUpdatePhases.clear();
+  applyItemUpdatePhases();
+}
+
+function setGroupingChip(button, isActive, label) {
+  button.classList.toggle("is-active", isActive);
+  button.setAttribute("aria-pressed", String(isActive));
+  button.title = label;
+}
+
+function renderSortOptions() {
+  sortOptionsEl.textContent = "";
+
+  for (const mode of SORT_OPTIONS) {
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "menu-item sort-option";
+    option.setAttribute("role", "menuitemradio");
+    option.setAttribute("aria-checked", String(mode === currentSort));
+    option.dataset.sort = mode;
+    option.appendChild(createIcon("check"));
+
+    const label = document.createElement("span");
+    label.textContent = translate(`sort_${mode}`);
+    option.appendChild(label);
+
+    sortOptionsEl.appendChild(option);
+  }
+
+  const label = `${translate("sortBy")}: ${translate(`sort_${currentSort}`)}`;
+  sortBtn.title = label;
+  sortBtn.setAttribute("aria-label", label);
+  sortBtn.classList.toggle("is-active", currentSort !== "added");
+  sortMenuTitleEl.textContent = translate("sortBy");
+}
+
 async function renderCart() {
   const items = await getCartItems();
   const viewMode = await getViewMode();
@@ -747,52 +874,44 @@ async function renderCart() {
   itemCountEl.textContent = String(calculateTotalItemCount(items));
   totalPriceEl.textContent = calculateTotal(items);
   selectedTotalPriceEl.textContent = calculateSelectedTotal(items);
+  markPurchasedBtn.hidden = items.length === 0;
 
-  setActionButtonLabel(
+  setGroupingChip(
     categorizeProductsBtn,
+    viewMode === "category",
     viewMode === "category" ? translate("removeCategories") : translate("categorizeProducts"),
   );
-
-  setActionButtonLabel(
+  setGroupingChip(
     installmentProductsBtn,
+    viewMode === "installment",
     viewMode === "installment"
       ? translate("removeInstallmentGrouping")
       : translate("installmentProducts"),
   );
-
-  const countryGroupingLabel =
-    viewMode === "country"
-      ? translate("removeCountryGrouping")
-      : translate("countryGrouping");
-  countryGroupingBtn.setAttribute("aria-label", countryGroupingLabel);
-  countryGroupingBtn.title = countryGroupingLabel;
-
-  countryGroupingBtn.classList.toggle("is-active", viewMode === "country");
-  categorizeProductsBtn.classList.toggle("is-active", viewMode === "category");
-  installmentProductsBtn.classList.toggle("is-active", viewMode === "installment");
+  setGroupingChip(
+    countryGroupingBtn,
+    viewMode === "country",
+    viewMode === "country" ? translate("removeCountryGrouping") : translate("countryGrouping"),
+  );
 
   if (items.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty";
     empty.textContent = translate("emptyCart");
     cartItemsEl.appendChild(empty);
+    renderedPrices = new Map();
     return;
   }
 
-  if (viewMode === "installment") {
-    renderInstallmentGroupedCart(items);
-    return;
+  const sortedItems = sortItems(items, currentSort);
+  const groups = getCartGroups(sortedItems, viewMode);
+
+  if (groups) {
+    groups.forEach((group) => cartItemsEl.appendChild(createGroupElement(group, createCartItemElement)));
+  } else {
+    sortedItems.forEach((item) => cartItemsEl.appendChild(createCartItemElement(item)));
   }
 
-  if (viewMode === "country") {
-    renderCountryGroupedCart(items);
-    return;
-  }
-
-  if (viewMode === "category" && shouldRenderCategorized(items)) {
-    renderCategorizedCart(items);
-    return;
-  }
-
-  renderFlatCart(items);
+  highlightChangedItems(items);
+  applyItemUpdatePhases();
 }

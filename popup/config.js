@@ -12,6 +12,24 @@ const UNDO_WINDOW_MS = 5 * 60 * 1000;
 const COMPACT_MODE_KEY = "ortakSepetCompactMode";
 const LANGUAGE_KEY = "ortakSepetLanguage";
 const THEME_KEY = "ortakSepetTheme";
+// Vurgu rengi: hazır renklerden biri ({ preset }) ya da kaydırıcıyla seçilen
+// renk tonu ({ hue }).
+const ACCENT_KEY = "ortakSepetAccent";
+const SORT_KEY = "ortakSepetSort";
+// "added" depodaki sıra, yani eklenme sırası.
+const SORT_OPTIONS = ["added", "newest", "price-asc", "price-desc", "name", "store"];
+
+// Her renk iki tonlu: toplam kartı ve logo bu ikisinin arasında geçiş yapıyor.
+const ACCENT_PRESETS = [
+  { id: "indigo", colors: ["#4f46e5", "#7c3aed"] },
+  { id: "blue", colors: ["#2563eb", "#0891b2"] },
+  { id: "teal", colors: ["#0d9488", "#0284c7"] },
+  { id: "green", colors: ["#16a34a", "#0d9488"] },
+  { id: "orange", colors: ["#ea580c", "#db2777"] },
+  { id: "pink", colors: ["#db2777", "#9333ea"] },
+  { id: "red", colors: ["#dc2626", "#ea580c"] },
+  { id: "graphite", colors: ["#334155", "#0f172a"] },
+];
 
 const addCurrentProductBtn = document.getElementById("addCurrentProductBtn");
 const categorizeProductsBtn = document.getElementById("categorizeProductsBtn");
@@ -50,10 +68,47 @@ const purchasedItemsEl = document.getElementById("purchasedItems");
 const purchasedSummaryEl = document.getElementById("purchasedSummary");
 const markPurchasedBtn = document.getElementById("markPurchasedBtn");
 const permissionNoticeEl = document.getElementById("permissionNotice");
+const moreActionsBtn = document.getElementById("moreActionsBtn");
+const moreActionsMenuEl = document.getElementById("moreActionsMenu");
+const updateProgressEl = document.getElementById("updateProgress");
+const updateProgressBarEl = document.getElementById("updateProgressBar");
+const groupByLabelEl = document.getElementById("groupByLabel");
+const sortControlEl = document.getElementById("sortControl");
+const sortBtn = document.getElementById("sortBtn");
+const sortMenuEl = document.getElementById("sortMenu");
+const sortMenuTitleEl = document.getElementById("sortMenuTitle");
+const sortOptionsEl = document.getElementById("sortOptions");
+const accentMenuTitleEl = document.getElementById("accentMenuTitle");
+const accentSwatchesEl = document.getElementById("accentSwatches");
+const accentCustomLabelEl = document.getElementById("accentCustomLabel");
+const accentHueInput = document.getElementById("accentHueInput");
 
 const I18N = {
   tr: {
     appSubtitle: "Alışverişte ortak sepetiniz",
+    moreActions: "Diğer işlemler",
+    groupBy: "Grupla",
+    chipCategory: "Kategori",
+    chipInstallment: "Taksit",
+    chipCountry: "Ülke",
+    chipCompact: "Kompakt",
+    accentColor: "Tema",
+    accentCustom: "Özel renk",
+    sortBy: "Sırala",
+    sort_added: "Eklenme sırası",
+    sort_newest: "En son eklenen",
+    "sort_price-asc": "Fiyat: artan",
+    "sort_price-desc": "Fiyat: azalan",
+    sort_name: "Ürün adı (A-Z)",
+    sort_store: "Mağaza (A-Z)",
+    accent_indigo: "Mor",
+    accent_blue: "Mavi",
+    accent_teal: "Turkuaz",
+    accent_green: "Yeşil",
+    accent_orange: "Turuncu",
+    accent_pink: "Pembe",
+    accent_red: "Kırmızı",
+    accent_graphite: "Grafit",
     cartActions: "Sepet işlemleri",
     switchToEnglish: "İngilizceye Geç",
     switchToTurkish: "Türkçeye Geç",
@@ -121,8 +176,6 @@ const I18N = {
     noActiveOffer: "Satışta değil / satın alma seçeneklerinde",
     subtotalNotIncluded: "Ara toplam: Toplama dahil edilmedi",
     productAddedWithoutPrice: "Ürün eklendi, ancak ana satış fiyatı bulunamadı. Fiyat toplama dahil edilmedi.",
-    site: "Site",
-    price: "Fiyat",
     source: "Kaynak",
     manual: "Manuel",
     previous: "Önceki",
@@ -160,8 +213,6 @@ const I18N = {
     productMeta: "{products} ürün • {quantity} adet • {total}",
     countryTurkey: "Türkiye",
     countryUnitedKingdom: "İngiltere",
-    groupedByCountry: "Ürünler ülkeye göre gruplandı.",
-    countryGroupingRemoved: "Ülke gruplaması kaldırıldı.",
     readingProduct: "Ürün okunuyor...",
     activeTabMissing: "Aktif sekme bulunamadı.",
     productReadFailed: "Bu sayfadan ürün okunamadı.",
@@ -171,11 +222,7 @@ const I18N = {
     duplicateAdded: "Bu ürün zaten vardı, adedi artırıldı ve seçili yapıldı.",
     productAdded: "Ürün sepete eklendi.",
     noItemsToCategorize: "Kategorize edilecek ürün yok.",
-    categoriesRemoved: "Kategoriler silindi.",
-    categoriesApplied: "Ürünler kategorilere ayrıldı.",
     noItemsToGroup: "Gruplanacak ürün yok.",
-    groupingRemoved: "Taksit/finance gruplaması kaldırıldı.",
-    groupedByPayment: "Ürünler taksit/finance durumuna göre gruplandı.",
     noItemsToUpdate: "Güncellenecek ürün yok.",
     pricesUpdating: "Fiyatlar güncelleniyor...",
     pricesUpdatingProgress: "Fiyatlar güncelleniyor: {current}/{total}",
@@ -208,6 +255,29 @@ const I18N = {
   },
   en: {
     appSubtitle: "Your shared shopping basket",
+    moreActions: "More actions",
+    groupBy: "Group",
+    chipCategory: "Category",
+    chipInstallment: "Finance",
+    chipCountry: "Country",
+    chipCompact: "Compact",
+    accentColor: "Theme",
+    accentCustom: "Custom colour",
+    sortBy: "Sort",
+    sort_added: "Order added",
+    sort_newest: "Newest first",
+    "sort_price-asc": "Price: low to high",
+    "sort_price-desc": "Price: high to low",
+    sort_name: "Product name (A-Z)",
+    sort_store: "Store (A-Z)",
+    accent_indigo: "Purple",
+    accent_blue: "Blue",
+    accent_teal: "Teal",
+    accent_green: "Green",
+    accent_orange: "Orange",
+    accent_pink: "Pink",
+    accent_red: "Red",
+    accent_graphite: "Graphite",
     cartActions: "Basket actions",
     switchToEnglish: "Switch to English",
     switchToTurkish: "Switch to Turkish",
@@ -275,8 +345,6 @@ const I18N = {
     noActiveOffer: "Unavailable / buying options only",
     subtotalNotIncluded: "Subtotal: Not included in total",
     productAddedWithoutPrice: "Product added, but the main selling price was not available. It was not included in totals.",
-    site: "Site",
-    price: "Price",
     source: "Source",
     manual: "Manual",
     previous: "Previous",
@@ -314,8 +382,6 @@ const I18N = {
     productMeta: "{products} products • {quantity} items • {total}",
     countryTurkey: "Türkiye",
     countryUnitedKingdom: "United Kingdom",
-    groupedByCountry: "Products grouped by country.",
-    countryGroupingRemoved: "Country grouping removed.",
     readingProduct: "Reading product...",
     activeTabMissing: "Active tab could not be found.",
     productReadFailed: "Product could not be read from this page.",
@@ -325,11 +391,7 @@ const I18N = {
     duplicateAdded: "This product was already in the basket, so its quantity was increased and selected.",
     productAdded: "Product added to basket.",
     noItemsToCategorize: "There are no products to categorise.",
-    categoriesRemoved: "Categories removed.",
-    categoriesApplied: "Products categorised.",
     noItemsToGroup: "There are no products to group.",
-    groupingRemoved: "Instalment/finance grouping removed.",
-    groupedByPayment: "Products grouped by instalment/finance availability.",
     noItemsToUpdate: "There are no products to refresh.",
     pricesUpdating: "Refreshing prices...",
     pricesUpdatingProgress: "Refreshing prices: {current}/{total}",
@@ -382,3 +444,5 @@ const CATEGORY_LABELS = {
 
 let currentLanguage = "tr";
 let currentTheme = "light";
+let currentAccent = { preset: "indigo" };
+let currentSort = "added";

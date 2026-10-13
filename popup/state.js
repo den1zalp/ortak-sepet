@@ -72,6 +72,56 @@ async function setViewMode(mode) {
   });
 }
 
+async function getSortMode() {
+  const result = await browser.storage.local.get(SORT_KEY);
+  return SORT_OPTIONS.includes(result[SORT_KEY]) ? result[SORT_KEY] : "added";
+}
+
+async function setSortMode(mode) {
+  currentSort = mode;
+  await browser.storage.local.set({ [SORT_KEY]: mode });
+}
+
+// Farklı para birimindeki fiyatlar birbiriyle kıyaslanamıyor (kur yok); fiyat
+// sıralamasında önce para birimi, sonra tutar. Fiyatı okunamayan ürün sonda.
+const CURRENCY_ORDER = ["TRY", "GBP", "EUR", "USD"];
+
+function getCurrencyRank(item) {
+  const index = CURRENCY_ORDER.indexOf(getItemCurrency(item));
+  return index === -1 ? CURRENCY_ORDER.length : index;
+}
+
+function compareByPrice(direction) {
+  return (a, b) => {
+    const priceA = extractNumberFromPrice(a.price);
+    const priceB = extractNumberFromPrice(b.price);
+
+    if (priceA === null || priceB === null) return (priceA === null) - (priceB === null);
+    return getCurrencyRank(a) - getCurrencyRank(b) || direction * (priceA - priceB);
+  };
+}
+
+function compareText(getText) {
+  const locale = currentLanguage === "en" ? "en-GB" : "tr-TR";
+  return (a, b) => (getText(a) || "").localeCompare(getText(b) || "", locale, { sensitivity: "base" });
+}
+
+const ITEM_COMPARATORS = {
+  "price-asc": compareByPrice(1),
+  "price-desc": compareByPrice(-1),
+  name: compareText((item) => item.title),
+  store: compareText((item) => item.site),
+};
+
+// Sıralama yalnızca gösterimi değiştiriyor; depodaki sıra (eklenme sırası) aynı
+// kalıyor. Gruplar kendi sıralarını koruyor, ürünler grubun içinde sıralanıyor.
+function sortItems(items, mode) {
+  if (mode === "newest") return [...items].reverse();
+
+  const compare = ITEM_COMPARATORS[mode];
+  return compare ? [...items].sort(compare) : items;
+}
+
 async function getCompactMode() {
   const result = await browser.storage.local.get(COMPACT_MODE_KEY);
   return result[COMPACT_MODE_KEY] === true;
@@ -87,10 +137,10 @@ function applyCompactMode(isCompact) {
   document.body.classList.toggle("compact-mode", Boolean(isCompact));
   if (compactViewBtn) {
     compactViewBtn.classList.toggle("is-active", Boolean(isCompact));
+    compactViewBtn.setAttribute("aria-pressed", String(Boolean(isCompact)));
     const label = isCompact
       ? translate("normalView")
       : translate("compactView");
-    compactViewBtn.setAttribute("aria-label", label);
     compactViewBtn.title = label;
   }
 }
@@ -114,6 +164,7 @@ function applyActiveTab() {
   actionGridEl.hidden = showPurchased;
   summarySectionEl.hidden = showPurchased;
   footerActionsEl.hidden = showPurchased;
+  sortControlEl.hidden = showPurchased;
 
   cartTabBtn.classList.toggle("is-active", !showPurchased);
   purchasedTabBtn.classList.toggle("is-active", showPurchased);

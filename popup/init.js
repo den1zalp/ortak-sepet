@@ -3,7 +3,7 @@
 
 addCurrentProductBtn.addEventListener("click", addCurrentProduct);
 categorizeProductsBtn.addEventListener("click", categorizeProducts);
-installmentProductsBtn.addEventListener("click", toggleInstallmentGrouping);
+installmentProductsBtn.addEventListener("click", () => toggleGrouping("installment"));
 updateAllPricesBtn.addEventListener("click", onUpdatePricesClick);
 exportCsvBtn.addEventListener("click", exportCartAsCsv);
 backupCartBtn.addEventListener("click", exportCartAsJson);
@@ -14,7 +14,7 @@ restoreCartBtn.addEventListener("click", () => {
   browser.tabs.create({ url: browser.runtime.getURL("popup/restore.html") });
 });
 copyCartBtn.addEventListener("click", copyCartToClipboard);
-countryGroupingBtn.addEventListener("click", toggleCountryGrouping);
+countryGroupingBtn.addEventListener("click", () => toggleGrouping("country"));
 compactViewBtn.addEventListener("click", toggleCompactMode);
 clearCartBtn.addEventListener("click", clearCart);
 undoBtn.addEventListener("click", undoLastAction);
@@ -36,10 +36,16 @@ browser.runtime.onMessage.addListener((message) => {
   if (!message || !message.type) return;
 
   if (message.type === "UPDATE_PRICES_PROGRESS") {
+    setUpdateProgress(message.current, message.total);
     setStatus(translate("pricesUpdatingProgress", { current: message.current, total: message.total }));
   }
 
+  if (message.type === "UPDATE_PRICES_ITEM") {
+    setItemUpdatePhase(message.id, message.phase);
+  }
+
   if (message.type === "UPDATE_PRICES_DONE") {
+    finishBackgroundPriceUpdate();
     setStatus(
       translate(message.cancelled ? "pricesUpdateCancelled" : "pricesUpdateDone", {
         changed: message.changed,
@@ -53,7 +59,8 @@ browser.runtime.onMessage.addListener((message) => {
 // `await`'te düşürüyor. Bu yüzden istek hiçbir şey beklemeden, doğrudan
 // tıklamanın içinden çıkıyor; sonuç `then` ile işleniyor.
 function requestPermissionFromClick(event) {
-  const origins = (event.target?.dataset?.grantPermission || "").split(" ").filter(Boolean);
+  const button = event.target.closest?.("[data-grant-permission]");
+  const origins = (button?.dataset.grantPermission || "").split(" ").filter(Boolean);
 
   if (origins.length === 0) return false;
 
@@ -76,69 +83,153 @@ permissionNoticeEl.addEventListener("click", (event) => {
   requestPermissionFromClick(event);
 });
 
-cartItemsEl.addEventListener("click", async (event) => {
-  const target = event.target;
+// Kart düğmeleri işini data-* özniteliğiyle söylüyor (data-remove="<id>" gibi).
+// Düğmelerin içinde simge var; tıklama çoğu zaman <svg>'ye düşüyor, bu yüzden
+// en yakın düğmeye bakılıyor.
+const CART_ITEM_ACTIONS = {
+  toggleSelected,
+  editPrice: editItemPrice,
+  remove: removeItem,
+  open: openItem,
+  increase: increaseQuantity,
+  decrease: decreaseQuantity,
+  purchase: markItemPurchased,
+};
 
-  if (!target || !target.dataset) return;
+const PURCHASE_ACTIONS = {
+  restorePurchase,
+  deletePurchase,
+  openPurchase,
+};
 
-  if (target.dataset.grantPermission) {
+async function runItemAction(event, actions) {
+  const target = event.target.closest?.("button, input");
+  if (!target) return;
+
+  const name = Object.keys(actions).find((action) => target.dataset[action]);
+  if (name) await actions[name](target.dataset[name]);
+}
+
+cartItemsEl.addEventListener("click", (event) => {
+  // İzin isteği tıklamanın içinden, hiçbir şey beklemeden gitmeli.
+  if (event.target.closest?.("[data-grant-permission]")) {
     requestPermissionFromClick(event);
     return;
   }
 
-  if (target.dataset.toggleSelected) {
-    await toggleSelected(target.dataset.toggleSelected);
-  }
+  runItemAction(event, CART_ITEM_ACTIONS);
+});
 
-  if (target.dataset.editPrice) {
-    await editItemPrice(target.dataset.editPrice);
-  }
+purchasedItemsEl.addEventListener("click", (event) => runItemAction(event, PURCHASE_ACTIONS));
 
-  if (target.dataset.remove) {
-    await removeItem(target.dataset.remove);
-  }
+// Açılır pencereler: "Diğer işlemler" ve sıralama. Dışarı tıklayınca ya da
+// Escape ile kapanıyorlar; biri açılınca öbürü kapanıyor.
+const POPOVERS = [
+  { button: moreActionsBtn, panel: moreActionsMenuEl },
+  { button: sortBtn, panel: sortMenuEl },
+];
 
-  if (target.dataset.open) {
-    await openItem(target.dataset.open);
-  }
+function setPopoverOpen(popover, isOpen) {
+  popover.panel.hidden = !isOpen;
+  popover.button.setAttribute("aria-expanded", String(isOpen));
+}
 
-  if (target.dataset.increase) {
-    await increaseQuantity(target.dataset.increase);
+function closePopovers(except = null) {
+  for (const popover of POPOVERS) {
+    if (popover !== except && !popover.panel.hidden) setPopoverOpen(popover, false);
   }
+}
 
-  if (target.dataset.decrease) {
-    await decreaseQuantity(target.dataset.decrease);
-  }
+for (const popover of POPOVERS) {
+  popover.button.addEventListener("click", () => {
+    closePopovers(popover);
+    setPopoverOpen(popover, popover.panel.hidden);
+  });
+}
 
-  if (target.dataset.purchase) {
-    await markItemPurchased(target.dataset.purchase);
+// "Diğer işlemler"de bir işlem seçilince menü kapanıyor. Tema renkleri art
+// arda denensin diye menüyü açık bırakıyor; "Sepeti Temizle" de ilk tıklamada
+// onay istediği için yalnızca onaylanınca kapatıyor. (clearCart depoyu
+// okuyana kadar onay sayacına dokunmuyor; burada tıklamadan önceki hâli var.)
+moreActionsMenuEl.addEventListener("click", (event) => {
+  const item = event.target.closest?.("button.menu-item");
+
+  if (!item) return;
+  if (item === clearCartBtn && !clearCartConfirmTimer) return;
+
+  setPopoverOpen(POPOVERS[0], false);
+});
+
+document.addEventListener("click", (event) => {
+  for (const popover of POPOVERS) {
+    if (popover.panel.hidden) continue;
+    if (popover.panel.parentElement.contains(event.target)) continue;
+
+    setPopoverOpen(popover, false);
   }
 });
 
-purchasedItemsEl.addEventListener("click", async (event) => {
-  const target = event.target;
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
 
-  if (!target || !target.dataset) return;
+  const open = POPOVERS.find((popover) => !popover.panel.hidden);
+  if (!open) return;
 
-  if (target.dataset.restorePurchase) {
-    await restorePurchase(target.dataset.restorePurchase);
-  }
+  setPopoverOpen(open, false);
+  open.button.focus();
+});
 
-  if (target.dataset.deletePurchase) {
-    await deletePurchase(target.dataset.deletePurchase);
-  }
+sortOptionsEl.addEventListener("click", async (event) => {
+  const option = event.target.closest?.("[data-sort]");
+  if (!option) return;
 
-  if (target.dataset.openPurchase) {
-    await openPurchase(target.dataset.openPurchase);
-  }
+  setPopoverOpen(POPOVERS[1], false);
+  await setSortMode(option.dataset.sort);
+  renderSortOptions();
+  await renderCart();
+});
+
+// Renk seçilir seçilmez uygulanıyor.
+accentSwatchesEl.addEventListener("click", async (event) => {
+  const swatch = event.target.closest?.("[data-accent]");
+  if (!swatch) return;
+
+  await setAccent({ preset: swatch.dataset.accent });
+  applyAccent();
+});
+
+accentHueInput.addEventListener("input", () => {
+  currentAccent = { hue: Number(accentHueInput.value) };
+  applyAccent();
+});
+
+accentHueInput.addEventListener("change", async () => {
+  await setAccent({ hue: Number(accentHueInput.value) });
+});
+
+// Sepet başka yerden de değişiyor: sağ tık menüsünden eklenen ürün, sürmekte
+// olan fiyat güncellemesinin her ürünü. Liste bunları beklemeden gösteriyor.
+let storageRenderTimer = null;
+
+browser.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local") return;
+  if (!changes[OrtakSepetCart.CART_STORAGE_KEY] && !changes[PURCHASED_KEY]) return;
+
+  clearTimeout(storageRenderTimer);
+  storageRenderTimer = setTimeout(() => {
+    renderCart();
+  }, 80);
 });
 
 async function initPopup() {
   currentLanguage = await getLanguage();
   currentTheme = await getTheme();
+  currentAccent = await getAccent();
+  currentSort = await getSortMode();
   applyStaticTranslations();
   await refreshUndoVisibility();
   await renderCart();
+  await resumeRunningPriceUpdate();
 }
 
 initPopup();

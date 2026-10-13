@@ -94,6 +94,8 @@ function normalizeDeliveryText(text) {
   }
 
   if (
+    // TR content script'in genel ifadesi; İngilizce arayüzde de çevrilsin.
+    normalized.includes("teslimat bilgisi var") ||
     normalized.includes("delivery options available") ||
     normalized.includes("delivery information available") ||
     normalized.includes("delivery available") ||
@@ -138,6 +140,74 @@ function applyTheme() {
     : translate("enableDarkMode");
 }
 
+async function getAccent() {
+  const result = await browser.storage.local.get(ACCENT_KEY);
+  const accent = result[ACCENT_KEY];
+
+  if (accent && Number.isFinite(accent.hue)) return { hue: accent.hue };
+  if (accent && ACCENT_PRESETS.some((preset) => preset.id === accent.preset)) {
+    return { preset: accent.preset };
+  }
+
+  return { preset: ACCENT_PRESETS[0].id };
+}
+
+async function setAccent(accent) {
+  currentAccent = accent;
+  await browser.storage.local.set({ [ACCENT_KEY]: accent });
+}
+
+// Kaydırıcının tonundan iki renk: ikincisi biraz kaydırılmış ton, böylece
+// toplam kartındaki geçiş hazır renklerdeki gibi duruyor.
+function getAccentColors(accent) {
+  if (Number.isFinite(accent.hue)) {
+    const hue = Math.round(accent.hue) % 360;
+    return [`hsl(${hue} 72% 50%)`, `hsl(${(hue + 35) % 360} 72% 48%)`];
+  }
+
+  return (ACCENT_PRESETS.find((preset) => preset.id === accent.preset) || ACCENT_PRESETS[0]).colors;
+}
+
+// Renkten türeyen tonlar (açık zemin, karanlık temada aydınlatılmış hâli)
+// popup.css'te color-mix ile üretiliyor; burada yalnızca iki ana renk
+// veriliyor.
+function applyAccent() {
+  const [first, second] = getAccentColors(currentAccent);
+
+  document.body.style.setProperty("--accent-1", first);
+  document.body.style.setProperty("--accent-2-base", second);
+
+  for (const swatch of accentSwatchesEl.querySelectorAll("[data-accent]")) {
+    swatch.setAttribute("aria-pressed", String(swatch.dataset.accent === currentAccent.preset));
+  }
+
+  accentHueInput.classList.toggle("is-active", Number.isFinite(currentAccent.hue));
+  if (Number.isFinite(currentAccent.hue)) accentHueInput.value = String(currentAccent.hue);
+}
+
+function renderAccentSwatches() {
+  accentSwatchesEl.textContent = "";
+
+  for (const preset of ACCENT_PRESETS) {
+    const swatch = document.createElement("button");
+    const name = translate(`accent_${preset.id}`);
+
+    swatch.type = "button";
+    swatch.className = "accent-swatch";
+    swatch.dataset.accent = preset.id;
+    swatch.title = name;
+    swatch.setAttribute("aria-label", name);
+    swatch.style.setProperty("--swatch-1", preset.colors[0]);
+    swatch.style.setProperty("--swatch-2", preset.colors[1]);
+    accentSwatchesEl.appendChild(swatch);
+  }
+
+  accentMenuTitleEl.textContent = translate("accentColor");
+  accentCustomLabelEl.textContent = translate("accentCustom");
+  accentHueInput.setAttribute("aria-label", translate("accentCustom"));
+  applyAccent();
+}
+
 function applyLanguageToggle() {
   const isEnglish = currentLanguage === "en";
   const label = isEnglish
@@ -170,6 +240,13 @@ function applyStaticTranslations() {
   setActionButtonLabel(exportCsvBtn, translate("exportCsv"));
   setActionButtonLabel(backupCartBtn, translate("backupCart"));
   setActionButtonLabel(restoreCartBtn, translate("restoreCart"));
+  setActionButtonLabel(categorizeProductsBtn, translate("chipCategory"));
+  setActionButtonLabel(installmentProductsBtn, translate("chipInstallment"));
+  setActionButtonLabel(countryGroupingBtn, translate("chipCountry"));
+  setActionButtonLabel(compactViewBtn, translate("chipCompact"));
+  groupByLabelEl.textContent = translate("groupBy");
+  moreActionsBtn.setAttribute("aria-label", translate("moreActions"));
+  moreActionsBtn.title = translate("moreActions");
   copyCartBtn.textContent = translate("copyCart");
   clearCartBtn.textContent = translate("clearCart");
   markPurchasedBtn.textContent = translate("markSelectedPurchased");
@@ -179,4 +256,6 @@ function applyStaticTranslations() {
   selectedTotalPriceLabelEl.textContent = translate("selectedTotal");
   applyLanguageToggle();
   applyTheme();
+  renderAccentSwatches();
+  renderSortOptions();
 }

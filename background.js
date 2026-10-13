@@ -314,7 +314,9 @@ function getUpdateProfile(item) {
   };
 }
 
-async function updateSingleItem(item) {
+// onPhase: popup ürünün kartını aşama aşama doldursun diye sekme açıldığında
+// ("loading") ve sayfa yüklenip okunmaya başlandığında ("reading") çağrılır.
+async function updateSingleItem(item, onPhase = () => {}) {
   if (!item.url) {
     return {
       ok: false,
@@ -355,9 +357,11 @@ async function updateSingleItem(item) {
       url: item.url,
       active: false,
     });
+    onPhase("loading");
 
     await waitForTabComplete(tab.id, updateProfile.tabTimeoutMs);
     await delay(updateProfile.initialDelayMs);
+    onPhase("reading");
 
     const freshProduct = await readProductFromTabWithRetry(tab.id, {
       attempts: updateProfile.attempts,
@@ -469,7 +473,10 @@ async function updateAllPrices() {
   const targetIds = initialItems.map((item) => item.id);
   const total = targetIds.length;
 
-  const run = { cancelled: false };
+  // İlerleme burada da tutuluyor: popup güncelleme sürerken kapanıp yeniden
+  // açılırsa kaldığı yeri buradan soruyor (GET_UPDATE_PRICES_STATUS).
+  // phases: o an güncellenen ürünlerin aşaması (id → aşama).
+  const run = { cancelled: false, current: 0, total, phases: new Map() };
   activePriceUpdate = run;
 
   let updated = 0;
@@ -500,18 +507,29 @@ async function updateAllPrices() {
       }
 
       completed += 1;
+      run.current = completed;
 
       await notifyProgress({
         type: "UPDATE_PRICES_PROGRESS",
         current: completed,
         total,
-        title: currentItem.title || "Ürün",
       });
 
-      const result = await updateSingleItem(currentItem);
+      const itemId = currentItem.id;
+      const setPhase = (phase) => {
+        if (phase === "done") run.phases.delete(itemId);
+        else run.phases.set(itemId, phase);
+
+        notifyProgress({ type: "UPDATE_PRICES_ITEM", id: itemId, phase });
+      };
+
+      setPhase("opening");
+
+      const result = await updateSingleItem(currentItem, setPhase);
 
       // İptal edilse bile okunan veri geçerli; yazıp öyle çıkıyoruz.
       const saved = await OrtakSepetCart.saveRefreshedItem(result.item);
+      setPhase("done");
 
       if (!saved) {
         // Ürün güncelleme sırasında sepetten çıkarılmış.
@@ -577,7 +595,27 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
 
 browser.runtime.onMessage.addListener((message) => {
   if (message && message.type === "UPDATE_ALL_PRICES") {
+    // Yeniden açılan popup'tan ikinci bir istek gelirse aynı ürünler iki kez
+    // paralel güncellenmesin.
+    if (activePriceUpdate) {
+      return Promise.resolve({ ok: false, alreadyRunning: true });
+    }
+
     return updateAllPrices();
+  }
+
+  if (message && message.type === "GET_UPDATE_PRICES_STATUS") {
+    return Promise.resolve(
+      activePriceUpdate
+        ? {
+            running: true,
+            cancelled: activePriceUpdate.cancelled,
+            current: activePriceUpdate.current,
+            total: activePriceUpdate.total,
+            phases: Object.fromEntries(activePriceUpdate.phases),
+          }
+        : { running: false },
+    );
   }
 
   if (message && message.type === "CANCEL_UPDATE_ALL_PRICES") {

@@ -94,7 +94,6 @@ async function categorizeProducts() {
     });
 
     await saveCartItems(updatedItems);
-    setStatus(translate("categoriesRemoved"));
     await renderCart();
     return;
   }
@@ -110,11 +109,12 @@ async function categorizeProducts() {
   await saveCartItems(updatedItems);
   await setViewMode("category");
 
-  setStatus(translate("categoriesApplied"));
   await renderCart();
 }
 
-async function toggleInstallmentGrouping() {
+// Gruplama düğmeleri aç/kapa çalışıyor: seçili görünüme tekrar basınca düz
+// listeye dönülüyor.
+async function toggleGrouping(mode) {
   const items = await getCartItems();
 
   if (items.length === 0) {
@@ -123,38 +123,7 @@ async function toggleInstallmentGrouping() {
   }
 
   const viewMode = await getViewMode();
-
-  if (viewMode === "installment") {
-    await setViewMode("normal");
-    setStatus(translate("groupingRemoved"));
-    await renderCart();
-    return;
-  }
-
-  await setViewMode("installment");
-  setStatus(translate("groupedByPayment"));
-  await renderCart();
-}
-
-async function toggleCountryGrouping() {
-  const items = await getCartItems();
-
-  if (items.length === 0) {
-    setStatus(translate("noItemsToGroup"));
-    return;
-  }
-
-  const viewMode = await getViewMode();
-
-  if (viewMode === "country") {
-    await setViewMode("normal");
-    setStatus(translate("countryGroupingRemoved"));
-    await renderCart();
-    return;
-  }
-
-  await setViewMode("country");
-  setStatus(translate("groupedByCountry"));
+  await setViewMode(viewMode === mode ? "normal" : mode);
   await renderCart();
 }
 
@@ -180,10 +149,21 @@ function setUpdateInProgress(inProgress) {
   countryGroupingBtn.disabled = inProgress;
   compactViewBtn.disabled = inProgress;
 
+  updateAllPricesBtn.classList.toggle("is-busy", inProgress);
+  updateProgressEl.hidden = !inProgress;
+  if (!inProgress) {
+    setUpdateProgress(0, 0);
+    clearItemUpdatePhases();
+  }
+
   setActionButtonLabel(
     updateAllPricesBtn,
     inProgress ? translate("cancelUpdate") : translate("updateAllPrices"),
   );
+}
+
+function setUpdateProgress(current, total) {
+  updateProgressBarEl.style.width = total > 0 ? `${Math.round((current / total) * 100)}%` : "0";
 }
 
 // Buton güncelleme sürerken iptal düğmesine dönüşüyor.
@@ -224,6 +204,11 @@ async function updateAllPrices() {
       type: "UPDATE_ALL_PRICES",
     });
 
+    if (result?.alreadyRunning) {
+      await resumeRunningPriceUpdate();
+      return;
+    }
+
     await renderCart();
 
     if (!result || !result.ok) {
@@ -240,9 +225,51 @@ async function updateAllPrices() {
   } catch (error) {
     setStatus(translate("pricesUpdateError"));
   } finally {
-    setUpdateInProgress(false);
-    await renderCart();
+    if (!updateRunsInBackground) {
+      setUpdateInProgress(false);
+      await renderCart();
+    }
   }
+}
+
+// Güncelleme arka planda sürüyor ve popup kapanınca durmuyor. Popup yeniden
+// açıldığında (ya da güncelleme başka bir pencereden başlatıldıysa) düğmeyi
+// "durdur"a, ilerleme çubuğunu kaldığı yere getiriyoruz; bitişi
+// UPDATE_PRICES_DONE mesajı bildiriyor.
+let updateRunsInBackground = false;
+
+async function resumeRunningPriceUpdate() {
+  let state = null;
+
+  try {
+    state = await browser.runtime.sendMessage({ type: "GET_UPDATE_PRICES_STATUS" });
+  } catch {
+    return;
+  }
+
+  if (!state?.running) return;
+
+  updateRunsInBackground = true;
+  setUpdateInProgress(true);
+  setUpdateProgress(state.current, state.total);
+
+  for (const [id, phase] of Object.entries(state.phases || {})) {
+    setItemUpdatePhase(id, phase);
+  }
+
+  setStatus(
+    state.current > 0
+      ? translate("pricesUpdatingProgress", { current: state.current, total: state.total })
+      : translate("pricesUpdating"),
+  );
+}
+
+function finishBackgroundPriceUpdate() {
+  if (!updateRunsInBackground) return;
+
+  updateRunsInBackground = false;
+  setUpdateInProgress(false);
+  renderCart();
 }
 
 async function editItemPrice(id) {

@@ -39,7 +39,7 @@ const INCLUDE_FILES = [
 
 // _locales pakete girmezse eklenti adı ve açıklaması yerine "__MSG_..." yazar;
 // Chrome açıklaması çözülemeyen eklentiyi hiç yüklemiyor.
-const INCLUDE_DIRS = ["icons", "shared", "popup", "content", "content-uk", "_locales"];
+const INCLUDE_DIRS = ["icons", "fonts", "shared", "popup", "content", "content-uk", "_locales"];
 
 const TARGETS = {
   firefox: {

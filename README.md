@@ -237,6 +237,7 @@ ortak-sepet/
 - content-uk.js          # UK içerik script'i giriş noktası
 - content-uk/            # UK: shared/ + parsers/
 - popup.html / popup.css
+- fonts/                 # popup fontu (Nunito, OFL-1.1)
 - popup/                 # popup modülleri (config, i18n, state, render, ...)
                          # ve yedekten geri yükleme sayfası (restore.html)
 - _locales/              # eklenti açıklamasının TR/EN çevirisi
@@ -291,3 +292,5 @@ Bu proje **açık kaynak değildir**; kaynağı görüntülenebilir (source avai
 Ayrıntılar için [LICENSE](LICENSE) dosyasına bakın.
 
 `browser-polyfill.js` bu lisansın kapsamı dışındadır; Mozilla'ya ait olup [MPL-2.0](https://mozilla.org/MPL/2.0/) ile dağıtılmaktadır.
+
+`fonts/Nunito.ttf` de bu lisansın kapsamı dışındadır; The Nunito Project Authors'a ait olup [SIL Open Font License 1.1](fonts/OFL.txt) ile dağıtılmaktadır.
