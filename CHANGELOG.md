@@ -2,6 +2,52 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.14.0 — 13 Ekim 2026
+
+### Yenilikler
+
+* **Popup baştan tasarlandı.** Eski arayüz kalabalık ve eski görünüyordu, ürün
+  kartlarında da çok boş alan vardı. Artık seçili toplam en üstte büyük
+  yazıyor. Sık kullanılan "Bu Ürünü Ekle" ve "Fiyatları Güncelle" öne çıktı;
+  CSV, yedekleme, geri yükleme, kopyalama ve temizleme "⋯" menüsüne taşındı.
+  Gruplama (kategori, taksit, ülke) ve kompakt görünüm tek satırda küçük
+  düğmeler. Ürün kartında ürün adının altında solda mağaza, sağda fiyat
+  duruyor; taksit, kargo ve stok küçük renkli etiketler. Adet ve işlem
+  düğmeleri aynı satırda. Kompakt görünüm de aynı bilgileri gösteriyor,
+  yalnızca daha sık.
+* **Fiyat değişimi kartta görünüyor.** Son güncellemede fiyatı değişen üründe
+  ne kadar düştüğü (yeşil) ya da arttığı (kırmızı) ve üstü çizili eski fiyat
+  yazıyor.
+* **Fiyat güncellemesi popup kapanınca kaybolmuyor.** Güncelleme zaten arka
+  planda sürüyordu ama popup yeniden açılınca ilerleme görünmüyordu ve yeniden
+  başlatılabiliyordu. Artık popup açılınca süren güncellemeyi bulup ilerlemeyi
+  kaldığı yerden gösteriyor; o an güncellenen ürünün kartı aşama aşama
+  (sayfa açılıyor, yükleniyor, okunuyor) doluyor. Güncelleme sürerken ikinci
+  bir güncelleme başlatılamıyor.
+* **Sıralama.** Başlıktaki düğmeyle sepet eklenme sırasına, en son eklenene,
+  fiyata (artan/azalan), ürün adına ya da mağazaya göre sıralanabiliyor. Kur
+  bilgisi olmadığı için fiyat sıralamasında TL ve sterlin karışmıyor: önce TL,
+  sonra sterlin ürünler kendi içinde sıralanıyor; fiyatı okunamayan ürün sonda.
+  Gruplama açıkken ürünler grubun içinde sıralanıyor. Seçim saklanıyor; sepetin
+  kayıtlı sırası değişmiyor.
+* **Tema rengi seçilebiliyor.** "⋯" menüsünün altındaki Tema bölümünden sekiz
+  hazır renk ya da kaydırıcıyla istenen herhangi bir ton seçilebiliyor; açık ve
+  koyu temada da çalışıyor.
+* **Yeni font: Nunito.** Eklentiyle birlikte geliyor, internetten
+  yüklenmiyor. Yalnızca Latin ve Türkçe karakterleri içerecek biçimde
+  küçültüldü (99 KB); £ ve Türkçe harflerin hepsi aynı fonttan geliyor.
+  SIL Open Font License 1.1 ile dağıtılıyor (`fonts/OFL.txt`).
+
+### Düzeltilenler
+
+* **İngilizce arayüzde Türk mağazalarının kargo bilgisi Türkçe kalıyordu.**
+  "Kargo/teslimat bilgisi var" çevrilmiyordu; artık "Delivery information
+  available" yazıyor.
+* **Taksite göre gruplamada "Taksit Yok" grubu renksiz görünüyordu.** Grup
+  renkleri ekranda yazan, dile göre değişen grup adına bağlıydı; bu ad
+  değiştiği için renk bulunamıyor, gri kalıyordu. Renkler artık dilden bağımsız
+  sabit anahtarlara bağlı.
+
 ## 1.13.4 — 13 Ekim 2026
 
 ### Düzeltilenler
