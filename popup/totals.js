@@ -109,7 +109,11 @@ function formatTotalsByCurrency(totals) {
 // yaklaşık olduğu için başında "≈" var. Kuru bilinmeyen para birimi
 // çevrilmeden yanına ekleniyor.
 function formatDisplayTotal(totals) {
-  if (!isConvertingCurrencies() || totals.size === 0) return formatTotalsByCurrency(totals);
+  if (currentDisplayCurrency !== "mixed" && totals.size === 0) {
+    return formatPriceByCurrency(0, currentDisplayCurrency);
+  }
+
+  if (!isConvertingCurrencies()) return formatTotalsByCurrency(totals);
 
   const target = currentDisplayCurrency;
   const unconverted = new Map();

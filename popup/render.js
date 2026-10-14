@@ -868,7 +868,7 @@ function renderSortOptions() {
   sortMenuTitleEl.textContent = translate("sortBy");
 }
 
-function renderCurrencySwitch() {
+function renderCurrencySwitch(items) {
   for (const button of currencySwitchEl.querySelectorAll("[data-display-currency]")) {
     const currency = button.dataset.displayCurrency;
     const isSelected = currency === currentDisplayCurrency;
@@ -881,7 +881,7 @@ function renderCurrencySwitch() {
 
   currencySwitchEl.setAttribute("aria-label", translate("displayCurrency"));
 
-  const rateInfo = getRateInfoText();
+  const rateInfo = getRateInfoText(items);
   rateInfoEl.textContent = rateInfo;
   rateInfoEl.hidden = !rateInfo;
 }
@@ -901,7 +901,7 @@ async function renderCart() {
   itemCountEl.textContent = String(calculateTotalItemCount(items));
   totalPriceEl.textContent = calculateTotal(items);
   selectedTotalPriceEl.textContent = calculateSelectedTotal(items);
-  renderCurrencySwitch();
+  renderCurrencySwitch(items);
   markPurchasedBtn.hidden = items.length === 0;
 
   setGroupingChip(

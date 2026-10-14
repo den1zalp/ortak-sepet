@@ -116,21 +116,39 @@ function getConvertedPriceText(item) {
   return converted === null ? null : `≈ ${formatPriceByCurrency(converted, currentDisplayCurrency)}`;
 }
 
-// Toplam kartının altındaki kur satırı: "1 £ = 65,39 TL · 13.10.2026 kuru".
-// TL seçiliyken sterlinin, diğerlerinde seçilen para biriminin TL karşılığı.
-function getRateInfoText() {
+// "1 £ = 65,40 TL". Küçük çıkan oranlar 100 birim üzerinden yazılıyor:
+// "1 TL = £0.02" yerine "100 TL = £1.53".
+function formatRatePair(fromCurrency, toCurrency) {
+  const value = convertAmount(1, fromCurrency, toCurrency);
+  if (value === null) return null;
+
+  const units = value < 0.1 ? 100 : 1;
+  const unitsText = fromCurrency === "TRY" ? `${units} TL` : `${units} ${CURRENCY_SYMBOLS[fromCurrency]}`;
+
+  return `${unitsText} = ${formatPriceByCurrency(value * units, toCurrency)}`;
+}
+
+// Toplam kartının altındaki kur satırı: sepetteki diğer para birimlerinin
+// seçilen para birimindeki karşılığı ("100 TL = £1.53 · 13.10.2026 kuru").
+// Çevrilecek başka para birimi yoksa (boş sepet, tek para birimi) TL ile
+// sterlin arasındaki kur gösteriliyor.
+function getRateInfoText(items) {
   if (currentDisplayCurrency === "mixed") return "";
   if (!currentRates) return translate(ratesRequest ? "rateLoading" : "rateUnavailable");
 
-  const shownCurrency = currentDisplayCurrency === "TRY" ? "GBP" : currentDisplayCurrency;
-  const rate = getRateFromTry(shownCurrency);
-  if (rate === null) return translate("rateUnavailable");
+  const target = currentDisplayCurrency;
+  const sources = [...new Set(items.map(getItemCurrency))].filter(
+    (currency) => currency !== target && getRateFromTry(currency) !== null,
+  );
+  if (sources.length === 0) sources.push(target === "TRY" ? "GBP" : "TRY");
 
-  const inLira = formatPriceByCurrency(1 / rate, "TRY");
+  const pairs = sources.map((currency) => formatRatePair(currency, target)).filter(Boolean);
+  if (pairs.length === 0) return translate("rateUnavailable");
+
   const date = new Date(`${currentRates.date}T12:00:00`);
   const dateText = Number.isNaN(date.getTime())
     ? currentRates.date
     : date.toLocaleDateString(currentLanguage === "en" ? "en-GB" : "tr-TR");
 
-  return translate("rateInfo", { rate: `1 ${CURRENCY_SYMBOLS[shownCurrency]} = ${inLira}`, date: dateText });
+  return translate("rateInfo", { rate: pairs.join(" · "), date: dateText });
 }

@@ -222,10 +222,11 @@ browser.storage.onChanged.addListener((changes, areaName) => {
 });
 
 // Para birimi seçilince toplamlar hemen kayıtlı kurla çiziliyor; kur eskiyse
-// arka planda yenilenip bir kez daha çiziliyor.
+// arka planda yenilenip bir kez daha çiziliyor ("Kur alınıyor…" yazısı da
+// böylece kalkıyor).
 async function refreshRatesAndRender() {
-  if (await refreshRatesIfStale()) await renderCart();
-  else renderCurrencySwitch();
+  await refreshRatesIfStale();
+  await renderCart();
 }
 
 currencySwitchEl.addEventListener("click", async (event) => {
