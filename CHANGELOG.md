@@ -2,6 +2,27 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.16.0 — 14 Ekim 2026
+
+### Yenilikler
+
+* **Yeni site: Moko Art Design** (mokoartdesign.com). Mücevher ürünlerinin
+  yüzlerce seçeneği var (maden, ölçü, taş) ve fiyat seçime göre değişiyor.
+  Sayfa TL tutarını İngilizce biçimde yazıyor ("4,550 TL"); burada virgül
+  binlik ayracı, düz okunsa 168.000 TL'lik bir alyans 168 TL görünürdü. Bu
+  yüzden fiyat ekrandaki yazıdan değil, mağazanın seçili seçenek için verdiği
+  sayıdan okunuyor. Başka seçenek seçilince fiyat da onunki oluyor, stokta
+  olmayan seçenek toplama katılmıyor. İndirimli üründe üstü çizili eski fiyat
+  alınmıyor.
+* **"Fiyatları Güncelle" döviz kurunu da yeniliyor.** Toplam bir para
+  biriminde gösteriliyorsa, fiyatlarla birlikte kur da yeniden alınıyor.
+
+### Düzeltilenler
+
+* **Kur yenilense bile eski kur gelebiliyordu.** Kur servisi yanıtının bir gün
+  önbellekte tutulmasını istiyor; tarayıcı da yeniden istenen kuru önbellekten
+  verebiliyordu. Artık kur her istendiğinde servise sorularak doğrulanıyor.
+
 ## 1.15.0 — 14 Ekim 2026
 
 ### Yenilikler
