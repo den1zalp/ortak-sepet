@@ -2,6 +2,30 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.15.0 — 14 Ekim 2026
+
+### Yenilikler
+
+* **Toplam ve fiyatlar TL, sterlin, dolar ya da euro olarak görülebiliyor.**
+  Türk ve İngiliz mağazalarından karışık alışveriş yapınca toplam
+  "81.538 TL + £170.95" gibi iki ayrı tutar olarak yazıyordu; sepetin toplamda
+  ne ettiğini kafadan hesaplamak gerekiyordu. Toplam kartına TL / £ / $ / €
+  seçicisi eklendi. Biri seçilince seçili toplam, genel toplam, grup toplamları
+  ve Aldıklarım özetleri o para birimine çevriliyor; kurla çevrildiği belli
+  olsun diye başında "≈" var. Farklı para birimindeki ürünün kartında da
+  fiyatın altında karşılığı yazıyor. Toplamın altında kullanılan kur ve
+  tarihi görünüyor. Seçili para birimine yeniden basınca her ürün kendi para
+  birimine dönüyor; varsayılan görünüm bu. Para birimi seçiliyken fiyata göre
+  sıralama TL ve sterlin ürünleri birlikte, gerçek değerlerine göre sıralıyor.
+
+  Kur, Avrupa Merkez Bankası'nın günlük kuru; herkese açık Frankfurter
+  servisinden alınıyor. İstek yalnızca bir para birimi seçiliyken, en fazla
+  altı saatte bir atılıyor ve içinde sepet ya da kullanıcı bilgisi yok. İnternet
+  yoksa son kayıtlı kur kullanılıyor. Yeni bir izin gerekmiyor. Gizlilik
+  politikası bu isteği anlatacak şekilde güncellendi.
+
+  "Sepeti Kopyala" ve CSV gerçek tutarlarla kalıyor; bunlar kayıt niteliğinde.
+
 ## 1.14.1 — 14 Ekim 2026
 
 ### Düzeltilenler
