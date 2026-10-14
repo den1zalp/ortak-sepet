@@ -2,6 +2,17 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.16.2 — 14 Ekim 2026
+
+### Düzeltilenler
+
+* **Alttaki bildirim kapatılamıyordu.** Popup'ın altındaki bildirim
+  ("Güncellenecek ürün yok.", "Ürün silindi." gibi) başka bir mesaj gelene kadar
+  kalıyordu; "Geri Al" teklifi olan bildirim de popup her açıldığında beş dakika
+  boyunca yeniden çıkıyordu. Bildirime kapatma düğmesi eklendi. "Geri Al"
+  görünürken kapatılırsa geri alma teklifi de kalkıyor; yoksa popup yeniden
+  açılınca bildirim geri gelirdi.
+
 ## 1.16.1 — 14 Ekim 2026
 
 ### Düzeltilenler
