@@ -45,9 +45,11 @@ function areRatesFresh() {
   return Boolean(currentRates && Date.now() - (currentRates.fetchedAt || 0) < RATES_MAX_AGE_MS);
 }
 
-// Kur eskiyse yeniler; yeni kur geldiyse true döner. Aynı anda tek istek.
-async function refreshRatesIfStale() {
-  if (currentDisplayCurrency === "mixed" || areRatesFresh()) return false;
+// Kur eskiyse (force ile her durumda) yeniler; yeni kur geldiyse true döner.
+// Aynı anda tek istek.
+async function refreshRatesIfStale({ force = false } = {}) {
+  if (currentDisplayCurrency === "mixed") return false;
+  if (!force && areRatesFresh()) return false;
 
   ratesRequest ||= fetchRates().finally(() => {
     ratesRequest = null;
@@ -58,7 +60,13 @@ async function refreshRatesIfStale() {
 
 async function fetchRates() {
   try {
-    const response = await fetch(RATES_URL, { signal: AbortSignal.timeout(RATES_TIMEOUT_MS) });
+    // Servis yanıtı bir gün önbellekte tutulsun diyor; kur gün içinde
+    // yayımlandığında eski yanıt gelmesin diye önbellek her seferinde
+    // sunucuya sorularak doğrulanıyor.
+    const response = await fetch(RATES_URL, {
+      cache: "no-cache",
+      signal: AbortSignal.timeout(RATES_TIMEOUT_MS),
+    });
     if (!response.ok) return false;
 
     const data = await response.json();

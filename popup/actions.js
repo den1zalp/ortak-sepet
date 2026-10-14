@@ -199,6 +199,10 @@ async function updateAllPrices() {
   setUpdateInProgress(true);
   setStatus(translate("pricesUpdating"));
 
+  // Fiyatlarla birlikte kur da yenileniyor (bir para birimi seçiliyse).
+  // Fiyat güncellemesini beklemiyor; gelince toplamlar yeniden çiziliyor.
+  refreshRatesIfStale({ force: true }).then((changed) => changed && renderCart());
+
   try {
     const result = await browser.runtime.sendMessage({
       type: "UPDATE_ALL_PRICES",
