@@ -254,6 +254,15 @@ function createPriceRow(item) {
   price.textContent = getPriceDisplayText(item);
   row.appendChild(price);
 
+  const convertedText = getConvertedPriceText(item);
+  if (convertedText) {
+    const converted = document.createElement("span");
+    converted.className = "price-converted";
+    converted.title = translate("convertedPriceTitle");
+    converted.textContent = convertedText;
+    row.appendChild(converted);
+  }
+
   if (!item.previousPrice || item.previousPrice === item.price) return row;
 
   const change = document.createElement("span");
@@ -859,6 +868,24 @@ function renderSortOptions() {
   sortMenuTitleEl.textContent = translate("sortBy");
 }
 
+function renderCurrencySwitch() {
+  for (const button of currencySwitchEl.querySelectorAll("[data-display-currency]")) {
+    const currency = button.dataset.displayCurrency;
+    const isSelected = currency === currentDisplayCurrency;
+    button.textContent = translate(`currency_${currency}`);
+    button.title = isSelected
+      ? translate("showOwnCurrencies")
+      : translate("showInCurrency", { currency: translate(`currency_${currency}`) });
+    button.setAttribute("aria-pressed", String(isSelected));
+  }
+
+  currencySwitchEl.setAttribute("aria-label", translate("displayCurrency"));
+
+  const rateInfo = getRateInfoText();
+  rateInfoEl.textContent = rateInfo;
+  rateInfoEl.hidden = !rateInfo;
+}
+
 async function renderCart() {
   const items = await getCartItems();
   const viewMode = await getViewMode();
@@ -874,6 +901,7 @@ async function renderCart() {
   itemCountEl.textContent = String(calculateTotalItemCount(items));
   totalPriceEl.textContent = calculateTotal(items);
   selectedTotalPriceEl.textContent = calculateSelectedTotal(items);
+  renderCurrencySwitch();
   markPurchasedBtn.hidden = items.length === 0;
 
   setGroupingChip(

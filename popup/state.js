@@ -82,8 +82,9 @@ async function setSortMode(mode) {
   await browser.storage.local.set({ [SORT_KEY]: mode });
 }
 
-// Farklı para birimindeki fiyatlar birbiriyle kıyaslanamıyor (kur yok); fiyat
-// sıralamasında önce para birimi, sonra tutar. Fiyatı okunamayan ürün sonda.
+// Fiyat sıralaması: kurla çevrilen görünümde bütün ürünler TL karşılığına göre
+// birlikte sıralanıyor. Kur yokken para birimleri kıyaslanamıyor; önce para
+// birimi, sonra tutar. Fiyatı okunamayan ürün her iki durumda da sonda.
 const CURRENCY_ORDER = ["TRY", "GBP", "EUR", "USD"];
 
 function getCurrencyRank(item) {
@@ -97,6 +98,13 @@ function compareByPrice(direction) {
     const priceB = extractNumberFromPrice(b.price);
 
     if (priceA === null || priceB === null) return (priceA === null) - (priceB === null);
+
+    if (isConvertingCurrencies()) {
+      const liraA = convertAmount(priceA, getItemCurrency(a), "TRY");
+      const liraB = convertAmount(priceB, getItemCurrency(b), "TRY");
+      if (liraA !== null && liraB !== null) return direction * (liraA - liraB);
+    }
+
     return getCurrencyRank(a) - getCurrencyRank(b) || direction * (priceA - priceB);
   };
 }

@@ -73,6 +73,8 @@ const moreActionsMenuEl = document.getElementById("moreActionsMenu");
 const updateProgressEl = document.getElementById("updateProgress");
 const updateProgressBarEl = document.getElementById("updateProgressBar");
 const groupByLabelEl = document.getElementById("groupByLabel");
+const currencySwitchEl = document.getElementById("currencySwitch");
+const rateInfoEl = document.getElementById("rateInfo");
 const sortControlEl = document.getElementById("sortControl");
 const sortBtn = document.getElementById("sortBtn");
 const sortMenuEl = document.getElementById("sortMenu");
@@ -95,6 +97,17 @@ const I18N = {
     accentColor: "Tema",
     accentCustom: "Özel renk",
     sortBy: "Sırala",
+    displayCurrency: "Toplamın para birimi",
+    currency_TRY: "TL",
+    currency_GBP: "£",
+    currency_USD: "$",
+    currency_EUR: "€",
+    showInCurrency: "Toplamı {currency} olarak göster",
+    showOwnCurrencies: "Kendi para birimlerine dön",
+    rateInfo: "{rate} · {date} kuru (Avrupa Merkez Bankası)",
+    rateLoading: "Kur alınıyor…",
+    rateUnavailable: "Kur alınamadı; tutarlar kendi para biriminde.",
+    convertedPriceTitle: "Günlük kurla yaklaşık karşılığı",
     sort_added: "Eklenme sırası",
     sort_newest: "En son eklenen",
     "sort_price-asc": "Fiyat: artan",
@@ -264,6 +277,17 @@ const I18N = {
     accentColor: "Theme",
     accentCustom: "Custom colour",
     sortBy: "Sort",
+    displayCurrency: "Currency for totals",
+    currency_TRY: "TL",
+    currency_GBP: "£",
+    currency_USD: "$",
+    currency_EUR: "€",
+    showInCurrency: "Show totals in {currency}",
+    showOwnCurrencies: "Back to each product's own currency",
+    rateInfo: "{rate} · rate of {date} (European Central Bank)",
+    rateLoading: "Getting the exchange rate…",
+    rateUnavailable: "Exchange rate unavailable; amounts shown in their own currency.",
+    convertedPriceTitle: "Approximate value at the daily rate",
     sort_added: "Order added",
     sort_newest: "Newest first",
     "sort_price-asc": "Price: low to high",

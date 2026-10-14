@@ -104,12 +104,40 @@ function formatTotalsByCurrency(totals) {
     .join(" + ");
 }
 
+// Ekrandaki toplamlar: kullanıcı bir para birimi (TL, £, $, €) seçtiyse her
+// şey o para birimine çevrilip tek tutar olarak yazılıyor. Çevrilen tutar
+// yaklaşık olduğu için başında "≈" var. Kuru bilinmeyen para birimi
+// çevrilmeden yanına ekleniyor.
+function formatDisplayTotal(totals) {
+  if (!isConvertingCurrencies() || totals.size === 0) return formatTotalsByCurrency(totals);
+
+  const target = currentDisplayCurrency;
+  const unconverted = new Map();
+  let converted = 0;
+  let isApproximate = false;
+
+  for (const [currency, value] of totals) {
+    const amount = currency === target ? value : convertAmount(value, currency, target);
+
+    if (amount === null) {
+      unconverted.set(currency, value);
+      continue;
+    }
+
+    converted += amount;
+    if (currency !== target) isApproximate = true;
+  }
+
+  const text = `${isApproximate ? "≈ " : ""}${formatPriceByCurrency(converted, target)}`;
+  return unconverted.size > 0 ? `${text} + ${formatTotalsByCurrency(unconverted)}` : text;
+}
+
 function calculateTotal(items) {
-  return formatTotalsByCurrency(calculateTotalsByCurrency(items));
+  return formatDisplayTotal(calculateTotalsByCurrency(items));
 }
 
 function calculateSelectedTotal(items) {
-  return formatTotalsByCurrency(calculateTotalsByCurrency(items, true));
+  return formatDisplayTotal(calculateTotalsByCurrency(items, true));
 }
 
 function calculateTotalItemCount(items) {
@@ -117,7 +145,7 @@ function calculateTotalItemCount(items) {
 }
 
 function calculateCategoryTotal(items) {
-  return formatTotalsByCurrency(calculateTotalsByCurrency(items));
+  return formatDisplayTotal(calculateTotalsByCurrency(items));
 }
 
 function getInstallmentDisplay(item) {

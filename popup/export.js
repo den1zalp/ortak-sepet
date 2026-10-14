@@ -130,7 +130,9 @@ function buildCartText(items) {
     }
   }
 
-  lines.push("", translate("copyTotal", { total: calculateTotal(items) }));
+  // Kopyalanan metin kayıt niteliğinde: kurla çevrilmiş değil, gerçek tutarlar.
+  const exactTotal = formatTotalsByCurrency(calculateTotalsByCurrency(items));
+  lines.push("", translate("copyTotal", { total: exactTotal }));
 
   return lines.join("\n");
 }

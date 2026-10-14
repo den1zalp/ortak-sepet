@@ -87,8 +87,17 @@
 
       <section id="summarySection" class="summary" aria-live="polite">
         <div class="summary-main">
-          <span id="selectedTotalPriceLabel" class="summary-label"></span>
+          <div class="summary-heading">
+            <span id="selectedTotalPriceLabel" class="summary-label"></span>
+            <div id="currencySwitch" class="currency-switch" role="group">
+              <button type="button" data-display-currency="TRY"></button>
+              <button type="button" data-display-currency="GBP"></button>
+              <button type="button" data-display-currency="USD"></button>
+              <button type="button" data-display-currency="EUR"></button>
+            </div>
+          </div>
           <strong id="selectedTotalPrice" class="summary-total">0,00 TL</strong>
+          <p id="rateInfo" class="summary-rate" hidden></p>
         </div>
         <div class="summary-meta">
           <div>
@@ -269,6 +278,7 @@
     <script src="popup/i18n.js"></script>
     <script src="popup/state.js"></script>
     <script src="popup/totals.js"></script>
+    <script src="popup/rates.js"></script>
     <script src="popup/render.js"></script>
     <script src="popup/media.js"></script>
     <script src="popup/actions.js"></script>

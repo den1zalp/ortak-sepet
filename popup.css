@@ -198,6 +198,49 @@ body.dark-mode .summary {
   box-shadow: none;
 }
 
+.summary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Toplamın para birimi: renkli zemin üstünde yarı saydam küçük düğmeler. */
+.currency-switch {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.currency-switch button {
+  min-width: 34px;
+  height: 22px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.currency-switch button:hover {
+  color: #ffffff;
+}
+
+.currency-switch button[aria-pressed="true"] {
+  background: #ffffff;
+  color: var(--accent-1);
+}
+
+.summary-rate {
+  margin: 4px 0 0;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
 .summary-label {
   display: block;
   font-size: 12px;
@@ -936,6 +979,15 @@ body.dark-mode .summary {
   align-items: flex-end;
   gap: 4px;
   text-align: right;
+}
+
+/* Kurla çevrilmiş fiyat; asıl fiyat değil, karşılaştırma için. */
+.price-converted {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .price-change {

@@ -221,15 +221,37 @@ browser.storage.onChanged.addListener((changes, areaName) => {
   }, 80);
 });
 
+// Para birimi seçilince toplamlar hemen kayıtlı kurla çiziliyor; kur eskiyse
+// arka planda yenilenip bir kez daha çiziliyor.
+async function refreshRatesAndRender() {
+  if (await refreshRatesIfStale()) await renderCart();
+  else renderCurrencySwitch();
+}
+
+currencySwitchEl.addEventListener("click", async (event) => {
+  const button = event.target.closest?.("[data-display-currency]");
+  if (!button) return;
+
+  // Seçili para birimine yeniden basınca her ürün kendi para birimine dönüyor.
+  const currency = button.dataset.displayCurrency;
+  await setDisplayCurrency(currency === currentDisplayCurrency ? "mixed" : currency);
+  const request = refreshRatesAndRender();
+  await renderCart();
+  await request;
+});
+
 async function initPopup() {
   currentLanguage = await getLanguage();
   currentTheme = await getTheme();
   currentAccent = await getAccent();
   currentSort = await getSortMode();
+  currentDisplayCurrency = await getDisplayCurrency();
+  await loadStoredRates();
   applyStaticTranslations();
   await refreshUndoVisibility();
   await renderCart();
   await resumeRunningPriceUpdate();
+  await refreshRatesAndRender();
 }
 
 initPopup();

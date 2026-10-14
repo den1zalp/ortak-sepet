@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 5 August 2026
+Last updated: 14 October 2026
 
 Ortak Sepet is a browser extension for Firefox and Chrome that helps users create a local shopping cart from supported e-commerce product pages.
 
@@ -38,6 +38,10 @@ This data stays in the user's browser and is not sent to any external server.
 When the user clicks the "Fiyatları Güncelle" ("Refresh Prices") button, the extension opens saved product links in background tabs, reads visible product page information again and updates the locally stored cart data. The background tabs are closed once each product has been read.
 
 No product data, cart data, browsing data or personal data is sent to the developer or to any third-party server.
+
+## Exchange Rates
+
+The user can choose to see totals in Turkish lira, pounds sterling, US dollars or euros instead of each product's own currency. Only when one of these currencies is selected, the extension downloads the daily exchange rates of the European Central Bank from the public Frankfurter service (https://api.frankfurter.dev), at most once every six hours. The request asks only for the TRY, GBP, EUR and USD rates; it contains no cart data, product data, browsing data or personal data. The rates are stored locally and used on the user's device to convert the amounts. When no currency is selected (the default), no such request is made.
 
 ## Product Images
 
