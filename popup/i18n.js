@@ -233,6 +233,8 @@ function setActionButtonLabel(button, label) {
 
 function applyStaticTranslations() {
   document.documentElement.lang = currentLanguage;
+  dismissStatusBtn.setAttribute("aria-label", translate("dismissStatus"));
+  dismissStatusBtn.title = translate("dismissStatus");
   appSubtitleEl.textContent = translate("appSubtitle");
   actionGridEl.setAttribute("aria-label", translate("cartActions"));
   setActionButtonLabel(addCurrentProductBtn, translate("addCurrentProduct"));

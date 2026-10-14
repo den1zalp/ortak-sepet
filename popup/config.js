@@ -42,6 +42,7 @@ const backupCartBtn = document.getElementById("backupCartBtn");
 const restoreCartBtn = document.getElementById("restoreCartBtn");
 const copyCartBtn = document.getElementById("copyCartBtn");
 const undoBtn = document.getElementById("undoBtn");
+const dismissStatusBtn = document.getElementById("dismissStatusBtn");
 const compactViewBtn = document.getElementById("compactViewBtn");
 const countryGroupingBtn = document.getElementById("countryGroupingBtn");
 const clearCartBtn = document.getElementById("clearCartBtn");
@@ -97,6 +98,7 @@ const I18N = {
     accentColor: "Tema",
     accentCustom: "Özel renk",
     sortBy: "Sırala",
+    dismissStatus: "Bildirimi kapat",
     displayCurrency: "Toplamın para birimi",
     currency_TRY: "TL",
     currency_GBP: "£",
@@ -277,6 +279,7 @@ const I18N = {
     accentColor: "Theme",
     accentCustom: "Custom colour",
     sortBy: "Sort",
+    dismissStatus: "Dismiss notification",
     displayCurrency: "Currency for totals",
     currency_TRY: "TL",
     currency_GBP: "£",

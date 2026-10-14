@@ -57,6 +57,17 @@ function setUndoVisible(isVisible) {
   undoBtn.textContent = translate("undo");
 }
 
+// Alttaki bildirimi kapatır. "Geri Al" görünüyorsa teklif de siliniyor; yoksa
+// popup yeniden açılınca bildirim geri gelirdi.
+async function dismissStatus() {
+  setStatus("");
+
+  if (!undoBtn.hidden) {
+    await clearUndoSnapshot();
+    setUndoVisible(false);
+  }
+}
+
 async function refreshUndoVisibility() {
   setUndoVisible(Boolean(await getUndoSnapshot()));
 }

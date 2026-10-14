@@ -1391,6 +1391,32 @@ body.dark-mode .summary {
   font-weight: 700;
 }
 
+.status-close {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.status-close .button-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.status-close:hover {
+  background: color-mix(in srgb, var(--bg) 16%, transparent);
+  opacity: 1;
+}
+
 .undo-button:hover {
   background: color-mix(in srgb, var(--bg) 26%, transparent);
 }

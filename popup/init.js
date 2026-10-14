@@ -18,6 +18,7 @@ countryGroupingBtn.addEventListener("click", () => toggleGrouping("country"));
 compactViewBtn.addEventListener("click", toggleCompactMode);
 clearCartBtn.addEventListener("click", clearCart);
 undoBtn.addEventListener("click", undoLastAction);
+dismissStatusBtn.addEventListener("click", dismissStatus);
 markPurchasedBtn.addEventListener("click", markSelectedPurchased);
 cartTabBtn.addEventListener("click", () => setActiveTab("cart"));
 purchasedTabBtn.addEventListener("click", () => setActiveTab("purchased"));
