@@ -164,6 +164,12 @@
       parse: () => parseZippoTr(),
     },
     {
+      id: "moko-art-design",
+      label: "Moko Art Design",
+      matches: hostIs("mokoartdesign.com"),
+      parse: () => parseMokoArtDesign(),
+    },
+    {
       id: "birkenstock-tr",
       label: "Birkenstock TR",
       matches: hostIs("birkenstock.com.tr"),
