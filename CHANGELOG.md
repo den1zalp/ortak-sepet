@@ -2,6 +2,20 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.16.1 — 14 Ekim 2026
+
+### Düzeltilenler
+
+* **Kur satırı TL'de de sterlinde de aynı şeyi yazıyordu.** Toplamın altındaki
+  satır iki durumda da "1 £ = 65,40 TL" gösteriyordu; sterlin seçiliyken TL
+  tutarların neye çevrildiği görünmüyordu. Artık sepetteki diğer para
+  birimlerinin seçilen para birimindeki karşılığını yazıyor: sterlinde
+  "100 TL = £1.53", dolarda "100 TL = $2.03 · 1 £ = $1.33". Çok küçük oranlar
+  100 birim üzerinden yazılıyor. Sepet boşsa ya da tek para birimi varsa TL ile
+  sterlin arasındaki kur gösteriliyor.
+* **Boş sepette toplam seçilen para biriminde yazmıyordu.** Sterlin seçiliyken
+  bile "0,00 TL" görünüyordu; artık "£0.00".
+
 ## 1.16.0 — 14 Ekim 2026
 
 ### Yenilikler
