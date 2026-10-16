@@ -2,6 +2,20 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.17.1 — 17 Ekim 2026
+
+### Yenilikler
+
+* **Ürün adı ürün sayfasını açıyor.** Karttaki ürün adına tıklayınca ürünün
+  sayfası yeni sekmede açılıyor; "Aldıklarım"da da öyle.
+
+### Düzeltilenler
+
+* **Kompakt görünümde adet ve işlemler kaybolmuştu.** 1.17.0'da kompakt
+  görünümde adet, "Alındı" ve sil düğmeleri gizleniyordu; ürünün sayfasına da
+  gidilemiyordu. Artık ürün adının altında ince bir satırda adet, "Alındı" ve
+  sil var. Ürün sayfası ürün adından açılıyor.
+
 ## 1.17.0 — 16 Ekim 2026
 
 ### Yenilikler
