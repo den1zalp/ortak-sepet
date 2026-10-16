@@ -180,13 +180,28 @@ function applyCategoryAccent(element, groupKey) {
   element.style.setProperty("--category-color", GROUP_COLORS[groupKey] || DEFAULT_GROUP_COLOR);
 }
 
-// Görsel, ad ve site: sepet ve alınanlar kartında ortak.
-function fillItemBasics(card, record, fullTitle) {
+// Görsel, ad ve site: sepet ve alınanlar kartında ortak. Ürün adı ürün
+// sayfasına bağlantı: kompakt görünümde işlem düğmeleri gizli olduğu için
+// sayfaya gitmenin tek yolu bu. Tıklamayı init.js karşılıyor (linkAction ile
+// adı verilen işlem); href orta tık ve klavye için duruyor.
+function fillItemBasics(card, record, fullTitle, linkAction) {
   card.querySelector(".os-item-media").prepend(createProductImage(record.image));
 
   const title = card.querySelector(".cart-title");
-  title.textContent = fullTitle;
   title.title = fullTitle;
+
+  if (record.url) {
+    const link = document.createElement("a");
+    link.className = "os-item-link";
+    link.href = record.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.dataset[linkAction] = record.id;
+    link.textContent = fullTitle;
+    title.appendChild(link);
+  } else {
+    title.textContent = fullTitle;
+  }
 
   card.querySelector(".os-item-store").textContent = record.site || translate("unknownSite");
 
@@ -425,7 +440,7 @@ function createCartItemElement(item) {
   // ait olduğunu söyleyebilmesi için her biri ürün adıyla adlandırılıyor.
   checkbox.setAttribute("aria-label", translate("selectItemLabel", { title: fullTitle }));
 
-  fillItemBasics(card, item, fullTitle);
+  fillItemBasics(card, item, fullTitle, "openLink");
   fillItemAmount(card, item);
   card.querySelector(".os-item-badges").append(...createItemBadges(item));
   fillQuantity(card, item, fullTitle);
@@ -625,7 +640,7 @@ function createPurchaseElement(record) {
   const fullTitle = record.title || translate("noProductTitle");
   const card = cloneTemplate(purchaseItemTemplate);
 
-  fillItemBasics(card, record, fullTitle);
+  fillItemBasics(card, record, fullTitle, "openPurchaseLink");
   fillItemAmount(card, record, { showChange: false });
   card.querySelector(".purchase-date").textContent = `${translate("purchasedOn")}: ${formatPurchaseDate(record)}`;
   fillPurchaseActions(card.querySelector(".cart-actions"), record, fullTitle);

@@ -102,6 +102,7 @@ const CART_ITEM_ACTIONS = {
   editPrice: editItemPrice,
   remove: removeItem,
   open: openItem,
+  openLink: openItem,
   increase: increaseQuantity,
   decrease: decreaseQuantity,
   purchase: markItemPurchased,
@@ -111,14 +112,19 @@ const PURCHASE_ACTIONS = {
   restorePurchase,
   deletePurchase,
   openPurchase,
+  openPurchaseLink: openPurchase,
 };
 
 async function runItemAction(event, actions) {
-  const target = event.target.closest?.("button, input");
+  const target = event.target.closest?.("button, input, a");
   if (!target) return;
 
   const name = Object.keys(actions).find((action) => target.dataset[action]);
-  if (name) await actions[name](target.dataset[name]);
+  if (!name) return;
+
+  // Ürün adı bağlantısı: sekmeyi "Linke Git" ile aynı yoldan açıyoruz.
+  if (target.tagName === "A") event.preventDefault();
+  await actions[name](target.dataset[name]);
 }
 
 cartItemsEl.addEventListener("click", (event) => {

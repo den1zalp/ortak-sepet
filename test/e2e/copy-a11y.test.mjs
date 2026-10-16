@@ -119,7 +119,43 @@ check("linke git etiketli", a11y.open === "Ürün sayfasını aç: Philips Airfr
 check("manuel fiyat etiketli", a11y.edit === "Manuel fiyat gir: Philips Airfryer XXL", a11y.edit);
 check("işlem alanı etiketli", a11y.actionGrid === "Sepet işlemleri", a11y.actionGrid);
 
-// --- 6. İngilizce tarafta da etiketler ---
+// --- 6. Kompakt görünüm: ürün adı ürün sayfasına götürüyor, "Linke Git" gizli ---
+await popup.evaluate(async () => {
+  await setCompactMode(true);
+  applyCompactMode(true);
+  // Gerçek mağaza sayfası açılmasın; yalnızca hangi adresin istendiğine bakılıyor.
+  window.__openedUrls = [];
+  browser.tabs.create = async ({ url }) => window.__openedUrls.push(url);
+});
+await popup.click("#cartItems .os-item-link");
+await new Promise((r) => setTimeout(r, 300));
+
+const titleLink = await popup.evaluate(async () => {
+  const visible = (selector) => getComputedStyle(document.querySelector(`#cartItems ${selector}`)).display !== "none";
+  const result = {
+    opened: window.__openedUrls,
+    compactButtons: {
+      quantity: visible("[data-increase]") && visible("[data-decrease]"),
+      purchase: visible("[data-purchase]"),
+      remove: visible("[data-remove]"),
+      open: visible("[data-open]"),
+      edit: visible("[data-edit-price]"),
+    },
+  };
+  await setCompactMode(false);
+  applyCompactMode(false);
+  return result;
+});
+const compactButtons = titleLink.compactButtons;
+check(
+  "kompakt görünümde adet, alındı ve sil duruyor",
+  compactButtons.quantity && compactButtons.purchase && compactButtons.remove,
+  JSON.stringify(compactButtons),
+);
+check("kompakt görünümde linke git ve manuel fiyat gizli", !compactButtons.open && !compactButtons.edit, JSON.stringify(compactButtons));
+check("ürün adına tıklayınca ürün sayfası açıldı", JSON.stringify(titleLink.opened) === '["https://www.hepsiburada.com/urun-p-1"]', JSON.stringify(titleLink.opened));
+
+// --- 7. İngilizce tarafta da etiketler ---
 const english = await popup.evaluate(async () => {
   await setLanguage("en");
   applyStaticTranslations();

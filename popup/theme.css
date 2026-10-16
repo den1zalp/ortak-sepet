@@ -812,6 +812,22 @@ html {
   font-weight: 500;
 }
 
+.os-item-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+.os-item-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.os-item-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 .os-item-meta {
   display: flex;
   align-items: flex-start;
@@ -1206,13 +1222,41 @@ html {
 
 html[data-density="compact"] .os-item:not(.os-item-bought) {
   align-items: center;
-  gap: 10px;
+  gap: 4px 10px;
   padding: 8px 12px;
 }
 
 html[data-density="compact"] .os-item > figure,
-html[data-density="compact"] .os-item .os-item-badges,
+html[data-density="compact"] .os-item .os-item-badges {
+  display: none;
+}
+
+/* Adet ve işlemler ürün adının altında ince bir satır: çizgisiz, küçük
+   düğmeler, metinle aynı hizada (seçim kutusu 16 px + boşluk 10 px).
+   "Linke Git" yok, ürün adı zaten bağlantı; manuel fiyat da normal
+   görünümde. */
 html[data-density="compact"] .os-item:not(.os-item-bought) > footer {
+  padding: 0 0 0 26px;
+  border-top: 0;
+}
+
+html[data-density="compact"] .os-item > footer .btn[data-size="icon-sm"] {
+  width: 26px;
+  height: 26px;
+}
+
+html[data-density="compact"] .os-item > footer .btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+html[data-density="compact"] .os-qty > output {
+  min-width: 28px;
+  font-size: 12px;
+}
+
+html[data-density="compact"] .os-item-actions [data-open],
+html[data-density="compact"] .os-item-actions [data-edit-price] {
   display: none;
 }
 
