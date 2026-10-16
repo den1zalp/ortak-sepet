@@ -2,6 +2,34 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.17.0 — 16 Ekim 2026
+
+### Yenilikler
+
+* **Yeni arayüz.** Popup baştan çizildi: daha sade bir üst bar, gradyanlı
+  toplam kartı, gündüz/gece anahtarı ve yeni ürün kartları. Arayüz
+  [Basecoat](https://basecoatui.com) bileşenleriyle, yazı tipi Geist. İkisi de
+  eklentiyle birlikte geliyor; eklenti internetten bir şey indirmiyor.
+* **Ürün kartları.** Görsel, ad, mağaza ve tutar üstte; taksit, kargo ve
+  kategori küçük rozetler olarak altında. Birden fazla adette büyük tutar
+  satırın toplamı, altında "2 × 28.790,00 TL". Adet, "Alındı", "Linke Git",
+  manuel fiyat ve silme düğmeleri kartın altında; ne yaptıkları üzerine
+  gelince yazıyor.
+* **Taksit yalnızca varsa yazıyor.** Kartta "Taksit: Yok" satırı yerine,
+  taksit varsa "Taksit var" rozeti çıkıyor.
+* **Dil seçimi menüden.** TR/EN anahtarı yerine Türkçe ve English seçenekli
+  bir menü.
+* **Sekmelerde sayılar rozet.** "Sepet" ve "Aldıklarım" sekmelerindeki ürün
+  sayısı yanlarında küçük bir rozette.
+* **Varsayılan renk turuncu.** Daha önce renk seçtiysen seçimin korunuyor;
+  "Grafit"in adı "Gece" oldu. Özel renk kaydırıcısı duruyor.
+
+### Düzeltilenler
+
+* **"…" menüsü kesilebiliyordu.** Popup kısayken menünün alt kısmı (tema
+  renkleri) görünmüyordu. Liste artık ayrı bir kutuda değil, sayfanın
+  kendisinde kayıyor; üst bar ve alttaki bildirim yerinde kalıyor.
+
 ## 1.16.2 — 14 Ekim 2026
 
 ### Düzeltilenler
