@@ -127,17 +127,16 @@ async function setTheme(theme) {
   await browser.storage.local.set({ [THEME_KEY]: currentTheme });
 }
 
+// Koyu tema Basecoat'un kuralı: <html class="dark">. basecoat.theme.set()
+// kullanılmıyor, o localStorage'a yazıyor; tercih browser.storage.local'da.
 function applyTheme() {
   const isDark = currentTheme === "dark";
-  document.body.classList.toggle("dark-mode", isDark);
-  themeToggleBtn.classList.toggle("is-dark", isDark);
-  themeToggleBtn.setAttribute(
-    "aria-label",
-    isDark ? translate("enableLightMode") : translate("enableDarkMode"),
-  );
-  themeToggleBtn.title = isDark
-    ? translate("enableLightMode")
-    : translate("enableDarkMode");
+  const label = isDark ? translate("enableLightMode") : translate("enableDarkMode");
+
+  document.documentElement.classList.toggle("dark", isDark);
+  themeToggleBtn.setAttribute("aria-checked", String(isDark));
+  themeToggleBtn.setAttribute("aria-label", label);
+  themeToggleBtn.dataset.tooltip = label;
 }
 
 async function getAccent() {
@@ -145,11 +144,11 @@ async function getAccent() {
   const accent = result[ACCENT_KEY];
 
   if (accent && Number.isFinite(accent.hue)) return { hue: accent.hue };
-  if (accent && ACCENT_PRESETS.some((preset) => preset.id === accent.preset)) {
+  if (accent && ACCENT_PRESETS.includes(accent.preset)) {
     return { preset: accent.preset };
   }
 
-  return { preset: ACCENT_PRESETS[0].id };
+  return { preset: DEFAULT_ACCENT };
 }
 
 async function setAccent(accent) {
@@ -157,48 +156,47 @@ async function setAccent(accent) {
   await browser.storage.local.set({ [ACCENT_KEY]: accent });
 }
 
-// Kaydırıcının tonundan iki renk: ikincisi biraz kaydırılmış ton, böylece
-// toplam kartındaki geçiş hazır renklerdeki gibi duruyor.
-function getAccentColors(accent) {
-  if (Number.isFinite(accent.hue)) {
-    const hue = Math.round(accent.hue) % 360;
-    return [`hsl(${hue} 72% 50%)`, `hsl(${(hue + 35) % 360} 72% 48%)`];
-  }
-
-  return (ACCENT_PRESETS.find((preset) => preset.id === accent.preset) || ACCENT_PRESETS[0]).colors;
-}
-
-// Renkten türeyen tonlar (açık zemin, karanlık temada aydınlatılmış hâli)
-// popup.css'te color-mix ile üretiliyor; burada yalnızca iki ana renk
-// veriliyor.
+// Hazır renkler theme.css'te html[data-accent] ile seçiliyor. Kaydırıcıyla
+// seçilen tonda gradyanın üç durağı ve seçili kur düğmesinin yazı rengi
+// buradan veriliyor; beyaz yazı okunsun diye tonlar koyu tutuluyor.
 function applyAccent() {
-  const [first, second] = getAccentColors(currentAccent);
+  const root = document.documentElement;
+  const isCustom = Number.isFinite(currentAccent.hue);
 
-  document.body.style.setProperty("--accent-1", first);
-  document.body.style.setProperty("--accent-2-base", second);
+  if (isCustom) {
+    const hue = Math.round(currentAccent.hue) % 360;
+    delete root.dataset.accent;
+    root.style.setProperty("--os-g1", `hsl(${hue} 70% 28%)`);
+    root.style.setProperty("--os-g2", `hsl(${(hue + 15) % 360} 70% 36%)`);
+    root.style.setProperty("--os-g3", `hsl(${(hue + 30) % 360} 68% 42%)`);
+    root.style.setProperty("--os-ink", `hsl(${hue} 70% 30%)`);
+    accentHueInput.value = String(currentAccent.hue);
+  } else {
+    root.dataset.accent = currentAccent.preset;
+    for (const name of ["--os-g1", "--os-g2", "--os-g3", "--os-ink"]) {
+      root.style.removeProperty(name);
+    }
+  }
 
   for (const swatch of accentSwatchesEl.querySelectorAll("[data-accent]")) {
-    swatch.setAttribute("aria-pressed", String(swatch.dataset.accent === currentAccent.preset));
+    swatch.setAttribute("aria-checked", String(swatch.dataset.accent === currentAccent.preset));
   }
 
-  accentHueInput.classList.toggle("is-active", Number.isFinite(currentAccent.hue));
-  if (Number.isFinite(currentAccent.hue)) accentHueInput.value = String(currentAccent.hue);
+  accentHueInput.classList.toggle("is-active", isCustom);
 }
 
 function renderAccentSwatches() {
   accentSwatchesEl.textContent = "";
 
   for (const preset of ACCENT_PRESETS) {
-    const swatch = document.createElement("button");
-    const name = translate(`accent_${preset.id}`);
+    const swatch = document.createElement("div");
+    const name = translate(`accent_${preset}`);
 
-    swatch.type = "button";
-    swatch.className = "accent-swatch";
-    swatch.dataset.accent = preset.id;
-    swatch.title = name;
+    swatch.className = "os-swatch";
+    swatch.setAttribute("role", "menuitemradio");
+    swatch.dataset.accent = preset;
+    swatch.dataset.tooltip = name;
     swatch.setAttribute("aria-label", name);
-    swatch.style.setProperty("--swatch-1", preset.colors[0]);
-    swatch.style.setProperty("--swatch-2", preset.colors[1]);
     accentSwatchesEl.appendChild(swatch);
   }
 
@@ -209,16 +207,12 @@ function renderAccentSwatches() {
 }
 
 function applyLanguageToggle() {
-  const isEnglish = currentLanguage === "en";
-  const label = isEnglish
-    ? translate("switchToTurkish")
-    : translate("switchToEnglish");
+  languageCurrentEl.textContent = currentLanguage.toUpperCase();
+  languageToggleBtn.setAttribute("aria-label", `${translate("language")}: ${currentLanguage.toUpperCase()}`);
 
-  languageToggleBtn.classList.toggle("is-english", isEnglish);
-  languageControlEl.classList.toggle("is-english", isEnglish);
-  languageToggleBtn.setAttribute("aria-label", label);
-  languageToggleBtn.setAttribute("aria-pressed", String(isEnglish));
-  languageToggleBtn.title = label;
+  for (const option of languageMenuEl.querySelectorAll("[data-language]")) {
+    option.setAttribute("aria-checked", String(option.dataset.language === currentLanguage));
+  }
 }
 
 function setActionButtonLabel(button, label) {
@@ -234,7 +228,6 @@ function setActionButtonLabel(button, label) {
 function applyStaticTranslations() {
   document.documentElement.lang = currentLanguage;
   dismissStatusBtn.setAttribute("aria-label", translate("dismissStatus"));
-  dismissStatusBtn.title = translate("dismissStatus");
   appSubtitleEl.textContent = translate("appSubtitle");
   actionGridEl.setAttribute("aria-label", translate("cartActions"));
   setActionButtonLabel(addCurrentProductBtn, translate("addCurrentProduct"));
@@ -246,11 +239,12 @@ function applyStaticTranslations() {
   setActionButtonLabel(installmentProductsBtn, translate("chipInstallment"));
   setActionButtonLabel(countryGroupingBtn, translate("chipCountry"));
   setActionButtonLabel(compactViewBtn, translate("chipCompact"));
+  setActionButtonLabel(cartTabBtn, translate("cart"));
+  setActionButtonLabel(purchasedTabBtn, translate("tabPurchased"));
   groupByLabelEl.textContent = translate("groupBy");
   moreActionsBtn.setAttribute("aria-label", translate("moreActions"));
-  moreActionsBtn.title = translate("moreActions");
-  copyCartBtn.textContent = translate("copyCart");
-  clearCartBtn.textContent = translate("clearCart");
+  setActionButtonLabel(copyCartBtn, translate("copyCart"));
+  disarmClearCartConfirm();
   markPurchasedBtn.textContent = translate("markSelectedPurchased");
   undoBtn.textContent = translate("undo");
   itemCountLabelEl.textContent = translate("itemCount");

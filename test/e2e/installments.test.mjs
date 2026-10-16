@@ -1,4 +1,6 @@
-// Taksit bilgisi okunamadığında "Bilinmiyor" yerine "Yok" yazıyor mu?
+// Taksit bilgisi okunamadığında "Bilinmiyor" yerine taksitsiz gibi mi görünüyor?
+// Kartta taksit yalnızca varsa "Taksit var" rozetiyle yazıyor; yoksa da
+// okunamadıysa da rozet yok.
 import { launchExtension, createChecker, screenshotPath } from "../helpers/extension.mjs";
 
 const { check, summary } = createChecker();
@@ -30,20 +32,17 @@ await new Promise((r) => setTimeout(r, 1500));
 
 const read = () =>
   popup.evaluate(() =>
-    [...document.querySelectorAll("#cartItems .cart-item")].map((el) => {
-      const title = el.querySelector(".cart-title")?.textContent?.trim();
-      const rows = [...el.querySelectorAll("*")]
-        .map((n) => n.textContent?.trim())
-        .filter((t) => t && /^Taksit:/.test(t));
-      return { title, taksit: rows[0] };
-    }),
+    [...document.querySelectorAll("#cartItems .cart-item")].map((el) => ({
+      title: el.querySelector(".cart-title")?.textContent?.trim(),
+      taksit: el.querySelector(".os-badge-installment")?.textContent?.trim() || null,
+    })),
   );
 
 const rows = await read();
 console.log(rows);
-check("bilgi okunamayan üründe 'Yok' yazıyor", rows[0]?.taksit === "Taksit:Yok", rows[0]?.taksit);
-check("taksitsiz üründe 'Yok' yazıyor", rows[1]?.taksit === "Taksit:Yok", rows[1]?.taksit);
-check("taksitli üründe 'Var' yazıyor", rows[2]?.taksit === "Taksit:Var", rows[2]?.taksit);
+check("bilgi okunamayan üründe taksit rozeti yok", rows[0]?.taksit === null, rows[0]?.taksit);
+check("taksitsiz üründe taksit rozeti yok", rows[1]?.taksit === null, rows[1]?.taksit);
+check("taksitli üründe 'Taksit var' yazıyor", rows[2]?.taksit === "Taksit var", rows[2]?.taksit);
 
 const pageText = await popup.evaluate(() => document.body.innerText);
 check("popup'ta hiç 'Bilinmiyor' geçmiyor", !pageText.includes("Bilinmiyor"), pageText.match(/.{0,30}Bilinmiyor.{0,30}/)?.[0] || "");
@@ -59,6 +58,7 @@ check("grup başlığında 'Bilinmiyor' yok", !groups.some((g) => g.includes("Bi
 
 // İngilizce tarafı
 await popup.click("#languageToggleBtn");
+await popup.click('[data-language="en"]');
 await new Promise((r) => setTimeout(r, 1200));
 const enText = await popup.evaluate(() => document.body.innerText);
 check("İngilizcede 'Unknown' geçmiyor", !enText.includes("Unknown"), enText.match(/.{0,30}Unknown.{0,30}/)?.[0] || "");

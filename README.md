@@ -238,10 +238,11 @@ ortak-sepet/
 - content/               # TR: shared/core.js + parsers/
 - content-uk.js          # UK içerik script'i giriş noktası
 - content-uk/            # UK: shared/ + parsers/
-- popup.html / popup.css
-- fonts/                 # popup fontu (Nunito, OFL-1.1)
-- popup/                 # popup modülleri (config, i18n, state, render, ...)
-                         # ve yedekten geri yükleme sayfası (restore.html)
+- popup.html
+- popup/                 # popup modülleri (config, i18n, state, render, ...),
+                         # marka katmanı (theme.css) ve yedekten geri yükleme
+                         # sayfası (restore.html)
+- vendor/                # Basecoat (popup bileşenleri, MIT) ve Geist fontu (OFL-1.1)
 - _locales/              # eklenti açıklamasının TR/EN çevirisi
 - icons/
 - test/                  # unit / e2e / live testleri (pakete girmez)
@@ -297,4 +298,7 @@ Ayrıntılar için [LICENSE](LICENSE) dosyasına bakın.
 
 `browser-polyfill.js` bu lisansın kapsamı dışındadır; Mozilla'ya ait olup [MPL-2.0](https://mozilla.org/MPL/2.0/) ile dağıtılmaktadır.
 
-`fonts/Nunito.ttf` de bu lisansın kapsamı dışındadır; The Nunito Project Authors'a ait olup [SIL Open Font License 1.1](fonts/OFL.txt) ile dağıtılmaktadır.
+`vendor/` altındaki üçüncü parti dosyalar da bu lisansın kapsamı dışındadır:
+
+* `vendor/basecoat/`: popup arayüzünün bileşenleri, [Basecoat](https://basecoatui.com) 1.0.2; [MIT](vendor/basecoat/LICENSE.md) ile dağıtılmaktadır.
+* `vendor/fonts/geist/Geist-Variable.woff2`: Geist fontu, Vercel'e ait olup [SIL Open Font License 1.1](vendor/fonts/geist/OFL.txt) ile dağıtılmaktadır.

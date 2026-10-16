@@ -192,7 +192,7 @@ async function initRestorePage() {
   const stored = await browser.storage.local.get([LANGUAGE_KEY, THEME_KEY]);
 
   language = stored[LANGUAGE_KEY] === "en" ? "en" : "tr";
-  document.body.classList.toggle("dark-mode", stored[THEME_KEY] === "dark");
+  document.documentElement.classList.toggle("dark", stored[THEME_KEY] === "dark");
 
   applyTexts();
 }

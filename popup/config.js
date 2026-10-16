@@ -19,17 +19,11 @@ const SORT_KEY = "ortakSepetSort";
 // "added" depodaki sıra, yani eklenme sırası.
 const SORT_OPTIONS = ["added", "newest", "price-asc", "price-desc", "name", "store"];
 
-// Her renk iki tonlu: toplam kartı ve logo bu ikisinin arasında geçiş yapıyor.
-const ACCENT_PRESETS = [
-  { id: "indigo", colors: ["#4f46e5", "#7c3aed"] },
-  { id: "blue", colors: ["#2563eb", "#0891b2"] },
-  { id: "teal", colors: ["#0d9488", "#0284c7"] },
-  { id: "green", colors: ["#16a34a", "#0d9488"] },
-  { id: "orange", colors: ["#ea580c", "#db2777"] },
-  { id: "pink", colors: ["#db2777", "#9333ea"] },
-  { id: "red", colors: ["#dc2626", "#ea580c"] },
-  { id: "graphite", colors: ["#334155", "#0f172a"] },
-];
+// Toplam kartının ve logonun gradyanı. Renk tonları popup/theme.css'te
+// (html[data-accent="…"]); burada yalnızca sıra ve kimlik var. Kimlikler eski
+// sürümlerde kaydedilen seçimle aynı kalmalı.
+const ACCENT_PRESETS = ["indigo", "blue", "teal", "green", "orange", "pink", "red", "graphite"];
+const DEFAULT_ACCENT = "orange";
 
 const addCurrentProductBtn = document.getElementById("addCurrentProductBtn");
 const categorizeProductsBtn = document.getElementById("categorizeProductsBtn");
@@ -47,12 +41,14 @@ const compactViewBtn = document.getElementById("compactViewBtn");
 const countryGroupingBtn = document.getElementById("countryGroupingBtn");
 const clearCartBtn = document.getElementById("clearCartBtn");
 const statusEl = document.getElementById("status");
+const statusRowEl = statusEl.parentElement;
 const cartItemsEl = document.getElementById("cartItems");
 const totalPriceEl = document.getElementById("totalPrice");
 const selectedTotalPriceEl = document.getElementById("selectedTotalPrice");
 const itemCountEl = document.getElementById("itemCount");
 const languageToggleBtn = document.getElementById("languageToggleBtn");
-const languageControlEl = document.getElementById("languageControl");
+const languageCurrentEl = document.getElementById("languageCurrent");
+const languageMenuEl = document.getElementById("languageMenu");
 const themeToggleBtn = document.getElementById("themeToggleBtn");
 const appSubtitleEl = document.getElementById("appSubtitle");
 const itemCountLabelEl = document.getElementById("itemCountLabel");
@@ -63,6 +59,8 @@ const summarySectionEl = document.getElementById("summarySection");
 const footerActionsEl = document.getElementById("footerActions");
 const cartTabBtn = document.getElementById("cartTabBtn");
 const purchasedTabBtn = document.getElementById("purchasedTabBtn");
+const cartCountEl = document.getElementById("cartCount");
+const purchasedCountEl = document.getElementById("purchasedCount");
 const cartPanelEl = document.getElementById("cartPanel");
 const purchasedPanelEl = document.getElementById("purchasedPanel");
 const purchasedItemsEl = document.getElementById("purchasedItems");
@@ -70,15 +68,14 @@ const purchasedSummaryEl = document.getElementById("purchasedSummary");
 const markPurchasedBtn = document.getElementById("markPurchasedBtn");
 const permissionNoticeEl = document.getElementById("permissionNotice");
 const moreActionsBtn = document.getElementById("moreActionsBtn");
-const moreActionsMenuEl = document.getElementById("moreActionsMenu");
 const updateProgressEl = document.getElementById("updateProgress");
 const updateProgressBarEl = document.getElementById("updateProgressBar");
 const groupByLabelEl = document.getElementById("groupByLabel");
 const currencySwitchEl = document.getElementById("currencySwitch");
 const rateInfoEl = document.getElementById("rateInfo");
 const sortControlEl = document.getElementById("sortControl");
+const listTabsEl = document.getElementById("listTabs");
 const sortBtn = document.getElementById("sortBtn");
-const sortMenuEl = document.getElementById("sortMenu");
 const sortMenuTitleEl = document.getElementById("sortMenuTitle");
 const sortOptionsEl = document.getElementById("sortOptions");
 const accentMenuTitleEl = document.getElementById("accentMenuTitle");
@@ -123,7 +120,14 @@ const I18N = {
     accent_orange: "Turuncu",
     accent_pink: "Pembe",
     accent_red: "Kırmızı",
-    accent_graphite: "Grafit",
+    accent_graphite: "Gece",
+    language: "Dil",
+    quantityGroup: "Adet",
+    installmentBadge: "Taksit var",
+    financeBadge: "Taksit var",
+    deliveryBadgeLabel: "Kargo: {text}",
+    emptyCartTitle: "Sepet boş",
+    emptyPurchasedTitle: "Henüz aldığın ürün yok",
     cartActions: "Sepet işlemleri",
     switchToEnglish: "İngilizceye Geç",
     switchToTurkish: "Türkçeye Geç",
@@ -152,7 +156,7 @@ const I18N = {
     deletePurchaseLabel: "Kaydı sil: {title}",
     purchaseRestored: "Ürün sepete geri alındı.",
     purchaseDeleted: "Kayıt silindi.",
-    emptyPurchased: "Henüz alınmış ürün yok. Sepetteki bir üründe “Alındı” butonuna bastığında burada ay ay listelenir.",
+    emptyPurchased: "Sepetteki bir üründe “Alındı”ya bastığında burada ay ay listelenir.",
     purchasedThisMonth: "Bu ay",
     purchasedAllTime: "Tümü",
     purchasedOn: "Alınma",
@@ -181,7 +185,7 @@ const I18N = {
     total: "Genel toplam",
     selectedTotal: "Seçili toplam",
     cart: "Sepet",
-    emptyCart: "Sepet boş. Desteklenen bir ürün sayfasına giderek ürün ekleyebilirsiniz.",
+    emptyCart: "Desteklenen bir ürün sayfasındayken “Bu Ürünü Ekle”ye bas.",
     selectedTotalTitle: "Seçili toplama dahil et",
     noProductTitle: "Ürün adı yok",
     unknownSite: "Bilinmeyen site",
@@ -304,7 +308,14 @@ const I18N = {
     accent_orange: "Orange",
     accent_pink: "Pink",
     accent_red: "Red",
-    accent_graphite: "Graphite",
+    accent_graphite: "Night",
+    language: "Language",
+    quantityGroup: "Quantity",
+    installmentBadge: "Instalments available",
+    financeBadge: "Finance available",
+    deliveryBadgeLabel: "Delivery: {text}",
+    emptyCartTitle: "Your basket is empty",
+    emptyPurchasedTitle: "Nothing purchased yet",
     cartActions: "Basket actions",
     switchToEnglish: "Switch to English",
     switchToTurkish: "Switch to Turkish",
@@ -333,7 +344,7 @@ const I18N = {
     deletePurchaseLabel: "Delete record: {title}",
     purchaseRestored: "Product moved back to the basket.",
     purchaseDeleted: "Record deleted.",
-    emptyPurchased: "Nothing purchased yet. Press “Bought” on a basket item and it will be listed here month by month.",
+    emptyPurchased: "Press “Bought” on a basket item and it will be listed here month by month.",
     purchasedThisMonth: "This month",
     purchasedAllTime: "All time",
     purchasedOn: "Bought on",
@@ -362,7 +373,7 @@ const I18N = {
     total: "Total",
     selectedTotal: "Selected total",
     cart: "Basket",
-    emptyCart: "Your basket is empty. Open a supported product page to add an item.",
+    emptyCart: "Open a supported product page and press “Add This Product”.",
     selectedTotalTitle: "Include in selected total",
     noProductTitle: "No product title",
     unknownSite: "Unknown site",
@@ -471,5 +482,5 @@ const CATEGORY_LABELS = {
 
 let currentLanguage = "tr";
 let currentTheme = "light";
-let currentAccent = { preset: "indigo" };
+let currentAccent = { preset: DEFAULT_ACCENT };
 let currentSort = "added";

@@ -3,32 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <title>Ortak Sepet</title>
-    <link rel="stylesheet" href="../popup.css" />
+    <link rel="stylesheet" href="../vendor/basecoat/basecoat.css" />
+    <link rel="stylesheet" href="theme.css" />
     <link rel="stylesheet" href="restore.css" />
   </head>
   <body>
-    <main class="app restore-page">
-      <header class="header">
+    <main class="restore-page">
+      <header class="os-brand">
+        <div class="os-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
         <div>
           <h1 id="restoreTitle"></h1>
           <p id="restoreSubtitle"></p>
         </div>
       </header>
 
-      <section class="restore-box">
-        <label id="fileLabel" class="restore-file-label" for="backupFile"></label>
-        <input id="backupFile" class="restore-file-input" type="file" accept="application/json,.json" />
+      <section class="card restore-box">
+        <section>
+          <label id="fileLabel" class="label" for="backupFile"></label>
+          <input id="backupFile" class="input restore-file-input" type="file" accept="application/json,.json" />
 
-        <p id="restoreStatus" class="status" role="status" aria-live="polite"></p>
+          <p id="restoreStatus" class="restore-status" role="status" aria-live="polite"></p>
 
-        <div id="restoreSummary" class="restore-summary" hidden></div>
+          <div id="restoreSummary" class="restore-summary" hidden></div>
+        </section>
 
-        <div class="restore-actions">
-          <button id="restoreConfirmBtn" class="action-button action-button-primary" type="button" disabled>
+        <footer class="restore-actions">
+          <button id="restoreConfirmBtn" class="btn" type="button" disabled>
             <span class="action-label"></span>
           </button>
-          <button id="restoreCloseBtn" class="secondary-button" type="button"></button>
-        </div>
+          <button id="restoreCloseBtn" class="btn" data-variant="outline" type="button"></button>
+        </footer>
       </section>
 
       <p id="restoreNote" class="restore-note"></p>

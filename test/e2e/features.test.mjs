@@ -46,26 +46,32 @@ check("çok para birimli toplam", labels.total.includes("TL") && labels.total.in
 check("adet toplamı", labels.itemCount === "4", labels.itemCount);
 
 // --- 2. Sepeti temizle: iki adımlı onay ---
+// Temizle "…" menüsünde; ilk tık onay istediği için menü açık kalıyor.
+await popup.click("#moreActionsBtn");
 await popup.click("#clearCartBtn");
 await new Promise((r) => setTimeout(r, 300));
 
 const afterFirstClick = await popup.evaluate(async () => ({
+  menuOpen: document.getElementById("moreActionsPopover").getAttribute("aria-hidden") === "false",
   buttonText: document.getElementById("clearCartBtn").textContent,
   status: document.getElementById("status").textContent,
   count: (await browser.storage.local.get("ortakSepetItems")).ortakSepetItems.length,
 }));
 check("ilk tık sepeti silmiyor", afterFirstClick.count === 3, `kalem: ${afterFirstClick.count}`);
 check("buton onay soruyor", afterFirstClick.buttonText === "Emin misin?", afterFirstClick.buttonText);
+check("onay beklerken menü açık kalıyor", afterFirstClick.menuOpen === true);
 
 await popup.click("#clearCartBtn");
 await new Promise((r) => setTimeout(r, 400));
 
 const afterSecondClick = await popup.evaluate(async () => ({
+  menuOpen: document.getElementById("moreActionsPopover").getAttribute("aria-hidden") === "false",
   count: (await browser.storage.local.get("ortakSepetItems")).ortakSepetItems.length,
   undoHidden: document.getElementById("undoBtn").hidden,
   status: document.getElementById("status").textContent,
 }));
 check("ikinci tık sepeti sildi", afterSecondClick.count === 0);
+check("onaydan sonra menü kapandı", afterSecondClick.menuOpen === false);
 check("geri al butonu göründü", afterSecondClick.undoHidden === false);
 
 // --- 3. Geri alma ---
@@ -86,6 +92,7 @@ check("adetler korundu", JSON.stringify(afterUndo.quantities) === "[1,2,1]", JSO
 check("geri al butonu tekrar gizlendi", afterUndo.undoHidden === true);
 
 // --- 4. Onay zaman aşımı ---
+await popup.click("#moreActionsBtn");
 await popup.click("#clearCartBtn");
 await new Promise((r) => setTimeout(r, 5400));
 const afterTimeout = await popup.evaluate(() => document.getElementById("clearCartBtn").textContent);

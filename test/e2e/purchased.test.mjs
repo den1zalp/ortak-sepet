@@ -29,8 +29,8 @@ await new Promise((r) => setTimeout(r, 700));
 
 // --- 1. Sekmeler ---
 const tabs = await popup.evaluate(() => ({
-  cart: document.getElementById("cartTabBtn").textContent,
-  purchased: document.getElementById("purchasedTabBtn").textContent,
+  cart: [...document.getElementById("cartTabBtn").children].map((el) => el.textContent).join(" (") + ")",
+  purchased: [...document.getElementById("purchasedTabBtn").children].map((el) => el.textContent).join(" (") + ")",
   purchasedHidden: document.getElementById("purchasedPanel").hidden,
   bulkLabel: document.getElementById("markPurchasedBtn").textContent,
 }));
@@ -51,8 +51,8 @@ const afterPurchase = await popup.evaluate(async () => {
     purchasedCount: purchased.length,
     record: purchased[0],
     status: document.getElementById("status").textContent,
-    cartTab: document.getElementById("cartTabBtn").textContent,
-    purchasedTab: document.getElementById("purchasedTabBtn").textContent,
+    cartTab: [...document.getElementById("cartTabBtn").children].map((el) => el.textContent).join(" (") + ")",
+    purchasedTab: [...document.getElementById("purchasedTabBtn").children].map((el) => el.textContent).join(" (") + ")",
     undoHidden: document.getElementById("undoBtn").hidden,
   };
 });
@@ -217,7 +217,7 @@ const english = await popup.evaluate(async () => {
   applyStaticTranslations();
   await renderCart();
   return {
-    tab: document.getElementById("purchasedTabBtn").textContent,
+    tab: [...document.getElementById("purchasedTabBtn").children].map((el) => el.textContent).join(" (") + ")",
     bulk: document.getElementById("markPurchasedBtn").textContent,
     buy: document.querySelector("[data-purchase]")?.textContent,
   };

@@ -55,6 +55,7 @@ async function clearUndoSnapshot() {
 function setUndoVisible(isVisible) {
   undoBtn.hidden = !isVisible;
   undoBtn.textContent = translate("undo");
+  updateStatusRow();
 }
 
 // Alttaki bildirimi kapatır. "Geri Al" görünüyorsa teklif de siliniyor; yoksa
@@ -152,16 +153,15 @@ async function setCompactMode(isCompact) {
   });
 }
 
+// Kompakt görünüm html[data-density] ile; gerisi theme.css'te.
 function applyCompactMode(isCompact) {
-  document.body.classList.toggle("compact-mode", Boolean(isCompact));
-  if (compactViewBtn) {
-    compactViewBtn.classList.toggle("is-active", Boolean(isCompact));
-    compactViewBtn.setAttribute("aria-pressed", String(Boolean(isCompact)));
-    const label = isCompact
-      ? translate("normalView")
-      : translate("compactView");
-    compactViewBtn.title = label;
-  }
+  const compact = Boolean(isCompact);
+
+  if (compact) document.documentElement.dataset.density = "compact";
+  else delete document.documentElement.dataset.density;
+
+  compactViewBtn.setAttribute("aria-pressed", String(compact));
+  compactViewBtn.title = compact ? translate("normalView") : translate("compactView");
 }
 
 // Content script'ler ürüne hangi bölgeden okunduğunu yazar. Para birimine
@@ -178,17 +178,18 @@ function isPurchasedTabActive() {
 function applyActiveTab() {
   const showPurchased = isPurchasedTabActive();
 
+  // Sekme seçimi Basecoat'un tabs bileşeninde; paneli o da gizleyip gösteriyor.
+  // Sekme klavyeyle değiştirildiyse bile durum buradan tek yerden kuruluyor.
+  if (typeof listTabsEl.select === "function") {
+    listTabsEl.select(showPurchased ? purchasedTabBtn : cartTabBtn);
+  }
+
   cartPanelEl.hidden = showPurchased;
   purchasedPanelEl.hidden = !showPurchased;
   actionGridEl.hidden = showPurchased;
   summarySectionEl.hidden = showPurchased;
   footerActionsEl.hidden = showPurchased;
   sortControlEl.hidden = showPurchased;
-
-  cartTabBtn.classList.toggle("is-active", !showPurchased);
-  purchasedTabBtn.classList.toggle("is-active", showPurchased);
-  cartTabBtn.setAttribute("aria-selected", String(!showPurchased));
-  purchasedTabBtn.setAttribute("aria-selected", String(showPurchased));
 }
 
 function getItemRegion(item) {
@@ -205,8 +206,14 @@ function getRegionLabel(region) {
     : translate("countryTurkey");
 }
 
+// Alttaki bildirim: metin ya da "Geri Al" varsa görünüyor.
 function setStatus(message) {
   statusEl.textContent = message;
+  updateStatusRow();
+}
+
+function updateStatusRow() {
+  statusRowEl.hidden = !statusEl.textContent && undoBtn.hidden;
 }
 
 function getQuantity(item) {

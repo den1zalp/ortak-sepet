@@ -16,14 +16,24 @@ restoreCartBtn.addEventListener("click", () => {
 copyCartBtn.addEventListener("click", copyCartToClipboard);
 countryGroupingBtn.addEventListener("click", () => toggleGrouping("country"));
 compactViewBtn.addEventListener("click", toggleCompactMode);
-clearCartBtn.addEventListener("click", clearCart);
+// "Sepeti Temizle" ilk tıklamada onay istiyor; menü o tıklamada açık kalsın
+// diye olay Basecoat'un menü işleyicisine ulaşmıyor. (clearCart depoyu
+// okuyana kadar onay sayacına dokunmuyor; burada tıklamadan önceki hâli var.)
+clearCartBtn.addEventListener("click", (event) => {
+  if (!clearCartConfirmTimer) event.stopPropagation();
+  clearCart();
+});
 undoBtn.addEventListener("click", undoLastAction);
 dismissStatusBtn.addEventListener("click", dismissStatus);
 markPurchasedBtn.addEventListener("click", markSelectedPurchased);
 cartTabBtn.addEventListener("click", () => setActiveTab("cart"));
 purchasedTabBtn.addEventListener("click", () => setActiveTab("purchased"));
-languageToggleBtn.addEventListener("click", async () => {
-  await setLanguage(currentLanguage === "tr" ? "en" : "tr");
+// Dil menüsü Basecoat dropdown'u; seçilen öğeyi işaretleyip menüyü o kapatıyor.
+languageMenuEl.addEventListener("click", async (event) => {
+  const option = event.target.closest?.("[data-language]");
+  if (!option || option.dataset.language === currentLanguage) return;
+
+  await setLanguage(option.dataset.language);
   applyStaticTranslations();
   await renderCart();
 });
@@ -123,78 +133,22 @@ cartItemsEl.addEventListener("click", (event) => {
 
 purchasedItemsEl.addEventListener("click", (event) => runItemAction(event, PURCHASE_ACTIONS));
 
-// Açılır pencereler: "Diğer işlemler" ve sıralama. Dışarı tıklayınca ya da
-// Escape ile kapanıyorlar; biri açılınca öbürü kapanıyor.
-const POPOVERS = [
-  { button: moreActionsBtn, panel: moreActionsMenuEl },
-  { button: sortBtn, panel: sortMenuEl },
-];
-
-function setPopoverOpen(popover, isOpen) {
-  popover.panel.hidden = !isOpen;
-  popover.button.setAttribute("aria-expanded", String(isOpen));
-}
-
-function closePopovers(except = null) {
-  for (const popover of POPOVERS) {
-    if (popover !== except && !popover.panel.hidden) setPopoverOpen(popover, false);
-  }
-}
-
-for (const popover of POPOVERS) {
-  popover.button.addEventListener("click", () => {
-    closePopovers(popover);
-    setPopoverOpen(popover, popover.panel.hidden);
-  });
-}
-
-// "Diğer işlemler"de bir işlem seçilince menü kapanıyor. Tema renkleri art
-// arda denensin diye menüyü açık bırakıyor; "Sepeti Temizle" de ilk tıklamada
-// onay istediği için yalnızca onaylanınca kapatıyor. (clearCart depoyu
-// okuyana kadar onay sayacına dokunmuyor; burada tıklamadan önceki hâli var.)
-moreActionsMenuEl.addEventListener("click", (event) => {
-  const item = event.target.closest?.("button.menu-item");
-
-  if (!item) return;
-  if (item === clearCartBtn && !clearCartConfirmTimer) return;
-
-  setPopoverOpen(POPOVERS[0], false);
-});
-
-document.addEventListener("click", (event) => {
-  for (const popover of POPOVERS) {
-    if (popover.panel.hidden) continue;
-    if (popover.panel.parentElement.contains(event.target)) continue;
-
-    setPopoverOpen(popover, false);
-  }
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
-
-  const open = POPOVERS.find((popover) => !popover.panel.hidden);
-  if (!open) return;
-
-  setPopoverOpen(open, false);
-  open.button.focus();
-});
-
 sortOptionsEl.addEventListener("click", async (event) => {
   const option = event.target.closest?.("[data-sort]");
   if (!option) return;
 
-  setPopoverOpen(POPOVERS[1], false);
   await setSortMode(option.dataset.sort);
   renderSortOptions();
   await renderCart();
 });
 
-// Renk seçilir seçilmez uygulanıyor.
+// Renk seçilir seçilmez uygulanıyor. Renkler art arda denensin diye menü
+// açık kalıyor: olay Basecoat'un menüyü kapatan işleyicisine ulaşmıyor.
 accentSwatchesEl.addEventListener("click", async (event) => {
   const swatch = event.target.closest?.("[data-accent]");
   if (!swatch) return;
 
+  event.stopPropagation();
   await setAccent({ preset: swatch.dataset.accent });
   applyAccent();
 });

@@ -150,6 +150,7 @@ function setUpdateInProgress(inProgress) {
   compactViewBtn.disabled = inProgress;
 
   updateAllPricesBtn.classList.toggle("is-busy", inProgress);
+  updateAllPricesBtn.dataset.variant = inProgress ? "secondary" : "outline";
   updateProgressEl.hidden = !inProgress;
   if (!inProgress) {
     setUpdateProgress(0, 0);
@@ -448,7 +449,7 @@ function disarmClearCartConfirm() {
     clearCartConfirmTimer = null;
   }
 
-  clearCartBtn.textContent = translate("clearCart");
+  setActionButtonLabel(clearCartBtn, translate("clearCart"));
 }
 
 // Tek tıkla tüm sepeti silmemek için iki adımlı onay; ayrıca geri alma
@@ -462,7 +463,7 @@ async function clearCart() {
   }
 
   if (!clearCartConfirmTimer) {
-    clearCartBtn.textContent = translate("clearCartConfirmButton");
+    setActionButtonLabel(clearCartBtn, translate("clearCartConfirmButton"));
     setStatus(translate("clearCartConfirm"));
     clearCartConfirmTimer = setTimeout(disarmClearCartConfirm, 5000);
     return;

@@ -55,6 +55,8 @@ check("ürün linkleri var", text.includes("https://www.hepsiburada.com/urun-p-1
 check("toplam satırı iki para birimi", text.includes("Toplam: 6.998,00 TL + £149.00"), text.split("\n").pop());
 
 // --- 3. Gerçekten panoya yazıyor mu ---
+// Kopyala "…" menüsünde; menü kapalıyken öğe tıklanamıyor.
+await popup.click("#moreActionsBtn");
 await popup.click("#copyCartBtn");
 await new Promise((r) => setTimeout(r, 500));
 

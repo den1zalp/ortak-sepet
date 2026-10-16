@@ -3,278 +3,268 @@
   <head>
     <meta charset="UTF-8" />
     <title>Ortak Sepet</title>
-    <link rel="stylesheet" href="popup.css" />
+    <!-- Sıra önemli: önce Basecoat, sonra marka katmanı (theme.css Basecoat'u ezer). -->
+    <link rel="stylesheet" href="vendor/basecoat/basecoat.css" />
+    <link rel="stylesheet" href="popup/theme.css" />
   </head>
   <body>
-    <main class="app">
-      <header class="header">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 8h14l-1.3 10.4a2 2 0 0 1-2 1.6H8.3a2 2 0 0 1-2-1.6Z"></path>
-              <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
-            </svg>
-          </span>
+    <div class="os-app">
+      <header class="os-header">
+        <div class="os-brand">
+          <div class="os-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
           <div>
             <h1>Ortak Sepet</h1>
             <p id="appSubtitle"></p>
           </div>
         </div>
 
-        <div class="header-controls">
-          <div id="sortControl" class="menu">
-            <button
-              id="sortBtn"
-              class="sort-button"
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-controls="sortMenu"
-            >
-              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 4v16"></path>
-                <path d="m3 16 4 4 4-4"></path>
-                <path d="M17 20V4"></path>
-                <path d="m13 8 4-4 4 4"></path>
-              </svg>
+        <div class="os-header-actions">
+          <!-- Sıralama: Basecoat dropdown-menu; seçenekleri render.js çiziyor. -->
+          <div id="sortControl" class="dropdown-menu">
+            <button type="button" id="sortBtn" class="btn" data-variant="ghost" data-size="icon-sm" aria-haspopup="menu" aria-controls="sortMenu" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
             </button>
-
-            <div id="sortMenu" class="menu-popover" role="menu" hidden>
-              <p id="sortMenuTitle" class="popover-title"></p>
-              <div id="sortOptions" class="sort-options"></div>
+            <div id="sortPopover" data-popover aria-hidden="true" data-align="end">
+              <div role="menu" id="sortMenu" aria-labelledby="sortBtn">
+                <div role="heading" id="sortMenuTitle"></div>
+                <div id="sortOptions" role="group" aria-labelledby="sortMenuTitle"></div>
+              </div>
             </div>
           </div>
 
-          <div id="languageControl" class="language-control">
-            <button id="languageToggleBtn" class="language-toggle" type="button" aria-label="Dil değiştir">
-              <span class="language-code language-code-tr" aria-hidden="true">TR</span>
-              <span class="language-code language-code-en" aria-hidden="true">EN</span>
-              <span class="language-thumb" aria-hidden="true">
-                <svg class="language-flag language-flag-tr" viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice">
-                  <rect width="30" height="20" fill="#e30a17"></rect>
-                  <circle cx="12" cy="10" r="5.2" fill="#ffffff"></circle>
-                  <circle cx="13.7" cy="10" r="4.2" fill="#e30a17"></circle>
-                  <polygon points="18.1,10 20.9,9.1 19.2,11.5 19.2,8.5 20.9,10.9" fill="#ffffff"></polygon>
-                </svg>
-                <svg class="language-flag language-flag-en" viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice">
-                  <rect width="30" height="20" fill="#012169"></rect>
-                  <path d="M0 0 30 20M30 0 0 20" stroke="#ffffff" stroke-width="5"></path>
-                  <path d="M0 0 30 20M30 0 0 20" stroke="#c8102e" stroke-width="2"></path>
-                  <path d="M15 0v20M0 10h30" stroke="#ffffff" stroke-width="7"></path>
-                  <path d="M15 0v20M0 10h30" stroke="#c8102e" stroke-width="4"></path>
-                </svg>
-              </span>
+          <!-- Dil seçimi: Basecoat dropdown-menu -->
+          <div id="languageControl" class="dropdown-menu">
+            <button type="button" id="languageToggleBtn" class="btn" data-variant="outline" data-size="sm" aria-haspopup="menu" aria-controls="languageMenu" aria-expanded="false">
+              <span id="languageCurrent">TR</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
+            <div id="languagePopover" data-popover aria-hidden="true" data-align="end">
+              <div role="menu" id="languageMenu" aria-labelledby="languageToggleBtn">
+                <div role="menuitemradio" id="languageOptionTr" data-language="tr" aria-checked="true" lang="tr">Türkçe</div>
+                <div role="menuitemradio" id="languageOptionEn" data-language="en" aria-checked="false" lang="en">English</div>
+              </div>
+            </div>
           </div>
 
-          <button id="themeToggleBtn" class="theme-toggle" type="button" aria-label="Tema değiştir">
-            <span class="theme-track">
-              <span class="theme-half theme-half-light" aria-hidden="true">
-                <span class="theme-sky-cloud theme-cloud-one"></span>
-                <span class="theme-sky-cloud theme-cloud-two"></span>
-              </span>
-              <span class="theme-half theme-half-dark" aria-hidden="true">
-                <span class="theme-stars"></span>
-              </span>
-            </span>
-            <span class="theme-thumb" aria-hidden="true">
-              <span class="theme-thumb-sun"></span>
-              <span class="theme-thumb-moon"></span>
-            </span>
+          <!-- Tema: gündüz/gece anahtarı. Sol yarı gündüz göğü, sağ yarı gece;
+               topuz gündüzde güneş, gecede ay. Durum aria-checked'te. -->
+          <button type="button" role="switch" id="themeToggleBtn" class="os-daynight" aria-checked="false" data-side="bottom" data-align="end">
+            <span class="os-dn-day" aria-hidden="true"></span>
+            <span class="os-dn-night" aria-hidden="true"></span>
+            <span class="os-dn-thumb" aria-hidden="true"></span>
           </button>
         </div>
       </header>
 
-      <section id="summarySection" class="summary" aria-live="polite">
-        <div class="summary-main">
-          <div class="summary-heading">
-            <span id="selectedTotalPriceLabel" class="summary-label"></span>
-            <div id="currencySwitch" class="currency-switch" role="group">
-              <button type="button" data-display-currency="TRY"></button>
-              <button type="button" data-display-currency="GBP"></button>
-              <button type="button" data-display-currency="USD"></button>
-              <button type="button" data-display-currency="EUR"></button>
+      <main class="os-main">
+        <!-- Toplam kartı (gradyan; renk html[data-accent] ile değişir) -->
+        <section id="summarySection" class="os-total" aria-labelledby="selectedTotalPriceLabel">
+          <div class="os-total-top">
+            <span id="selectedTotalPriceLabel" class="os-total-label"></span>
+            <div id="currencySwitch" class="os-currency" role="group">
+              <button type="button" data-display-currency="TRY" aria-pressed="false"></button>
+              <button type="button" data-display-currency="GBP" aria-pressed="false"></button>
+              <button type="button" data-display-currency="USD" aria-pressed="false"></button>
+              <button type="button" data-display-currency="EUR" aria-pressed="false"></button>
             </div>
           </div>
-          <strong id="selectedTotalPrice" class="summary-total">0,00 TL</strong>
-          <p id="rateInfo" class="summary-rate" hidden></p>
-        </div>
-        <div class="summary-meta">
-          <div>
-            <span id="totalPriceLabel" class="summary-label"></span>
-            <strong id="totalPrice">0,00 TL</strong>
+          <p id="selectedTotalPrice" class="os-total-value" aria-live="polite">0,00 TL</p>
+          <p id="rateInfo" class="os-total-rate" hidden></p>
+          <div class="os-total-foot">
+            <div>
+              <span id="totalPriceLabel"></span>
+              <strong id="totalPrice">0,00 TL</strong>
+            </div>
+            <div>
+              <span id="itemCountLabel"></span>
+              <strong id="itemCount">0</strong>
+            </div>
           </div>
-          <div>
-            <span id="itemCountLabel" class="summary-label"></span>
-            <strong id="itemCount">0</strong>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="actionGrid" class="action-bar">
-        <div class="action-row">
-          <button id="addCurrentProductBtn" class="action-button action-button-primary" type="button">
-            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 5v14M5 12h14"></path>
-            </svg>
-            <span class="action-label"></span>
-          </button>
-          <button id="updateAllPricesBtn" class="action-button" type="button">
-            <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path>
-              <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path>
-              <path d="M21 3v5h-5M3 21v-5h5"></path>
-            </svg>
-            <span class="action-label"></span>
-          </button>
-
-          <div class="menu">
-            <button
-              id="moreActionsBtn"
-              class="icon-button"
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-controls="moreActionsMenu"
-            >
-              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="5" cy="12" r="1.2"></circle>
-                <circle cx="12" cy="12" r="1.2"></circle>
-                <circle cx="19" cy="12" r="1.2"></circle>
-              </svg>
+        <section id="actionGrid" class="os-action-area">
+          <div class="os-actions">
+            <button type="button" id="addCurrentProductBtn" class="btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <span class="action-label"></span>
+            </button>
+            <button type="button" id="updateAllPricesBtn" class="btn" data-variant="outline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              <span class="action-label"></span>
             </button>
 
-            <div id="moreActionsMenu" class="menu-popover" role="menu" hidden>
-              <button id="exportCsvBtn" class="menu-item" type="button" role="menuitem">
-                <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 3v12"></path>
-                  <path d="m7 10 5 5 5-5"></path>
-                  <path d="M5 21h14"></path>
-                </svg>
-                <span class="action-label"></span>
+            <!-- "…" menüsü: Basecoat dropdown-menu -->
+            <div id="moreActions" class="dropdown-menu">
+              <button type="button" id="moreActionsBtn" class="btn" data-variant="outline" data-size="icon" aria-haspopup="menu" aria-controls="moreActionsMenu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
               </button>
-              <button id="backupCartBtn" class="menu-item" type="button" role="menuitem">
-                <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 4h11l3 3v13H5z"></path>
-                  <path d="M8 4v5h7V4"></path>
-                  <path d="M8 20v-6h8v6"></path>
-                </svg>
-                <span class="action-label"></span>
-              </button>
-              <button id="restoreCartBtn" class="menu-item" type="button" role="menuitem">
-                <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 21V9"></path>
-                  <path d="m7 14 5-5 5 5"></path>
-                  <path d="M5 4h14"></path>
-                </svg>
-                <span class="action-label"></span>
-              </button>
-
-              <div id="footerActions" class="menu-group">
-                <button id="copyCartBtn" class="menu-item" type="button" role="menuitem"></button>
-                <button id="clearCartBtn" class="menu-item menu-item-danger" type="button" role="menuitem"></button>
-              </div>
-
-              <div class="menu-group menu-theme">
-                <p id="accentMenuTitle" class="popover-title"></p>
-                <div id="accentSwatches" class="accent-swatches"></div>
-                <label class="accent-custom">
-                  <span id="accentCustomLabel"></span>
-                  <input id="accentHueInput" class="accent-hue" type="range" min="0" max="359" step="1" />
-                </label>
+              <div id="moreActionsPopover" data-popover aria-hidden="true" data-align="end">
+                <div role="menu" id="moreActionsMenu" aria-labelledby="moreActionsBtn">
+                  <button type="button" role="menuitem" id="exportCsvBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+                    <span class="action-label"></span>
+                  </button>
+                  <button type="button" role="menuitem" id="backupCartBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>
+                    <span class="action-label"></span>
+                  </button>
+                  <button type="button" role="menuitem" id="restoreCartBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+                    <span class="action-label"></span>
+                  </button>
+                  <hr role="separator" />
+                  <div id="footerActions" role="group">
+                    <button type="button" role="menuitem" id="copyCartBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span class="action-label"></span></button>
+                    <button type="button" role="menuitem" id="clearCartBtn" data-variant="destructive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg><span class="action-label"></span></button>
+                  </div>
+                  <hr role="separator" />
+                  <div role="group" aria-labelledby="accentMenuTitle">
+                    <div role="heading" id="accentMenuTitle"></div>
+                    <div id="accentSwatches" class="os-swatches"></div>
+                    <label class="os-accent-custom">
+                      <span id="accentCustomLabel"></span>
+                      <input id="accentHueInput" class="os-accent-hue" type="range" min="0" max="359" step="1" />
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          <div id="updateProgress" class="os-progress" hidden>
+            <span id="updateProgressBar"></span>
+          </div>
+
+          <div class="os-toolbar">
+            <div class="os-group" role="group" aria-labelledby="groupByLabel">
+              <span id="groupByLabel"></span>
+              <button type="button" id="categorizeProductsBtn" class="btn" data-variant="outline" data-size="xs" aria-pressed="false">
+                <span class="action-label"></span>
+              </button>
+              <button type="button" id="installmentProductsBtn" class="btn" data-variant="outline" data-size="xs" aria-pressed="false">
+                <span class="action-label"></span>
+              </button>
+              <button type="button" id="countryGroupingBtn" class="btn" data-variant="outline" data-size="xs" aria-pressed="false">
+                <span class="action-label"></span>
+              </button>
+            </div>
+            <button type="button" id="compactViewBtn" class="btn" data-variant="outline" data-size="xs" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 10 7-7"/><path d="M20 10h-6V4"/><path d="m3 21 7-7"/><path d="M4 14h6v6"/></svg>
+              <span class="action-label"></span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Sepet / Aldıklarım: Basecoat tabs -->
+        <div id="listTabs" class="tabs os-tabs">
+          <nav role="tablist" aria-orientation="horizontal">
+            <button type="button" role="tab" id="cartTabBtn" class="cart-tab" aria-controls="cartPanel" aria-selected="true" tabindex="0">
+              <span class="action-label"></span>
+              <span id="cartCount" class="badge" data-variant="secondary">0</span>
+            </button>
+            <button type="button" role="tab" id="purchasedTabBtn" class="cart-tab" aria-controls="purchasedPanel" aria-selected="false" tabindex="-1">
+              <span class="action-label"></span>
+              <span id="purchasedCount" class="badge" data-variant="secondary">0</span>
+            </button>
+          </nav>
+
+          <div role="tabpanel" id="cartPanel" aria-labelledby="cartTabBtn" tabindex="-1">
+            <div id="permissionNotice" class="os-notice" role="status" aria-live="polite" hidden></div>
+            <div id="cartItems" class="item-group os-list"></div>
+            <button type="button" id="markPurchasedBtn" class="btn os-mark-purchased" data-variant="outline" data-size="sm"></button>
+          </div>
+
+          <div role="tabpanel" id="purchasedPanel" aria-labelledby="purchasedTabBtn" tabindex="-1" hidden>
+            <div id="purchasedSummary" class="os-purchased-summary"></div>
+            <div id="purchasedItems" class="item-group os-list"></div>
+          </div>
         </div>
+      </main>
 
-        <div id="updateProgress" class="progress" hidden>
-          <span id="updateProgressBar" class="progress-bar"></span>
-        </div>
-
-        <div class="view-row">
-          <span id="groupByLabel" class="view-row-label"></span>
-          <button id="categorizeProductsBtn" class="chip" type="button" aria-pressed="false">
-            <span class="action-label"></span>
-          </button>
-          <button id="installmentProductsBtn" class="chip" type="button" aria-pressed="false">
-            <span class="action-label"></span>
-          </button>
-          <button id="countryGroupingBtn" class="chip" type="button" aria-pressed="false">
-            <span class="action-label"></span>
-          </button>
-
-            <button id="compactViewBtn" class="chip chip-compact" type="button" aria-pressed="false">
-            <svg class="action-icon compact-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <g class="compact-mode-enter-icon">
-                <path d="M4.25 4.25 10.5 10.5"></path>
-                <path d="M10.5 5.6v4.9H5.6"></path>
-                <path d="M19.75 4.25 13.5 10.5"></path>
-                <path d="M18.4 10.5h-4.9V5.6"></path>
-                <path d="M4.25 19.75 10.5 13.5"></path>
-                <path d="M5.6 13.5h4.9v4.9"></path>
-                <path d="M19.75 19.75 13.5 13.5"></path>
-                <path d="M13.5 18.4v-4.9h4.9"></path>
-              </g>
-              <g class="compact-mode-exit-icon">
-                <path d="M10.5 10.5 4.25 4.25"></path>
-                <path d="M4.25 9.15v-4.9h4.9"></path>
-                <path d="M13.5 10.5 19.75 4.25"></path>
-                <path d="M14.85 4.25h4.9v4.9"></path>
-                <path d="M10.5 13.5 4.25 19.75"></path>
-                <path d="M4.25 14.85v4.9h4.9"></path>
-                <path d="M13.5 13.5 19.75 19.75"></path>
-                <path d="M14.85 19.75h4.9v-4.9"></path>
-              </g>
-            </svg>
-            <span class="action-label"></span>
-          </button>
-
-        </div>
-      </section>
-
-      <section class="cart-section">
-        <div class="cart-tabs" role="tablist">
-          <button
-            id="cartTabBtn"
-            class="cart-tab is-active"
-            type="button"
-            role="tab"
-            aria-selected="true"
-            aria-controls="cartPanel"
-          ></button>
-          <button
-            id="purchasedTabBtn"
-            class="cart-tab"
-            type="button"
-            role="tab"
-            aria-selected="false"
-            aria-controls="purchasedPanel"
-          ></button>
-        </div>
-
-        <div id="cartPanel" role="tabpanel" aria-labelledby="cartTabBtn">
-          <div id="permissionNotice" class="permission-notice" role="status" aria-live="polite" hidden></div>
-          <div id="cartItems" class="item-list"></div>
-          <button id="markPurchasedBtn" class="mark-purchased-button" type="button"></button>
-        </div>
-
-        <div id="purchasedPanel" role="tabpanel" aria-labelledby="purchasedTabBtn" hidden>
-          <div id="purchasedSummary" class="purchased-summary"></div>
-          <div id="purchasedItems" class="item-list"></div>
-        </div>
-      </section>
-
-      <div class="status-row">
-        <p id="status" class="status" role="status" aria-live="polite"></p>
-        <button id="undoBtn" class="undo-button" type="button" hidden></button>
-        <button id="dismissStatusBtn" class="status-close" type="button">
-          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6l12 12M18 6 6 18"></path>
-          </svg>
+      <div class="os-status" hidden>
+        <p id="status" role="status" aria-live="polite"></p>
+        <button type="button" id="undoBtn" class="btn" data-variant="secondary" data-size="xs" hidden></button>
+        <button type="button" id="dismissStatusBtn" class="btn" data-variant="ghost" data-size="icon-xs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>
-    </main>
+    </div>
 
+    <!-- Sepet satırı: render.js klonlayıp dolduruyor (innerHTML yok). -->
+    <template id="cartItemTemplate">
+      <article class="item os-item cart-item" data-variant="outline">
+        <input type="checkbox" class="input os-item-check select-checkbox" />
+        <figure class="os-item-media">
+          <svg class="os-item-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        </figure>
+        <section>
+          <h3 class="os-item-title cart-title"></h3>
+          <div class="os-item-meta">
+            <p class="os-item-store"></p>
+            <div class="os-item-amount">
+              <strong class="os-item-price"></strong>
+              <small class="os-item-unit" hidden></small>
+              <small class="os-item-converted" hidden></small>
+              <small class="os-item-change" hidden><span class="os-price-delta"></span><s class="os-previous-price"></s></small>
+            </div>
+          </div>
+          <div class="os-item-badges"></div>
+        </section>
+        <footer>
+          <div class="button-group os-qty" role="group">
+            <button type="button" class="btn" data-variant="outline" data-size="icon-sm" data-qty="decrease">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+            </button>
+            <output class="os-qty-value"></output>
+            <button type="button" class="btn" data-variant="outline" data-size="icon-sm" data-qty="increase">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+          </div>
+          <div class="os-item-actions cart-actions"></div>
+        </footer>
+      </article>
+    </template>
+
+    <!-- Aldıklarım satırı -->
+    <template id="purchaseItemTemplate">
+      <article class="item os-item os-item-bought cart-item cart-item-purchase" data-variant="outline" data-size="sm">
+        <figure class="os-item-media">
+          <svg class="os-item-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        </figure>
+        <section>
+          <h3 class="os-item-title cart-title"></h3>
+          <p class="os-item-store"></p>
+          <p class="purchase-date"></p>
+        </section>
+        <aside>
+          <div class="os-item-amount">
+            <strong class="os-item-price"></strong>
+            <small class="os-item-unit" hidden></small>
+          </div>
+          <div class="os-item-actions cart-actions"></div>
+        </aside>
+      </article>
+    </template>
+
+    <!-- Kart düğmelerinin simgeleri: render.js buradan kopyalıyor. -->
+    <template id="iconTemplates">
+      <svg data-icon="purchase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><path d="M3.29 7 12 12l8.71-5"/><path d="M12 22V12"/></svg>
+      <svg data-icon="open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      <svg data-icon="edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+      <svg data-icon="remove" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      <svg data-icon="restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+      <svg data-icon="key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>
+      <svg data-icon="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      <svg data-icon="truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+      <svg data-icon="cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </template>
+
+    <!-- Basecoat davranışları (yalnızca gereken bileşenler); popup betiklerinden önce. -->
+    <script src="vendor/basecoat/js/basecoat.js"></script>
+    <script src="vendor/basecoat/js/dropdown-menu.js"></script>
+    <script src="vendor/basecoat/js/tabs.js"></script>
     <script src="browser-polyfill.js"></script>
     <script src="shared/category.js"></script>
     <script src="shared/cart.js"></script>

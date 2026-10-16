@@ -1,0 +1,1290 @@
+/*
+ * Ortak Sepet — Basecoat üstüne marka katmanı.
+ *
+ * vendor/basecoat/basecoat.css'ten SONRA yüklenmeli. Basecoat kurallarını
+ * @layer içinde veriyor; buradaki kurallar katmansız olduğu için onları her
+ * zaman ezer, !important'a gerek kalmıyor.
+ *
+ * Basecoat'un hazır CSS'inde Tailwind yardımcı class'ları (flex, gap-2…) yok,
+ * yalnızca bileşenler var. Yerleşim bu dosyada, os- önekli class'larla.
+ * JS yalnızca <html>'e attribute veriyor: koyu tema .dark, vurgu rengi
+ * data-accent, kompakt görünüm data-density="compact".
+ */
+
+/* Font eklentiyle birlikte geliyor: tek ağ çağrısı kur servisi kalsın diye
+   Google Fonts kullanılmıyor. Basecoat "Geist Sans" adını bekliyor. */
+@font-face {
+  font-family: "Geist Sans";
+  src: url("../vendor/fonts/geist/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --brand: #c2410c;
+  --brand-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #a16207;
+  --warning-soft: #fef9c3;
+
+  /* Toplam kartı gradyanı: [başlangıç, orta, bitiş] + koyu ton (seçili kur
+     düğmesinin yazısı). Beyaz yazı okunur kalsın diye tonlar koyu.
+     Varsayılan turuncu; kaydırıcıyla seçilen ton bunları inline veriyor. */
+  --os-g1: #b91c1c;
+  --os-g2: #c2410c;
+  --os-g3: #d05a12;
+  --os-ink: #9a3412;
+}
+
+.dark {
+  --brand: #ea580c;
+  --success: #4ade80;
+  --warning: #facc15;
+  --warning-soft: rgb(250 204 21 / 0.1);
+}
+
+html[data-accent="red"]      { --os-g1: #7f1d1d; --os-g2: #b91c1c; --os-g3: #dc2626; --os-ink: #991b1b; }
+html[data-accent="indigo"]   { --os-g1: #4c1d95; --os-g2: #6d28d9; --os-g3: #7c3aed; --os-ink: #5b21b6; }
+html[data-accent="blue"]     { --os-g1: #1e3a8a; --os-g2: #1d4ed8; --os-g3: #0369a1; --os-ink: #1e40af; }
+html[data-accent="teal"]     { --os-g1: #134e4a; --os-g2: #0f766e; --os-g3: #0e7490; --os-ink: #115e59; }
+html[data-accent="green"]    { --os-g1: #14532d; --os-g2: #166534; --os-g3: #15803d; --os-ink: #14532d; }
+html[data-accent="pink"]     { --os-g1: #86198f; --os-g2: #a21caf; --os-g3: #be185d; --os-ink: #86198f; }
+html[data-accent="graphite"] { --os-g1: #020617; --os-g2: #1e293b; --os-g3: #334155; --os-ink: #0f172a; }
+
+/* ---------- Sayfa ---------- */
+
+html,
+body {
+  margin: 0;
+}
+
+/* Popup içeriği kadar uzuyor; tarayıcı 600 px'te kesip sayfayı kaydırıyor.
+   Liste ayrı bir kaydırma alanında değil, çünkü açılır menüler o alanın
+   içinde kalıp kırpılıyordu. Üst bar ve alttaki bildirim yapışkan. */
+body {
+  width: 420px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.os-app {
+  display: flex;
+  flex-direction: column;
+}
+
+.os-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Üst bar ---------- */
+
+.os-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.os-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.os-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--os-g1), var(--os-g3));
+}
+
+.os-logo svg {
+  width: 18px;
+  height: 18px;
+}
+
+.os-brand h1 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.os-brand p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+
+.os-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Varsayılandan farklı bir sıralama seçiliyse simgenin köşesinde nokta */
+#sortBtn[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+#sortControl [data-popover] {
+  min-width: 196px;
+}
+
+#languageControl [data-popover] {
+  min-width: 132px;
+}
+
+/* ---------- Gündüz/gece anahtarı ----------
+   Sol yarı gündüz göğü + bulutlar, sağ yarı gece + yıldızlar.
+   Topuz açık temada solda güneş, koyu temada sağda kraterli ay.
+   Durum aria-checked'ten okunuyor. */
+
+.os-daynight {
+  position: relative;
+  flex-shrink: 0;
+  width: 68px;
+  height: 32px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #2b313d;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 4px rgb(0 0 0 / 0.25);
+}
+
+.os-daynight:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.os-dn-day,
+.os-dn-night {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  overflow: hidden;
+}
+
+/* Gündüz: sarıdan maviye gökyüzü, solda hafif güneş parıltısı, altta bulutlar */
+.os-dn-day {
+  left: 0;
+  background:
+    radial-gradient(circle at 22% 22%, rgb(255 255 255 / 0.45) 0 4px, transparent 9px),
+    linear-gradient(180deg, #f1e27c 0%, #c9dc9f 38%, #8ccbef 66%, #bfe4f8 100%);
+}
+
+.os-dn-day::before,
+.os-dn-day::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.os-dn-day::before {
+  left: 4px;
+  right: -5px;
+  bottom: -6px;
+  height: 15px;
+}
+
+.os-dn-day::after {
+  left: 13px;
+  bottom: 4px;
+  width: 16px;
+  height: 11px;
+  box-shadow: -9px 4px 0 -1px #ffffff, 10px 2px 0 -2px #ffffff;
+}
+
+/* Gece: koyu gri-mavi, yıldızlar */
+.os-dn-night {
+  right: 0;
+  background:
+    radial-gradient(circle at 14% 22%, #ffffff 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 14% 80%, #ffffff 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 34% 34%, rgb(255 255 255 / 0.7) 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 30% 62%, #ffffff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 52% 18%, rgb(255 255 255 / 0.6) 0 0.7px, transparent 1.3px),
+    linear-gradient(180deg, #4a515d 0%, #2b313d 100%);
+}
+
+/* Topuz: varsayılan (açık tema) güneş */
+.os-dn-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 32%, #fff7c2 0%, #f8d24a 55%, #e9a91a 100%);
+  box-shadow: 0 0 0 3px rgb(255 226 120 / 0.35), 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: transform 0.35s cubic-bezier(0.3, 1.3, 0.6, 1), background 0.35s, box-shadow 0.35s;
+}
+
+.os-dn-thumb::before,
+.os-dn-thumb::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: #8b93a3;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+/* Büyük ve küçük krater */
+.os-dn-thumb::before {
+  top: 5px;
+  right: 4px;
+  width: 11px;
+  height: 11px;
+}
+
+.os-dn-thumb::after {
+  bottom: 4px;
+  left: 6px;
+  width: 5px;
+  height: 5px;
+}
+
+/* Koyu tema: topuz sağa kayar, aya döner */
+.os-daynight[aria-checked="true"] .os-dn-thumb {
+  transform: translateX(36px);
+  background: radial-gradient(circle at 35% 30%, #eef0f4 0%, #c3c9d3 60%, #a3abb8 100%);
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.06), 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+.os-daynight[aria-checked="true"] .os-dn-thumb::before,
+.os-daynight[aria-checked="true"] .os-dn-thumb::after {
+  opacity: 1;
+}
+
+/* İpucu anahtarın içinde kırpılmasın: overflow yalnızca yarılarda */
+.os-daynight[data-tooltip] {
+  overflow: visible;
+}
+
+.os-daynight .os-dn-day {
+  border-radius: 999px 0 0 999px;
+}
+
+.os-daynight .os-dn-night {
+  border-radius: 0 999px 999px 0;
+}
+
+/* ---------- Kaydırılan alan ---------- */
+
+.os-main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Dikey kaydırma çubuğu 420 px'in içinden yer alıyor; yatay çubuk çıkmasın. */
+html {
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ---------- Toplam kartı ---------- */
+
+.os-total {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  color: #ffffff;
+  /* Kenarlık ve renkli gölge yok: yarı saydam kenarlık gradyanın üstünde açık
+     bir çizgi, renkli gölge de koyu zeminde kahverengimsi bir hale bırakıyordu. */
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(255 255 255 / 0.14), transparent 55%),
+    linear-gradient(120deg, var(--os-g1) 0%, var(--os-g2) 55%, var(--os-g3) 100%);
+}
+
+.os-total-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.os-total-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(255 255 255 / 0.88);
+}
+
+.os-total-label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.os-currency {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.2);
+}
+
+.os-currency button {
+  height: 24px;
+  min-width: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.85);
+  font: 500 12px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.os-currency button:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.os-currency button[aria-pressed="true"] {
+  background: #ffffff;
+  color: var(--os-ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.os-currency button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+/* Birden çok para birimi aynı boyutta: "81.238,00 TL + £170.95"; satır
+   yalnızca parçaların arasından kırılıyor (render.js → setSelectedTotal). */
+.os-total-value {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.os-total-value span {
+  white-space: nowrap;
+}
+
+.os-total-rate {
+  margin: -8px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: rgb(255 255 255 / 0.8);
+}
+
+.os-total-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(255 255 255 / 0.22);
+}
+
+.os-total-foot > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.os-total-foot > div:last-child {
+  align-items: flex-end;
+}
+
+.os-total-foot span {
+  font-size: 12px;
+  line-height: 16px;
+  color: rgb(255 255 255 / 0.85);
+}
+
+.os-total-foot strong {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- İşlemler ---------- */
+
+.os-action-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.os-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.os-actions > .btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.os-actions > .btn .action-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Güncelleme sürerken simge dönüyor; düğme "durdur" görevi görüyor. */
+#updateAllPricesBtn.is-busy svg {
+  animation: os-spin 1s linear infinite;
+}
+
+#moreActions [data-popover] {
+  min-width: 228px;
+}
+
+/* Menüdeki tema renkleri: Basecoat menü öğelerini tam genişlik satır
+   yapıyor, burada küçük renk kutularına çeviriyoruz. */
+.os-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 4px 8px 8px;
+}
+
+.dropdown-menu .os-swatches .os-swatch {
+  width: auto;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  cursor: pointer;
+}
+
+.dropdown-menu .os-swatches .os-swatch:hover,
+.dropdown-menu .os-swatches .os-swatch.active {
+  outline-color: var(--ring);
+}
+
+.dropdown-menu .os-swatches .os-swatch[aria-checked="true"] {
+  outline-color: var(--foreground);
+}
+
+.os-swatch[data-accent="indigo"]   { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+.os-swatch[data-accent="blue"]     { background: linear-gradient(135deg, #1e3a8a, #0369a1); }
+.os-swatch[data-accent="teal"]     { background: linear-gradient(135deg, #134e4a, #0e7490); }
+.os-swatch[data-accent="green"]    { background: linear-gradient(135deg, #14532d, #15803d); }
+.os-swatch[data-accent="orange"]   { background: linear-gradient(135deg, #b91c1c, #d05a12); }
+.os-swatch[data-accent="pink"]     { background: linear-gradient(135deg, #86198f, #be185d); }
+.os-swatch[data-accent="red"]      { background: linear-gradient(135deg, #7f1d1d, #dc2626); }
+.os-swatch[data-accent="graphite"] { background: linear-gradient(135deg, #020617, #334155); }
+
+/* Özel renk: tonu seçen kaydırıcı, izi gökkuşağı */
+.os-accent-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 8px 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.os-accent-hue {
+  width: 100%;
+  height: 10px;
+  margin: 0;
+  border-radius: 999px;
+  appearance: none;
+  background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  cursor: pointer;
+}
+
+.os-accent-hue::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  appearance: none;
+  background: transparent;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+
+.os-accent-hue::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+
+.os-accent-hue.is-active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--foreground);
+}
+
+.os-accent-hue.is-active::-moz-range-thumb {
+  box-shadow: 0 0 0 2px var(--foreground);
+}
+
+/* Fiyat güncellemesinin ilerlemesi */
+.os-progress {
+  height: 4px;
+  margin-top: -4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--muted);
+}
+
+.os-progress > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--os-g1), var(--os-g3));
+  transition: width 300ms ease;
+}
+
+/* ---------- Grupla + Kompakt ---------- */
+
+.os-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.os-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.os-group > span {
+  margin-right: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+/* Basecoat'ta toggle bileşeni yok; outline düğmenin basılı hâli */
+.btn[data-variant="outline"][aria-pressed="true"],
+.btn[data-variant="outline"][aria-pressed="true"]:hover {
+  background: var(--muted);
+  border-color: var(--muted);
+  color: var(--foreground);
+}
+
+.btn[data-variant="outline"][aria-pressed="false"] {
+  color: var(--muted-foreground);
+}
+
+/* ---------- Sekmeler ---------- */
+
+.os-tabs {
+  gap: 12px;
+}
+
+.os-tabs > [role="tablist"] {
+  width: 100%;
+}
+
+.os-tabs [role="tab"] {
+  gap: 6px;
+}
+
+.os-tabs [role="tab"] .badge {
+  font-variant-numeric: tabular-nums;
+}
+
+.os-tabs [role="tab"][aria-selected="true"] .badge {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Pasif sekmenin rozeti sekme zemininde kaybolmasın */
+.os-tabs [role="tab"][aria-selected="false"] .badge {
+  background: var(--background);
+  color: var(--muted-foreground);
+}
+
+.os-tabs > [role="tabpanel"] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.os-tabs > [role="tabpanel"][hidden] {
+  display: none;
+}
+
+.os-mark-purchased {
+  width: 100%;
+}
+
+/* ---------- İzin uyarısı ---------- */
+
+.os-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid color-mix(in oklab, var(--warning) 35%, transparent);
+  border-radius: 12px;
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.os-notice p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.os-notice .permission-notice-text {
+  font-weight: 600;
+}
+
+.os-notice .permission-notice-hint {
+  opacity: 0.85;
+}
+
+.os-notice .grant-permission-button {
+  margin-top: 6px;
+}
+
+/* ---------- Ürün listesi ---------- */
+
+.os-list {
+  gap: 8px;
+}
+
+.os-list:empty {
+  display: none;
+}
+
+.os-item {
+  position: relative;
+  isolation: isolate;
+  align-items: flex-start;
+  border-radius: 12px;
+  background: var(--background);
+  transition: border-color 200ms ease;
+}
+
+.item.os-item:not([data-size]) {
+  gap: 12px;
+  padding: 12px;
+}
+
+/* Kategorili ürünün solunda kategori renginde ince çizgi */
+.os-item.cart-item-with-category::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: -1px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--category-color);
+}
+
+/* Seçim kutusu marka renginde */
+.os-item-check {
+  margin-top: 2px;
+}
+
+.os-item-check.input[type="checkbox"]:checked {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-foreground);
+}
+
+/* Seçili olmayan ürün soluk görünür */
+.os-item.cart-item-unselected > :not(.os-item-check) {
+  opacity: 0.55;
+}
+
+.os-item.cart-item-update-failed {
+  border-color: color-mix(in oklab, var(--destructive) 45%, transparent);
+}
+
+/* Eksik izin hata değil, kullanıcının tek tıkla düzeltebileceği bir durum;
+   başarısız güncellemenin kırmızısından ayrı dursun diye uyarı sarısı. */
+.os-item.cart-item-needs-permission {
+  border-color: color-mix(in oklab, var(--warning) 45%, transparent);
+  background: color-mix(in oklab, var(--warning-soft) 60%, var(--background));
+}
+
+.item > figure.os-item-media {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  overflow: hidden;
+}
+
+.item > figure.os-item-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.os-item-media img:not([hidden]) + .os-item-placeholder {
+  display: none;
+}
+
+.os-item-placeholder {
+  width: 20px;
+  height: 20px;
+}
+
+.os-item > section {
+  min-width: 0;
+  gap: 4px;
+}
+
+/* Basecoat başlığı tek satıra kesiyor; ürün adları uzun olduğu için iki satır */
+.item .os-item-title {
+  display: -webkit-box;
+  width: auto;
+  margin: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.os-item-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item .os-item-store {
+  margin: 0;
+  min-width: 0;
+  display: block;
+  font-size: 12px;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-item-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.os-item-price {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.os-item-price.os-item-price-missing {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.os-item-unit,
+.os-item-converted,
+.os-item-change {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.os-item-change {
+  display: flex;
+  gap: 4px;
+}
+
+.os-price-delta[data-direction="down"] {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.os-price-delta[data-direction="up"] {
+  color: var(--destructive);
+  font-weight: 600;
+}
+
+.os-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.os-item-badges .badge {
+  max-width: 100%;
+}
+
+.os-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.badge[data-tone="success"] .os-dot {
+  background: var(--success);
+}
+
+.badge.os-badge-shipping[data-tone="success"] {
+  color: var(--success);
+}
+
+.badge[data-tone="warning"] {
+  border-color: color-mix(in oklab, var(--warning) 40%, transparent);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.badge[data-tone="danger"] {
+  border-color: color-mix(in oklab, var(--destructive) 40%, transparent);
+  color: var(--destructive);
+}
+
+.os-badge-category .os-dot {
+  background: var(--category-color);
+}
+
+.os-item > footer {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.os-qty > output {
+  display: flex;
+  align-items: center;
+  min-width: 34px;
+  justify-content: center;
+  border-block: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.dark .os-qty > output {
+  border-color: var(--input);
+  background: color-mix(in oklab, var(--input) 30%, transparent);
+}
+
+.os-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.os-item-actions .btn {
+  color: var(--muted-foreground);
+}
+
+.os-item-actions .os-action-purchase:hover {
+  color: var(--success);
+}
+
+.os-item-actions .os-action-remove:hover {
+  color: var(--destructive);
+}
+
+.os-item-actions .grant-permission-button,
+.os-notice .grant-permission-button {
+  background: var(--warning);
+  color: var(--background);
+}
+
+/* Fiyat güncellemesi sırasında kart soldan sağa doluyor. Aşamaların gerçek
+   süresi bilinmiyor; her aşama dolguyu bir adım ileri götürüyor, beklerken
+   dolgu nabız gibi atıyor. Dolgu kartın arkasında (isolation + z-index -1),
+   böylece kart overflow: hidden olmadan da köşeleri taşmıyor ve düğme
+   ipuçları kırpılmıyor. */
+.os-item::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--brand) 6%, transparent), color-mix(in oklab, var(--brand) 16%, transparent)) no-repeat;
+  background-size: 0% 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: background-size 900ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 300ms ease;
+}
+
+.os-item[data-update-phase]::after {
+  opacity: 1;
+}
+
+.os-item[data-update-phase="opening"]::after {
+  background-size: 14% 100%;
+}
+
+.os-item[data-update-phase="loading"]::after {
+  background-size: 48% 100%;
+}
+
+.os-item[data-update-phase="reading"]::after {
+  background-size: 82% 100%;
+}
+
+.os-item[data-update-phase="done"]::after {
+  background-size: 100% 100%;
+  opacity: 0;
+  transition: background-size 400ms ease, opacity 500ms ease 400ms;
+}
+
+.os-item[data-update-phase="opening"]::after,
+.os-item[data-update-phase="loading"]::after,
+.os-item[data-update-phase="reading"]::after {
+  animation: os-fill-pulse 1.4s ease-in-out infinite;
+}
+
+.os-item[data-update-phase]:not([data-update-phase="done"]) {
+  border-color: color-mix(in oklab, var(--brand) 35%, transparent);
+}
+
+/* Yeni eklenen ve fiyatı az önce değişen ürün bir an öne çıkıyor. */
+.os-item.is-new {
+  animation: os-item-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.os-item.is-updated {
+  animation: os-item-flash 1600ms ease;
+}
+
+/* ---------- Gruplar ---------- */
+
+.category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-group + .category-group {
+  margin-top: 8px;
+}
+
+.category-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px;
+}
+
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.category-group-colored .category-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--category-color);
+}
+
+.category-meta {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------- Aldıklarım ---------- */
+
+.os-purchased-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.os-purchased-summary:empty {
+  display: none;
+}
+
+.os-purchased-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.os-purchased-summary span {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.os-purchased-summary strong {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.os-item-bought {
+  align-items: center;
+}
+
+.item.os-item-bought > figure.os-item-media {
+  width: 40px;
+  height: 40px;
+}
+
+.os-item-bought > section {
+  gap: 0;
+}
+
+.item.os-item-bought .os-item-title {
+  -webkit-line-clamp: 1;
+}
+
+.item.os-item-bought .os-item-store,
+.item.os-item-bought .purchase-date {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.os-item-bought > aside {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.os-item-bought .os-item-price {
+  font-size: 14px;
+}
+
+/* Boş durum */
+.os-empty {
+  padding: 28px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+}
+
+.os-empty h3 {
+  margin: 8px 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.os-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.os-empty figure {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.os-empty figure svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Alttaki bildirim ---------- */
+
+.os-status {
+  position: sticky;
+  z-index: 10;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px 12px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 12px;
+  background: var(--foreground);
+  color: var(--background);
+  box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.45);
+  animation: os-toast-in 200ms ease;
+}
+
+.os-status p {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.os-status .btn[data-variant="ghost"] {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.os-status .btn[data-variant="ghost"]:hover {
+  background: color-mix(in oklab, var(--background) 16%, transparent);
+  opacity: 1;
+}
+
+/* ---------- Kompakt mod ---------- */
+
+html[data-density="compact"] .os-item:not(.os-item-bought) {
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+html[data-density="compact"] .os-item > figure,
+html[data-density="compact"] .os-item .os-item-badges,
+html[data-density="compact"] .os-item:not(.os-item-bought) > footer {
+  display: none;
+}
+
+html[data-density="compact"] .os-item-check {
+  margin-top: 0;
+}
+
+html[data-density="compact"] .item .os-item-title {
+  -webkit-line-clamp: 1;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+html[data-density="compact"] .item .os-item-store {
+  line-height: 18px;
+}
+
+html[data-density="compact"] .os-item-price {
+  font-size: 14px;
+  line-height: 18px;
+}
+
+html[data-density="compact"] .os-list,
+html[data-density="compact"] .category-group {
+  gap: 6px;
+}
+
+/* ---------- Hareket ---------- */
+
+@keyframes os-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes os-fill-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes os-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes os-item-flash {
+  20% {
+    border-color: var(--brand);
+  }
+}
+
+@keyframes os-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-dn-thumb,
+  .os-item,
+  .os-item::after,
+  .os-status,
+  .os-progress > span {
+    transition: none;
+    animation: none;
+  }
+
+  #updateAllPricesBtn.is-busy svg {
+    animation: none;
+  }
+}
