@@ -15,8 +15,9 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
   Ürün adı ve fiyat sayfanın ilk hâlinde zaten var; artık sayfanın tamamen
   yüklenmesi beklenmiyor. Aylık ödeme kutusu ekrana geldiği anda "Taksit var"
-  okunuyor ve sekme kapanıyor. Kutusu hiç çıkmayan üründe bekleme süresi
-  değişmedi, sıradaki ürünleri de yine durdurmuyor.
+  okunuyor ve sekme kapanıyor. Kutusu hiç çıkmayan üründe sekme on saniye
+  yerine sayfa açıldıktan beş saniye sonra kapanıyor; bu bekleme sıradaki
+  ürünleri yine durdurmuyor.
 
 ## 1.17.1 — 17 Ekim 2026
 

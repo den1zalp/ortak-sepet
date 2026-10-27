@@ -89,7 +89,7 @@ async function waitForUkProductFromPage(maxWaitMs = 2200) {
   return normalizeProduct(latestProduct);
 }
 
-const AMAZON_FINANCE_SETTLE_MS = 10000;
+const AMAZON_FINANCE_SETTLE_MS = 5000;
 
 // Resolves with the finance offer as soon as Amazon draws the monthly payment
 // box, or with null once the page is untilPageAgeMs old. A MutationObserver
