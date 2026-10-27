@@ -2,6 +2,23 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.17.4 — 27 Ekim 2026
+
+### Düzeltilenler
+
+* **Sonradan taksit gelen Amazon UK ürünü güncellemede "Taksit yok" kalıyordu.**
+  Amazon aylık ödeme satırını ("Or £20.00/month (3 months) at no interest
+  with Amazon") sayfayla birlikte gönderiyor ama ekranda ancak kendi
+  script'i bir istek daha attıktan sonra gösteriyor. Fiyat güncellemesinin
+  arka planda açtığı sekmede bu hiç olmadığından satır görünmüyor, ürün
+  ancak sepete yeniden eklenince "Taksit var" oluyordu. Artık satır,
+  ekranda gösterilmesi beklenmeden ödeme seçenekleri kutusundan okunuyor.
+* **Amazon UK sekmeleri fiyat güncellemesinde hemen kapanıyor.** Ödeme
+  seçenekleri kutusu sayfadaysa taksit olup olmadığı ilk okumada kesin;
+  taksitsiz ürünlerde de beklenmiyor. 1.17.3'te bu ürünlerde sekme, Firefox
+  arka plan sekmesinin sayacını ertelediği için 10 saniyeye kadar açık
+  kalabiliyordu.
+
 ## 1.17.3 — 27 Ekim 2026
 
 ### Düzeltilenler
