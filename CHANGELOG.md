@@ -2,6 +2,22 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.17.2 — 27 Ekim 2026
+
+### Düzeltilenler
+
+* **Fiyat güncellemesinde Amazon UK sekmeleri geç kapanıyordu.** Güncelleme,
+  Amazon UK sayfasının reklamları ve görselleriyle birlikte tamamen yüklenmesini
+  bekliyor, sonra aylık ödeme kutusuna ("Or £16.44/month (3 months) at no
+  interest…") 400 ms'de bir bakıyordu. Arka plandaki sekmede tarayıcı
+  zamanlayıcıları yavaşlattığı için bu kontroller saniyeyi aşıyor, kutu çıktıktan
+  sonra da sekme bir süre açık kalıyordu.
+
+  Ürün adı ve fiyat sayfanın ilk hâlinde zaten var; artık sayfanın tamamen
+  yüklenmesi beklenmiyor. Aylık ödeme kutusu ekrana geldiği anda "Taksit var"
+  okunuyor ve sekme kapanıyor. Kutusu hiç çıkmayan üründe bekleme süresi
+  değişmedi, sıradaki ürünleri de yine durdurmuyor.
+
 ## 1.17.1 — 17 Ekim 2026
 
 ### Yenilikler
