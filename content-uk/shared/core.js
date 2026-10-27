@@ -475,6 +475,23 @@ function stripZeroWidth(text) {
   return String(text || "").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
 }
 
+// The payment options box under an Amazon UK price. When the account is
+// offered monthly payments, the line ("Or £20.00/month (3 months) at no
+// interest with Amazon") is in the page's HTML inside this box, behind a
+// skeleton loader; the page's script only reveals it after a request of its
+// own, which never completes in the background tab the price refresh opens.
+// So the line is read from the box's markup whether it is shown or not. Only
+// this box's message counts: the product column also holds hidden plan
+// templates. A box without a message means no offer, and the answer is final.
+const AMAZON_UK_PAYMENT_BOX = "#paymentOptions_PriceblockMessaging_feature_div";
+
+function hasAmazonUkPaymentBoxOffer() {
+  const messages = document.querySelectorAll(`${AMAZON_UK_PAYMENT_BOX} .price-block-message`);
+  const text = cleanText(stripZeroWidth(Array.from(messages, (message) => message.textContent).join(" ")));
+
+  return AMAZON_UK_FINANCE_OFFER_PATTERN.test(text);
+}
+
 // Amazon has no finance widget of its own on most listings, while its product
 // columns still hold hidden monthly-plan templates ("Includes initial monthly
 // payment", class aok-hidden). innerText leaves hidden elements out, so only an
@@ -492,7 +509,8 @@ function findAmazonUkFinanceInfo() {
   if (zones.length === 0) return null;
 
   const visibleText = cleanText(stripZeroWidth(zones.map((zone) => zone.innerText || "").join(" ")));
-  const hasOffer = AMAZON_UK_FINANCE_OFFER_PATTERN.test(visibleText);
+  const hasOffer =
+    hasAmazonUkPaymentBoxOffer() || AMAZON_UK_FINANCE_OFFER_PATTERN.test(visibleText);
 
   return hasOffer
     ? {

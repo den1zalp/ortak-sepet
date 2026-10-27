@@ -93,19 +93,29 @@ const AMAZON_FINANCE_SETTLE_MS = 5000;
 
 // The UK scripts load at document_start so that an Amazon page can be read
 // while it is still streaming in: on its 2 MB product page the title, the
-// price and the monthly payment line under it ("Or £16.44/month (3 months) at
-// no interest", sent in the HTML to eligible accounts) are parsed about a
-// second before DOMContentLoaded, with the page's CSS already applied, so the
-// hidden plan templates stay hidden. A read that comes in that early waits
-// until the parser is past the price block, which the first of these sections
-// after it marks.
-const AMAZON_UK_AFTER_PRICE_BLOCK =
-  "#inemi_feature_div, #tradeInPriceBlock_feature_div, #featurebullets_feature_div";
+// price and the payment options box under it (AMAZON_UK_PAYMENT_BOX, which
+// holds the monthly payment line) are parsed about a second before
+// DOMContentLoaded, with the page's CSS already applied, so the hidden plan
+// templates elsewhere in the column stay hidden.
+//
+// A read that comes in that early waits until the parser is past the box:
+// once an element follows the box, the box is complete. Section ids around it
+// are no marker; #inemi_feature_div turns up several times on a page, the
+// first of them before the box. A page without the box is read at
+// DOMContentLoaded.
+function isAmazonUkPaymentBoxParsed() {
+  const box = document.querySelector(AMAZON_UK_PAYMENT_BOX);
 
-function waitForAmazonUkPriceBlock() {
+  for (let element = box; element && element !== document.body; element = element.parentElement) {
+    if (element.nextElementSibling) return true;
+  }
+
+  return false;
+}
+
+function waitForAmazonUkPaymentBox() {
   return new Promise((resolve) => {
-    const isReady = () =>
-      document.readyState !== "loading" || Boolean(document.querySelector(AMAZON_UK_AFTER_PRICE_BLOCK));
+    const isReady = () => document.readyState !== "loading" || isAmazonUkPaymentBoxParsed();
 
     if (isReady()) {
       resolve();
@@ -145,17 +155,19 @@ function mutationsMentionFinance(records) {
   return false;
 }
 
-// Resolves with the finance offer as soon as Amazon draws the monthly payment
-// box, or with null once the page is untilPageAgeMs old. A MutationObserver
-// fires the moment the box is filled; the timer polling it replaced fell to a
-// second or more per check in the background tab the price refresh opens,
-// where timers are throttled.
+// Resolves with the finance offer as soon as Amazon shows one, or with null
+// once the page is untilPageAgeMs old. With the payment options box on the
+// page there is nothing to wait for: its message, shown or not, is the answer.
+// Without it, a MutationObserver fires the moment an offer is drawn; the timer
+// polling it replaced fell to a second or more per check in the background tab
+// the price refresh opens, where timers are throttled.
 function waitForAmazonUkFinance(untilPageAgeMs) {
   return new Promise((resolve) => {
     const remainingMs = untilPageAgeMs - performance.now();
 
-    if (remainingMs <= 0) {
-      resolve(null);
+    if (remainingMs <= 0 || isAmazonUkPaymentBoxParsed()) {
+      const info = findAmazonUkFinanceInfo();
+      resolve(info?.installmentAvailable ? info : null);
       return;
     }
 
@@ -211,7 +223,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // The price refresh's second question to an Amazon UK page whose first read
   // found no monthly payment box: only the box is waited for. Parsing the
   // product again would read the whole page's text, which on Amazon forces a
-  // layout of the entire page.
+  // layout of the entire page. The refresh keeps the deadline itself and
+  // closes the tab when it passes: Firefox defers this page's timers while a
+  // background tab loads, so the deadline below can fire seconds late.
   if (message && message.type === "WAIT_AMAZON_FINANCE") {
     waitForAmazonUkFinance(AMAZON_FINANCE_SETTLE_MS).then(
       (finance) => sendResponse({ ok: true, finance }),
@@ -225,7 +239,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const productParser = getProductParserForCurrentPage();
 
-      if (productParser?.id === "amazon-uk") await waitForAmazonUkPriceBlock();
+      if (productParser?.id === "amazon-uk") await waitForAmazonUkPaymentBox();
 
       const product = await waitForUkProductFromPage();
 
@@ -251,14 +265,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         product.installmentText = dieselFinanceInfo.installmentText;
       }
 
-      // Amazon fills the monthly payment box (#inemi_feature_div, empty in the
-      // page's HTML) by script after the page is up, and later still in the
-      // background tab the price refresh opens. A freshly opened page is
-      // watched until it is AMAZON_FINANCE_SETTLE_MS old and answered the
-      // moment the box shows; one that has been open longer, as when the user
-      // adds from the popup, is read as it is. The price refresh asks with
-      // skipFinanceSettle so that the wait does not hold one of its tab slots,
-      // then waits for the box with WAIT_AMAZON_FINANCE.
+      // On a page without the payment options box an offer may still be drawn
+      // by script after the page is up. A freshly opened page is watched until
+      // it is AMAZON_FINANCE_SETTLE_MS old and answered the moment an offer
+      // shows; one that has been open longer, as when the user adds from the
+      // popup, is read as it is. The price refresh asks with skipFinanceSettle
+      // so that the wait does not hold one of its tab slots, then waits with
+      // WAIT_AMAZON_FINANCE.
       if (
         !message.skipFinanceSettle &&
         productParser?.id === "amazon-uk" &&

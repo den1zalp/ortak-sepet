@@ -352,11 +352,29 @@ function needsAmazonFinanceSettle(item, product) {
   return itemHostMatches(item, ["amazon.co.uk"]) && product.installmentAvailable === false;
 }
 
-async function settleAmazonFinance(tabId, product) {
+// Süreyi sekmenin içindeki sayaca bırakmıyoruz: Firefox arka planda yüklenen
+// sekmenin zamanlayıcılarını sayfa yüklenene ya da 10 saniye dolana kadar
+// erteliyor, 5 saniyelik sınır sekmede 10-11 saniyede doluyordu. Arka plan
+// sayfasının sayacı ertelenmiyor; süre dolunca ilk okuma geçerli sayılıp
+// sekme kapatılıyor.
+const AMAZON_UK_FINANCE_WAIT_MS = 5000;
+
+async function settleAmazonFinance(tabId, product, tabOpenedAt) {
+  const remainingMs = AMAZON_UK_FINANCE_WAIT_MS - (Date.now() - tabOpenedAt);
+
+  if (remainingMs <= 0) return product;
+
+  let timer = null;
+
   try {
     // Ürünü yeniden okutmuyoruz: okuma tüm sayfanın metnine baktığı için
     // Amazon'da sayfanın tamamını yeniden dizdiriyor. Yalnızca kutu bekleniyor.
-    const response = await browser.tabs.sendMessage(tabId, { type: "WAIT_AMAZON_FINANCE" });
+    const response = await Promise.race([
+      browser.tabs.sendMessage(tabId, { type: "WAIT_AMAZON_FINANCE" }),
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve(null), remainingMs);
+      }),
+    ]);
 
     if (response?.ok && response.finance?.installmentAvailable === true) {
       return {
@@ -367,6 +385,8 @@ async function settleAmazonFinance(tabId, product) {
     }
   } catch {
     // Sekme kapanmışsa ilk okuma geçerli.
+  } finally {
+    clearTimeout(timer);
   }
 
   return product;
@@ -413,6 +433,7 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
   try {
     const updateProfile = getUpdateProfile(item);
 
+    const tabOpenedAt = Date.now();
     tab = await browser.tabs.create({
       url: item.url,
       active: false,
@@ -435,7 +456,7 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
 
     if (needsAmazonFinanceSettle(item, freshProduct)) {
       releaseSlot();
-      freshProduct = await settleAmazonFinance(tab.id, freshProduct);
+      freshProduct = await settleAmazonFinance(tab.id, freshProduct, tabOpenedAt);
     }
 
     const oldPrice = item.price || null;
