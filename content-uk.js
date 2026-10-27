@@ -91,6 +91,59 @@ async function waitForUkProductFromPage(maxWaitMs = 2200) {
 
 const AMAZON_FINANCE_SETTLE_MS = 10000;
 
+// Resolves with the finance offer as soon as Amazon draws the monthly payment
+// box, or with null once the page is untilPageAgeMs old. A MutationObserver
+// fires the moment the box is filled; the timer polling it replaced fell to a
+// second or more per check in the background tab the price refresh opens,
+// where timers are throttled.
+function waitForAmazonUkFinance(untilPageAgeMs) {
+  return new Promise((resolve) => {
+    const remainingMs = untilPageAgeMs - performance.now();
+
+    if (remainingMs <= 0) {
+      resolve(null);
+      return;
+    }
+
+    let done = false;
+    let timer = null;
+
+    const finish = (info) => {
+      if (done) return;
+      done = true;
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve(info);
+    };
+
+    const check = () => {
+      if (done) return;
+      const info = findAmazonUkFinanceInfo();
+      if (info?.installmentAvailable) finish(info);
+    };
+
+    // The box lives in the product column or the buy box; watching only those
+    // keeps carousels and ads further down from triggering a check. The class
+    // and style attributes are watched because Amazon also reveals boxes by
+    // dropping aok-hidden.
+    const observer = new MutationObserver(check);
+    const zones = Array.from(document.querySelectorAll("#centerCol, #rightCol"));
+
+    for (const zone of zones.length > 0 ? zones : [document.body || document.documentElement]) {
+      observer.observe(zone, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["class", "style"],
+      });
+    }
+
+    timer = setTimeout(() => finish(null), remainingMs);
+    check();
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === "GET_PRODUCT") {
     (async () => {
@@ -120,27 +173,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         product.installmentText = dieselFinanceInfo.installmentText;
       }
 
-      // Amazon fills the monthly payment box seconds after the page has loaded,
-      // and later still in the background tab the price refresh opens (timers
-      // and requests are throttled there). A freshly opened page is given until
-      // it is AMAZON_FINANCE_SETTLE_MS old; one that has been open longer, as
-      // when the user adds from the popup, is read as it is. The price refresh
-      // first asks with skipFinanceSettle so that the wait does not hold one of
-      // its tab slots, then asks again without it.
+      // Amazon fills the monthly payment box (#inemi_feature_div, empty in the
+      // page's HTML) by script after the page is up, and later still in the
+      // background tab the price refresh opens. A freshly opened page is
+      // watched until it is AMAZON_FINANCE_SETTLE_MS old and answered the
+      // moment the box shows; one that has been open longer, as when the user
+      // adds from the popup, is read as it is. The price refresh first asks
+      // with skipFinanceSettle so that the wait does not hold one of its tab
+      // slots, then asks again without it.
       if (
         !message.skipFinanceSettle &&
         productParser?.id === "amazon-uk" &&
         product.installmentAvailable === false
       ) {
-        while (performance.now() < AMAZON_FINANCE_SETTLE_MS) {
-          await wait(400);
-          const amazonFinanceInfo = findAmazonUkFinanceInfo();
+        const amazonFinanceInfo = await waitForAmazonUkFinance(AMAZON_FINANCE_SETTLE_MS);
 
-          if (amazonFinanceInfo?.installmentAvailable) {
-            product.installmentAvailable = true;
-            product.installmentText = amazonFinanceInfo.installmentText;
-            break;
-          }
+        if (amazonFinanceInfo) {
+          product.installmentAvailable = true;
+          product.installmentText = amazonFinanceInfo.installmentText;
         }
       }
 

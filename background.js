@@ -297,7 +297,20 @@ function getUpdateProfile(item) {
     };
   }
 
-  if (itemHostMatches(item, ["amazon.com.tr", "amazon.co.uk"])) {
+  // Amazon UK'nin sayfası "complete" olana kadar reklam ve görseller yüzünden
+  // saniyeler geçiyor, oysa ad ve fiyat ilk HTML'de var. UK içerik script'i
+  // document_end'de yüklendiği için yüklenmeyi beklemeden, script cevap verene
+  // kadar kısa aralıklarla soruyoruz.
+  if (itemHostMatches(item, ["amazon.co.uk"])) {
+    return {
+      waitForLoad: false,
+      attempts: 72,
+      waitMs: 250,
+      acceptTitleOnly: false,
+    };
+  }
+
+  if (itemHostMatches(item, ["amazon.com.tr"])) {
     return {
       tabTimeoutMs: 18000,
       initialDelayMs: 800,
@@ -318,7 +331,8 @@ function getUpdateProfile(item) {
 
 // Amazon UK aylık ödeme kutusunu sayfa açıldıktan saniyeler sonra dolduruyor;
 // içerik script'i taksiti "Yok" okuduğu Amazon UK sayfasını yeni açılmışsa
-// bir süre izliyor (content-uk.js, AMAZON_FINANCE_SETTLE_MS). Fiyat güncellemesi
+// kutu çıkana kadar, en fazla AMAZON_FINANCE_SETTLE_MS yaşına gelene dek
+// izliyor (content-uk.js) ve kutu çıktığı anda cevap veriyor. Fiyat güncellemesi
 // önce bu beklemeyi atlayarak okuyor, sekme hakkını bırakıyor, sonra bekleyerek
 // yeniden okuyor; böylece bekleme sıradaki ürünleri durdurmuyor.
 function needsAmazonFinanceSettle(item, product) {
@@ -329,11 +343,22 @@ async function settleAmazonFinance(tabId, product) {
   try {
     const response = await browser.tabs.sendMessage(tabId, { type: "GET_PRODUCT" });
 
-    if (response?.ok && response.product?.installmentAvailable === true) {
+    if (response?.ok && response.product) {
+      const settled = response.product;
+
+      // İlk okuma sayfa daha DOMContentLoaded'dayken yapılabiliyor; teslimat
+      // satırı o sırada henüz dolmamış olabilir, bu yüzden kargoyu da sonraki
+      // okumadan alıyoruz.
       return {
         ...product,
-        installmentAvailable: true,
-        installmentText: response.product.installmentText,
+        shippingAvailable: settled.shippingAvailable,
+        freeShipping: settled.freeShipping,
+        shippingText: settled.shippingText,
+        shippingSource: settled.shippingSource,
+        shippingConfidence: settled.shippingConfidence,
+        ...(settled.installmentAvailable === true
+          ? { installmentAvailable: true, installmentText: settled.installmentText }
+          : {}),
       };
     }
   } catch {
@@ -390,8 +415,10 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
     });
     onPhase("loading");
 
-    await waitForTabComplete(tab.id, updateProfile.tabTimeoutMs);
-    await delay(updateProfile.initialDelayMs);
+    if (updateProfile.waitForLoad !== false) {
+      await waitForTabComplete(tab.id, updateProfile.tabTimeoutMs);
+      await delay(updateProfile.initialDelayMs);
+    }
     onPhase("reading");
 
     let freshProduct = await readProductFromTabWithRetry(tab.id, {

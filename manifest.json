@@ -356,7 +356,7 @@
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_end"
     }
   ],
   "browser_specific_settings": {
