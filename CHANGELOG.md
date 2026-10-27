@@ -2,6 +2,19 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.17.3 — 27 Ekim 2026
+
+### Düzeltilenler
+
+* **Amazon UK sekmeleri fiyat güncellemesinde hâlâ geç kapanıyordu.** Fiyatın
+  altındaki aylık ödeme satırı ("Or £16.44/month (3 months) at no interest…")
+  sonradan dolmuyormuş: taksit hakkı olan hesapta sayfayla birlikte geliyor.
+  Artık Amazon UK sayfası daha inerken, fiyat bloğu gelir gelmez okunuyor;
+  sayfanın geri kalanı beklenmiyor. Denemelerde ilk cevap sayfa açıldıktan
+  1 saniye içinde geldi.
+* **Fiyatı okunamayan Amazon UK ürünü güncellemeyi uzatmıyor.** Sayfa cevap
+  verdiği hâlde fiyat bulunamazsa yaklaşık 3 saniye sonra vazgeçiliyor.
+
 ## 1.17.2 — 27 Ekim 2026
 
 ### Düzeltilenler
