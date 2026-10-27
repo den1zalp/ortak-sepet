@@ -189,12 +189,19 @@ async function readProductFromTabWithRetry(tabId, options = {}) {
     waitMs = 900,
     acceptTitleOnly = false,
     message = { type: "GET_PRODUCT" },
+    // Sekmeye yüklenme beklenmeden soruluyorsa attempts içerik script'inin
+    // gelmesini bekleyecek kadar uzun; script cevap verdikten sonra fiyatı
+    // olmayan sayfa için o kadar beklemeyelim diye ayrı bir üst sınır.
+    attemptsAfterReply = attempts,
   } = options;
   let lastPartialProduct = null;
+  let attemptsLeftAfterReply = null;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
       const response = await browser.tabs.sendMessage(tabId, message);
+
+      if (attemptsLeftAfterReply === null) attemptsLeftAfterReply = attemptsAfterReply;
 
       if (
         response &&
@@ -219,6 +226,8 @@ async function readProductFromTabWithRetry(tabId, options = {}) {
     } catch {
       // content.js henüz hazır olmayabilir.
     }
+
+    if (attemptsLeftAfterReply !== null && --attemptsLeftAfterReply <= 0) break;
 
     if (attempt < attempts) {
       await delay(waitMs);
@@ -298,14 +307,17 @@ function getUpdateProfile(item) {
   }
 
   // Amazon UK'nin sayfası "complete" olana kadar reklam ve görseller yüzünden
-  // saniyeler geçiyor, oysa ad ve fiyat ilk HTML'de var. UK içerik script'i
-  // document_end'de yüklendiği için yüklenmeyi beklemeden, script cevap verene
-  // kadar kısa aralıklarla soruyoruz.
+  // saniyeler geçiyor, oysa ad, fiyat ve taksit satırı ilk HTML'de var. UK
+  // içerik script'i document_start'ta yüklenip fiyat bloğu gelir gelmez
+  // okuduğu için yüklenmeyi beklemeden, script cevap verene kadar 100 ms'de
+  // bir soruyoruz; hazır olmayan sekmeye giden mesaj hemen hata dönüyor, sık
+  // sormanın maliyeti yok.
   if (itemHostMatches(item, ["amazon.co.uk"])) {
     return {
       waitForLoad: false,
-      attempts: 72,
-      waitMs: 250,
+      attempts: 180,
+      attemptsAfterReply: 30,
+      waitMs: 100,
       acceptTitleOnly: false,
     };
   }
@@ -333,32 +345,24 @@ function getUpdateProfile(item) {
 // içerik script'i taksiti "Yok" okuduğu Amazon UK sayfasını yeni açılmışsa
 // kutu çıkana kadar, en fazla AMAZON_FINANCE_SETTLE_MS yaşına gelene dek
 // izliyor (content-uk.js) ve kutu çıktığı anda cevap veriyor. Fiyat güncellemesi
-// önce bu beklemeyi atlayarak okuyor, sekme hakkını bırakıyor, sonra bekleyerek
-// yeniden okuyor; böylece bekleme sıradaki ürünleri durdurmuyor.
+// önce bu beklemeyi atlayarak okuyor, sekme hakkını bırakıyor, sonra yalnızca
+// kutuyu bekliyor (WAIT_AMAZON_FINANCE); böylece bekleme sıradaki ürünleri
+// durdurmuyor.
 function needsAmazonFinanceSettle(item, product) {
   return itemHostMatches(item, ["amazon.co.uk"]) && product.installmentAvailable === false;
 }
 
 async function settleAmazonFinance(tabId, product) {
   try {
-    const response = await browser.tabs.sendMessage(tabId, { type: "GET_PRODUCT" });
+    // Ürünü yeniden okutmuyoruz: okuma tüm sayfanın metnine baktığı için
+    // Amazon'da sayfanın tamamını yeniden dizdiriyor. Yalnızca kutu bekleniyor.
+    const response = await browser.tabs.sendMessage(tabId, { type: "WAIT_AMAZON_FINANCE" });
 
-    if (response?.ok && response.product) {
-      const settled = response.product;
-
-      // İlk okuma sayfa daha DOMContentLoaded'dayken yapılabiliyor; teslimat
-      // satırı o sırada henüz dolmamış olabilir, bu yüzden kargoyu da sonraki
-      // okumadan alıyoruz.
+    if (response?.ok && response.finance?.installmentAvailable === true) {
       return {
         ...product,
-        shippingAvailable: settled.shippingAvailable,
-        freeShipping: settled.freeShipping,
-        shippingText: settled.shippingText,
-        shippingSource: settled.shippingSource,
-        shippingConfidence: settled.shippingConfidence,
-        ...(settled.installmentAvailable === true
-          ? { installmentAvailable: true, installmentText: settled.installmentText }
-          : {}),
+        installmentAvailable: true,
+        installmentText: response.finance.installmentText,
       };
     }
   } catch {
@@ -425,6 +429,7 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
       attempts: updateProfile.attempts,
       waitMs: updateProfile.waitMs,
       acceptTitleOnly: updateProfile.acceptTitleOnly,
+      attemptsAfterReply: updateProfile.attemptsAfterReply,
       message: { type: "GET_PRODUCT", skipFinanceSettle: true },
     });
 

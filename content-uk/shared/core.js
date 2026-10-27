@@ -464,6 +464,17 @@ function getPaymentRelatedText() {
   };
 }
 
+// Amazon splits prices into several spans and sometimes puts zero-width
+// characters between them, so "£16.00/month" is not always contiguous text.
+// The monthly box ("Or £16.00/month (3 months) at no interest with Amazon
+// Select plan") is matched on its wording, not on the amount next to it.
+const AMAZON_UK_FINANCE_OFFER_PATTERN =
+  /spread the cost|instal?lments?|lender:|\/\s*mo(nth)?\b|monthly payments?|pay later|0%\s*interest|at no interest|interest[-\s]free credit|select plan/i;
+
+function stripZeroWidth(text) {
+  return String(text || "").replace(/[\u200B-\u200D\u2060\uFEFF]/g, "");
+}
+
 // Amazon has no finance widget of its own on most listings, while its product
 // columns still hold hidden monthly-plan templates ("Includes initial monthly
 // payment", class aok-hidden). innerText leaves hidden elements out, so only an
@@ -480,20 +491,8 @@ function findAmazonUkFinanceInfo() {
   const zones = Array.from(document.querySelectorAll("#centerCol, #rightCol"));
   if (zones.length === 0) return null;
 
-  // Amazon splits prices into several spans and sometimes puts zero-width
-  // characters between them, so "£16.00/month" is not always contiguous text.
-  // The monthly box ("Or £16.00/month (3 months) at no interest with Amazon
-  // Select plan") is matched on its wording, not on the amount next to it.
-  const visibleText = cleanText(
-    zones
-      .map((zone) => zone.innerText || "")
-      .join(" ")
-      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, ""),
-  );
-  const hasOffer =
-    /spread the cost|instal?lments?|lender:|\/\s*mo(nth)?\b|monthly payments?|pay later|0%\s*interest|at no interest|interest[-\s]free credit|select plan/i.test(
-      visibleText,
-    );
+  const visibleText = cleanText(stripZeroWidth(zones.map((zone) => zone.innerText || "").join(" ")));
+  const hasOffer = AMAZON_UK_FINANCE_OFFER_PATTERN.test(visibleText);
 
   return hasOffer
     ? {
