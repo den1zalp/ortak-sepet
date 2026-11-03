@@ -190,7 +190,7 @@ async function refreshRatesAndRender() {
   await renderCart();
 }
 
-currencySwitchEl.addEventListener("click", async (event) => {
+async function onCurrencySwitchClick(event) {
   const button = event.target.closest?.("[data-display-currency]");
   if (!button) return;
 
@@ -200,7 +200,10 @@ currencySwitchEl.addEventListener("click", async (event) => {
   const request = refreshRatesAndRender();
   await renderCart();
   await request;
-});
+}
+
+currencySwitchEl.addEventListener("click", onCurrencySwitchClick);
+purchasedCurrencySwitchEl.addEventListener("click", onCurrencySwitchClick);
 
 async function initPopup() {
   currentLanguage = await getLanguage();

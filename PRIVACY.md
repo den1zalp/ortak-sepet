@@ -43,6 +43,8 @@ No product data, cart data, browsing data or personal data is sent to the develo
 
 The user can choose to see totals in Turkish lira, pounds sterling, US dollars or euros instead of each product's own currency. Only when one of these currencies is selected, the extension downloads the daily exchange rates of the European Central Bank from the public Frankfurter service (https://api.frankfurter.dev), at most once every six hours. The request asks only for the TRY, GBP, EUR and USD rates; it contains no cart data, product data, browsing data or personal data. The rates are stored locally and used on the user's device to convert the amounts. When no currency is selected (the default), no such request is made.
 
+Purchased items are converted at the rate of the day they were bought. For this, when a currency is selected and the "Purchased" list is opened, the extension asks the same service for the daily rates over a date range, from a few days before the oldest purchase that has not been converted before up to today. The only information in this request is that date range; it contains no product, price, store or personal data. Past rates do not change, so each day's rate is downloaded once and kept locally.
+
 ## Product Images
 
 Product images are fetched directly from the retailer's own servers so they can be shown in the cart. These requests are made without cookies or credentials and no identifying information is attached to them.

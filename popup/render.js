@@ -300,7 +300,15 @@ function getUpdateStatusTone(status) {
 // Büyük yazılan tutar satırın tutarı (fiyat × adet); birden fazla adette
 // altında birim fiyat. Kurla çevrilen görünümde yaklaşık karşılığı, son
 // güncellemede fiyat değiştiyse ne kadar değiştiği ve üstü çizili eski fiyat.
-function fillItemAmount(card, item, { showChange = true } = {}) {
+function fillItemAmount(
+  card,
+  item,
+  {
+    showChange = true,
+    convertedText = getConvertedPriceText(item),
+    convertedTitle = translate("convertedPriceTitle"),
+  } = {},
+) {
   const quantity = getQuantity(item);
   const lineTotal = calculateItemTotal(item);
   const price = card.querySelector(".os-item-price");
@@ -323,10 +331,9 @@ function fillItemAmount(card, item, { showChange = true } = {}) {
   }
 
   const converted = card.querySelector(".os-item-converted");
-  const convertedText = getConvertedPriceText(item);
   if (converted && convertedText) {
     converted.textContent = convertedText;
-    converted.title = translate("convertedPriceTitle");
+    converted.title = convertedTitle;
     converted.hidden = false;
   }
 
@@ -520,7 +527,7 @@ function groupItemsByCountry(items) {
     .map((group) => ({ ...group, label: getRegionLabel(group.key) }));
 }
 
-function createGroupElement({ key, label, items }, createItem) {
+function createGroupElement({ key, label, items }, createItem, formatTotal = calculateCategoryTotal) {
   const group = document.createElement("section");
   group.className = "category-group";
   if (key) {
@@ -540,7 +547,7 @@ function createGroupElement({ key, label, items }, createItem) {
   meta.textContent = translate("productMeta", {
     products: items.length,
     quantity: calculateTotalItemCount(items),
-    total: calculateCategoryTotal(items),
+    total: formatTotal(items),
   });
 
   header.appendChild(title);
@@ -641,7 +648,11 @@ function createPurchaseElement(record) {
   const card = cloneTemplate(purchaseItemTemplate);
 
   fillItemBasics(card, record, fullTitle, "openPurchaseLink");
-  fillItemAmount(card, record, { showChange: false });
+  fillItemAmount(card, record, {
+    showChange: false,
+    convertedText: getPurchaseConvertedPriceText(record),
+    convertedTitle: translate("purchaseConvertedPriceTitle"),
+  });
   card.querySelector(".purchase-date").textContent = `${translate("purchasedOn")}: ${formatPurchaseDate(record)}`;
   fillPurchaseActions(card.querySelector(".cart-actions"), record, fullTitle);
 
@@ -660,8 +671,8 @@ function renderPurchasedSummary(records) {
   );
 
   const entries = [
-    [translate("purchasedThisMonth"), calculateCategoryTotal(thisMonthRecords)],
-    [translate("purchasedAllTime"), calculateCategoryTotal(records)],
+    [translate("purchasedThisMonth"), formatPurchasedTotal(thisMonthRecords)],
+    [translate("purchasedAllTime"), formatPurchasedTotal(records)],
   ];
 
   for (const [label, total] of entries) {
@@ -678,6 +689,11 @@ function renderPurchasedSummary(records) {
 async function renderPurchased() {
   const records = await getPurchasedItems();
 
+  purchasedCurrencyEl.hidden = records.length === 0;
+  const rateInfo = getPurchasedRateInfoText(records);
+  purchasedRateInfoEl.textContent = rateInfo;
+  purchasedRateInfoEl.hidden = !rateInfo;
+
   renderPurchasedSummary(records);
   purchasedItemsEl.textContent = "";
 
@@ -689,8 +705,14 @@ async function renderPurchased() {
   }
 
   for (const group of groupPurchasesByMonth(records)) {
-    purchasedItemsEl.appendChild(createGroupElement(group, createPurchaseElement));
+    purchasedItemsEl.appendChild(createGroupElement(group, createPurchaseElement, formatPurchasedTotal));
   }
+
+  // Alım günlerinin kuru eksikse alınıp liste bir kez daha çiziliyor. Kur
+  // deposu değişince popup kendiliğinden çizilmiyor (init.js → onChanged).
+  refreshPurchaseRatesIfNeeded(records).then((changed) => {
+    if (changed && isPurchasedTabActive()) renderPurchased();
+  });
 }
 
 async function refreshTabs() {
@@ -804,8 +826,10 @@ function renderSortOptions() {
   sortMenuTitleEl.textContent = translate("sortBy");
 }
 
+// Para birimi seçimi tek; sepetin toplam kartındaki ve Aldıklarım'daki seçici
+// aynı ayarı gösteriyor.
 function renderCurrencySwitch(items) {
-  for (const button of currencySwitchEl.querySelectorAll("[data-display-currency]")) {
+  for (const button of document.querySelectorAll("[data-display-currency]")) {
     const currency = button.dataset.displayCurrency;
     const isSelected = currency === currentDisplayCurrency;
     button.textContent = translate(`currency_${currency}`);
@@ -816,6 +840,7 @@ function renderCurrencySwitch(items) {
   }
 
   currencySwitchEl.setAttribute("aria-label", translate("displayCurrency"));
+  purchasedCurrencyLabelEl.textContent = translate("purchasedCurrency");
 
   const rateInfo = getRateInfoText(items);
   rateInfoEl.textContent = rateInfo;

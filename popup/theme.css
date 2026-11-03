@@ -1086,6 +1086,60 @@ html {
 
 /* ---------- Aldıklarım ---------- */
 
+/* Para birimi seçicisi: toplam kartındakinin gradyansız hâli, sekme çubuğu
+   gibi gri zemin üstünde. */
+.os-purchased-currency {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.os-purchased-currency[hidden] {
+  display: none;
+}
+
+.os-purchased-currency-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.os-purchased-currency-label {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.os-currency.os-currency-plain {
+  background: var(--muted);
+}
+
+.os-currency-plain button {
+  color: var(--muted-foreground);
+}
+
+.os-currency-plain button:hover {
+  background: transparent;
+  color: var(--foreground);
+}
+
+.os-currency-plain button[aria-pressed="true"] {
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+.os-currency-plain button:focus-visible {
+  outline-color: var(--ring);
+}
+
+.os-purchased-rate {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}
+
 .os-purchased-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

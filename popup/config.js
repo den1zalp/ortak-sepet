@@ -73,6 +73,10 @@ const updateProgressBarEl = document.getElementById("updateProgressBar");
 const groupByLabelEl = document.getElementById("groupByLabel");
 const currencySwitchEl = document.getElementById("currencySwitch");
 const rateInfoEl = document.getElementById("rateInfo");
+const purchasedCurrencyEl = document.getElementById("purchasedCurrency");
+const purchasedCurrencyLabelEl = document.getElementById("purchasedCurrencyLabel");
+const purchasedCurrencySwitchEl = document.getElementById("purchasedCurrencySwitch");
+const purchasedRateInfoEl = document.getElementById("purchasedRateInfo");
 const sortControlEl = document.getElementById("sortControl");
 const listTabsEl = document.getElementById("listTabs");
 const sortBtn = document.getElementById("sortBtn");
@@ -107,6 +111,10 @@ const I18N = {
     rateLoading: "Kur alınıyor…",
     rateUnavailable: "Kur alınamadı; tutarlar kendi para biriminde.",
     convertedPriceTitle: "Günlük kurla yaklaşık karşılığı",
+    purchaseConvertedPriceTitle: "Alım günündeki kurla yaklaşık karşılığı",
+    purchasedCurrency: "Para birimi",
+    purchasedRateInfo: "Alım günlerinin kuruyla (Avrupa Merkez Bankası)",
+    purchasedRatePartial: "Alım günü kuru alınamayanlar bugünkü kurla çevrildi.",
     sort_added: "Eklenme sırası",
     sort_newest: "En son eklenen",
     "sort_price-asc": "Fiyat: artan",
@@ -295,6 +303,10 @@ const I18N = {
     rateLoading: "Getting the exchange rate…",
     rateUnavailable: "Exchange rate unavailable; amounts shown in their own currency.",
     convertedPriceTitle: "Approximate value at the daily rate",
+    purchaseConvertedPriceTitle: "Approximate value at the purchase day's rate",
+    purchasedCurrency: "Currency",
+    purchasedRateInfo: "At each purchase day's rate (European Central Bank)",
+    purchasedRatePartial: "Where the purchase day's rate couldn't be fetched, today's rate is used.",
     sort_added: "Order added",
     sort_newest: "Newest first",
     "sort_price-asc": "Price: low to high",

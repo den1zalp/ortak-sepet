@@ -42,6 +42,7 @@ Geliştirme için paketlenmemiş kurulum aşağıda anlatılıyor.
 * Sağ tık menüsünden ürünü sepete ekleme
 * Tarayıcı ikonunda sepetteki ürün sayısını gösterme
 * Toplamı ve kartlardaki fiyatları günlük kurla TL, sterlin, dolar ya da euroya çevirerek gösterme
+* Alınan ürünleri alım günündeki kurla çevirerek aylık harcamayı tek para biriminde gösterme
 * Türkçe / İngilizce dil seçimi
 * Karanlık mod desteği
 * Verileri tarayıcıda lokal olarak saklama
@@ -278,6 +279,8 @@ Listelenen tüm marka adları, yalnızca eklentinin hangi sitelerde çalışmay�
 Bu eklenti ürün bilgilerini kullanıcının tarayıcısında lokal olarak saklar. Ürün listesi, fiyat bilgileri veya sepet verileri herhangi bir harici sunucuya gönderilmez.
 
 Toplamı TL, sterlin, dolar ya da euro olarak göstermek seçilirse eklenti günlük döviz kurunu [Frankfurter](https://frankfurter.dev) üzerinden (Avrupa Merkez Bankası kurları) alır. Bu istek yalnızca bu görünüm seçiliyken, en fazla altı saatte bir atılır ve içinde sepet ya da kullanıcı bilgisi yoktur.
+
+Alınan ürünler alım günündeki kurla çevrilir. Bunun için para birimi seçiliyken "Aldıklarım" açılınca aynı servisten bir tarih aralığının (daha önce çevrilmemiş en eski alımın birkaç gün öncesinden bugüne) günlük kurları istenir. İstekte yalnızca bu tarih aralığı vardır; ürün, fiyat ya da mağaza bilgisi yoktur. Geçmiş günlerin kuru değişmediği için her günün kuru bir kez alınıp tarayıcıda saklanır.
 
 Eklenti, desteklenen ürün sayfalarındaki görünür bilgileri okumaya çalışır. Fiyat, taksit/finance, kargo ve teslimat bilgileri bazı sitelerde sepette veya ödeme adımında değişebileceğinden, bilgiler kullanıcı tarafından kontrol edilmelidir.
 

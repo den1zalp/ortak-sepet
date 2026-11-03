@@ -115,25 +115,55 @@ function formatDisplayTotal(totals) {
 
   if (!isConvertingCurrencies()) return formatTotalsByCurrency(totals);
 
+  return formatConvertedTotal(
+    Array.from(totals, ([currency, value]) => ({ currency, value, rates: currentRates.rates })),
+  );
+}
+
+// parts: [{ currency, value, rates }]; her tutar kendi kuruyla çevriliyor
+// (Aldıklarım'da her alım kendi gününün kuruyla). Hiçbiri çevrilemediyse
+// "0,00 TL + £50" yerine tutarlar kendi para biriminde yazılıyor.
+function formatConvertedTotal(parts) {
   const target = currentDisplayCurrency;
   const unconverted = new Map();
   let converted = 0;
+  let convertedCount = 0;
   let isApproximate = false;
 
-  for (const [currency, value] of totals) {
-    const amount = currency === target ? value : convertAmount(value, currency, target);
+  for (const { currency, value, rates } of parts) {
+    const amount = currency === target ? value : convertAmount(value, currency, target, rates);
 
     if (amount === null) {
-      unconverted.set(currency, value);
+      unconverted.set(currency, (unconverted.get(currency) || 0) + value);
       continue;
     }
 
     converted += amount;
+    convertedCount += 1;
     if (currency !== target) isApproximate = true;
   }
 
+  if (convertedCount === 0 && unconverted.size > 0) return formatTotalsByCurrency(unconverted);
+
   const text = `${isApproximate ? "≈ " : ""}${formatPriceByCurrency(converted, target)}`;
   return unconverted.size > 0 ? `${text} + ${formatTotalsByCurrency(unconverted)}` : text;
+}
+
+// Aldıklarım'ın toplamları: para birimi seçiliyse her alım kendi gününün
+// kuruyla çevrilip toplanıyor (rates.js → getPurchaseRates).
+function formatPurchasedTotal(records) {
+  if (currentDisplayCurrency === "mixed") return formatTotalsByCurrency(calculateTotalsByCurrency(records));
+
+  const parts = [];
+
+  for (const record of records) {
+    const value = calculateItemTotal(record);
+    if (value === null) continue;
+
+    parts.push({ currency: getItemCurrency(record), value, rates: getPurchaseRates(record) });
+  }
+
+  return formatConvertedTotal(parts);
 }
 
 function calculateTotal(items) {

@@ -177,6 +177,19 @@
           </div>
 
           <div role="tabpanel" id="purchasedPanel" aria-labelledby="purchasedTabBtn" tabindex="-1" hidden>
+            <!-- Toplam kartındakiyle aynı ayar; alımlar alım gününün kuruyla çevriliyor -->
+            <div id="purchasedCurrency" class="os-purchased-currency" hidden>
+              <div class="os-purchased-currency-row">
+                <span id="purchasedCurrencyLabel" class="os-purchased-currency-label"></span>
+                <div id="purchasedCurrencySwitch" class="os-currency os-currency-plain" role="group" aria-labelledby="purchasedCurrencyLabel">
+                  <button type="button" data-display-currency="TRY" aria-pressed="false"></button>
+                  <button type="button" data-display-currency="GBP" aria-pressed="false"></button>
+                  <button type="button" data-display-currency="USD" aria-pressed="false"></button>
+                  <button type="button" data-display-currency="EUR" aria-pressed="false"></button>
+                </div>
+              </div>
+              <p id="purchasedRateInfo" class="os-purchased-rate" hidden></p>
+            </div>
             <div id="purchasedSummary" class="os-purchased-summary"></div>
             <div id="purchasedItems" class="item-group os-list"></div>
           </div>
@@ -242,6 +255,7 @@
           <div class="os-item-amount">
             <strong class="os-item-price"></strong>
             <small class="os-item-unit" hidden></small>
+            <small class="os-item-converted" hidden></small>
           </div>
           <div class="os-item-actions cart-actions"></div>
         </aside>
