@@ -2,6 +2,23 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.18.0 — 3 Kasım 2026
+
+### Yenilikler
+
+* **Aldıklarım'da kur dönüştürme.** "Aldıklarım"ın üstünde TL, £, $ ve €
+  seçicisi var. Seçince "Bu ay", "Tümü", her ayın toplamı ve alınan
+  ürünlerin tutarı o para birimine çevriliyor. Her alım, alındığı günün
+  kuruyla çevriliyor: Eylül'de sterlinle alınan ürün Eylül'ün kuruyla. Böylece
+  geçmiş ayların harcaması kur oynadıkça değişmiyor. Hafta sonu ya da tatilde
+  alınan ürüne bir önceki iş gününün kuru uygulanıyor. Seçim sepetteki
+  seçiciyle ortak; birinde seçince öbürü de değişiyor.
+
+  Kurlar Avrupa Merkez Bankası'nın; geçmiş günlerin kuru bir kez alınıp
+  tarayıcıda saklanıyor. Bu istekte yalnızca bir tarih aralığı var; ürün,
+  fiyat ya da mağaza bilgisi yok. Kur alınamazsa o alımlar bugünkü kurla
+  çevriliyor ve bu, seçicinin altında yazıyor.
+
 ## 1.17.4 — 27 Ekim 2026
 
 ### Düzeltilenler
