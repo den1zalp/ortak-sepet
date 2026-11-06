@@ -106,6 +106,7 @@ const CART_ITEM_ACTIONS = {
   increase: increaseQuantity,
   decrease: decreaseQuantity,
   purchase: markItemPurchased,
+  priceHistory: openPriceHistory,
 };
 
 const PURCHASE_ACTIONS = {

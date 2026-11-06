@@ -77,6 +77,11 @@ const purchasedCurrencyEl = document.getElementById("purchasedCurrency");
 const purchasedCurrencyLabelEl = document.getElementById("purchasedCurrencyLabel");
 const purchasedCurrencySwitchEl = document.getElementById("purchasedCurrencySwitch");
 const purchasedRateInfoEl = document.getElementById("purchasedRateInfo");
+const priceHistoryDialogEl = document.getElementById("priceHistoryDialog");
+const priceHistoryTitleEl = document.getElementById("priceHistoryTitle");
+const priceHistoryProductEl = document.getElementById("priceHistoryProduct");
+const priceHistoryBodyEl = document.getElementById("priceHistoryBody");
+const priceHistoryCloseBtn = document.getElementById("priceHistoryClose");
 const sortControlEl = document.getElementById("sortControl");
 const listTabsEl = document.getElementById("listTabs");
 const sortBtn = document.getElementById("sortBtn");
@@ -115,6 +120,26 @@ const I18N = {
     purchasedCurrency: "Para birimi",
     purchasedRateInfo: "Alım günlerinin kuruyla (Avrupa Merkez Bankası)",
     purchasedRatePartial: "Alım günü kuru alınamayanlar bugünkü kurla çevrildi.",
+    priceHistory: "Fiyat geçmişi",
+    priceHistoryLabel: "{title} için fiyat geçmişi",
+    close: "Kapat",
+    historyNow: "Şu an",
+    historyLowest: "En düşük",
+    historyHighest: "En yüksek",
+    historyChanges: "Değişimler",
+    historyFirstRecord: "İlk kayıt",
+    historyNoChanges: "Fiyat şimdilik bir kez kaydedildi. Fiyatları güncelledikçe her gün burada bir nokta olacak.",
+    historyNoChangesInRange: "Fiyat bu aralıkta değişmedi.",
+    historyNoChecksInRange: "Bu aralıkta fiyat kontrol edilmedi. Son bilinen fiyat: {price} ({date}).",
+    historyUnchanged: "Değişmedi",
+    historyRange: "Aralık",
+    historyRange_7: "7 gün",
+    historyRange_30: "30 gün",
+    historyRange_all: "Tümü",
+    historyEmpty: "Bu ürün için kayıtlı fiyat yok.",
+    historyLastChecked: "Son kontrol: {date}",
+    historyManualNote: "Grafik mağazadaki fiyatı gösteriyor; sepette senin girdiğin {price} kullanılıyor.",
+    historyChartLabel: "Fiyat, {from} ile {to} arası: en düşük {min}, en yüksek {max}, şu an {now}",
     sort_added: "Eklenme sırası",
     sort_newest: "En son eklenen",
     "sort_price-asc": "Fiyat: artan",
@@ -307,6 +332,26 @@ const I18N = {
     purchasedCurrency: "Currency",
     purchasedRateInfo: "At each purchase day's rate (European Central Bank)",
     purchasedRatePartial: "Where the purchase day's rate couldn't be fetched, today's rate is used.",
+    priceHistory: "Price history",
+    priceHistoryLabel: "Price history for {title}",
+    close: "Close",
+    historyNow: "Now",
+    historyLowest: "Lowest",
+    historyHighest: "Highest",
+    historyChanges: "Changes",
+    historyFirstRecord: "First record",
+    historyNoChanges: "The price has been recorded once so far. Each day you refresh prices adds a point here.",
+    historyNoChangesInRange: "The price didn't change in this range.",
+    historyNoChecksInRange: "The price wasn't checked in this range. Last known price: {price} ({date}).",
+    historyUnchanged: "Unchanged",
+    historyRange: "Range",
+    historyRange_7: "7 days",
+    historyRange_30: "30 days",
+    historyRange_all: "All",
+    historyEmpty: "No price recorded for this product.",
+    historyLastChecked: "Last checked: {date}",
+    historyManualNote: "The chart shows the store's price; the basket uses the {price} you entered.",
+    historyChartLabel: "Price from {from} to {to}: lowest {min}, highest {max}, now {now}",
     sort_added: "Order added",
     sort_newest: "Newest first",
     "sort_price-asc": "Price: low to high",

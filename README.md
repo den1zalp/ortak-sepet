@@ -35,6 +35,7 @@ Geliştirme için paketlenmemiş kurulum aşağıda anlatılıyor.
 * Kategorileri tek butonla açma ve kapatma
 * Tek butonla tüm fiyatları güncelleme (paralel çalışır ve durdurulabilir)
 * Manuel fiyat girme
+* Her ürünün fiyat geçmişini grafik ve değişim listesiyle gösterme
 * CSV / Excel dışa aktarma
 * Sepeti ve alınanları JSON olarak yedekleme, yedekten geri yükleme
 * Sepeti paylaşılabilir düz metin olarak panoya kopyalama

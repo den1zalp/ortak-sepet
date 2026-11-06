@@ -196,6 +196,20 @@
         </div>
       </main>
 
+      <!-- Fiyat geçmişi (history.js); içerik açılırken çiziliyor -->
+      <dialog id="priceHistoryDialog" class="dialog os-history" aria-labelledby="priceHistoryTitle" aria-describedby="priceHistoryProduct">
+        <div>
+          <header>
+            <h2 id="priceHistoryTitle"></h2>
+            <p id="priceHistoryProduct"></p>
+          </header>
+          <section id="priceHistoryBody" class="os-history-body"></section>
+          <button type="button" id="priceHistoryClose" class="os-history-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </dialog>
+
       <div class="os-status" hidden>
         <p id="status" role="status" aria-live="polite"></p>
         <button type="button" id="undoBtn" class="btn" data-variant="secondary" data-size="xs" hidden></button>
@@ -266,6 +280,7 @@
     <template id="iconTemplates">
       <svg data-icon="purchase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 2 2 4-4"/><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path d="m7.5 4.27 9 5.15"/><path d="M3.29 7 12 12l8.71-5"/><path d="M12 22V12"/></svg>
       <svg data-icon="open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      <svg data-icon="history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
       <svg data-icon="edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
       <svg data-icon="remove" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
       <svg data-icon="restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
@@ -290,6 +305,7 @@
     <script src="popup/rates.js"></script>
     <script src="popup/render.js"></script>
     <script src="popup/media.js"></script>
+    <script src="popup/history.js"></script>
     <script src="popup/actions.js"></script>
     <script src="popup/export.js"></script>
     <script src="popup/init.js"></script>

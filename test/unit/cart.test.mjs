@@ -107,6 +107,50 @@ const removed = { ...target, id: "silinmis-id" };
 check("silinmiş ürün geri yazılmadı", await Cart.saveRefreshedItem(removed), false);
 check("kalem sayısı değişmedi", store.ortakSepetItems.length, 3);
 
+// --- fiyat geçmişi ---
+// Eklenen ürün ilk noktayla başlıyor; aynı gün yeniden eklenince yeni nokta
+// açılmıyor (ilk ürün yukarıda aynı gün üç kez eklendi).
+const firstHistory = store.ortakSepetItems.find((item) => item.title === "Philips Airfryer").priceHistory;
+check("eklenen ürünün geçmişi tek nokta", firstHistory.length, 1);
+check("ilk nokta eklenen fiyat", firstHistory[0].price, "3.499,00 TL");
+
+// Saatler öğlen: hangi saat diliminde çalışırsa çalışsın aynı yerel gün.
+const tracked = { priceHistory: [{ at: "2026-10-01T12:00:00.000Z", price: "£100.00" }] };
+const nextDay = Cart.recordPriceHistory(tracked, "£100.00", "2026-10-02T12:00:00.000Z");
+check("fiyat aynı olsa da her gün bir nokta", nextDay.map((point) => point.price).join(" > "), "£100.00 > £100.00");
+const sameDay = Cart.recordPriceHistory({ priceHistory: nextDay }, "£89.99", "2026-10-02T13:00:00.000Z");
+check("aynı gün ikinci okuma o günün noktasını değiştiriyor", sameDay.map((point) => point.price).join(" > "), "£100.00 > £89.99");
+check("günün noktası son okunma anında", sameDay[1].at, "2026-10-02T13:00:00.000Z");
+check("eski geçmiş değişmedi", tracked.priceHistory.length, 1);
+check("fiyatsız okuma nokta eklemiyor", Cart.recordPriceHistory(tracked, null).length, 1);
+
+// Bu özellikten önce eklenmiş ürün: bilinen fiyat son kontrol anıyla başlangıç.
+const legacy = { price: "26.290 TL", lastCheckedAt: "2026-10-20T12:00:00.000Z", addedAt: "2026-09-01T12:00:00.000Z" };
+check("eski ürünün başlangıcı son kontrol", Cart.getPriceHistory(legacy)[0].at, "2026-10-20T12:00:00.000Z");
+check("eski ürün ertesi gün iki nokta", Cart.recordPriceHistory(legacy, "26.290 TL", "2026-10-21T12:00:00.000Z").length, 2);
+// Elle girilen fiyat geçmişe girmiyor: başlangıç mağazanın okuduğu fiyat.
+check(
+  "elle fiyatlı eski ürün mağaza fiyatıyla başlıyor",
+  Cart.getPriceHistory({ ...legacy, manualPrice: true, price: "20.000 TL", detectedPrice: "26.290 TL" })[0].price,
+  "26.290 TL",
+);
+
+// Bir yıldan eski noktalar düşüyor.
+let daily = { priceHistory: [] };
+const dayMs = 24 * 60 * 60 * 1000;
+for (let day = 0; day < 400; day++) {
+  const at = new Date(Date.UTC(2026, 0, 1, 12) + day * dayMs).toISOString();
+  daily = { priceHistory: Cart.recordPriceHistory(daily, `£${100 + (day % 7)}.00`, at) };
+}
+check("son 365 günün noktaları kalıyor", daily.priceHistory.length, 366);
+check("en eski nokta tam bir yıl önce", daily.priceHistory[0].at, new Date(Date.UTC(2026, 0, 1, 12) + 34 * dayMs).toISOString());
+
+// Bir yıldır güncellenmemiş ürünün son fiyatı düşmüyor.
+const stale = Cart.recordPriceHistory({ priceHistory: [{ at: "2025-01-01T12:00:00.000Z", price: "£50.00" }] }, null);
+check("güncellenmemiş ürünün tek noktası kalıyor", stale.length, 1);
+const afterYear = Cart.recordPriceHistory({ priceHistory: [{ at: "2025-01-01T12:00:00.000Z", price: "£50.00" }] }, "£45.00", "2026-06-01T12:00:00.000Z");
+check("bir yıl sonraki okuma eskiyi düşürüyor", afterYear.map((point) => point.price).join(" > "), "£45.00");
+
 // --- kategori kuralları ---
 check("kategori: iPhone kılıf şarj kablosu", categorize({ title: "iPhone kılıf şarj kablosu", site: "Trendyol" }), "Telefon & Aksesuar");
 check("kategori: Samsung çamaşır makinesi", categorize({ title: "Samsung çamaşır makinesi", site: "Teknosa" }), "Diğer");

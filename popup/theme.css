@@ -1359,6 +1359,238 @@ html[data-density="compact"] .category-group {
   }
 }
 
+/* ---------- Fiyat geçmişi (history.js) ---------- */
+
+/* Çizgi vurgu renginde. Koyu temada vurgu %25 açılıyor: koyu vurgular ("Gece")
+   koyu zeminde kayboluyordu; her hazır vurguda 3:1'in üstünde. */
+:root {
+  --os-chart-line: var(--os-g2);
+}
+
+.dark {
+  --os-chart-line: color-mix(in oklab, var(--os-g3), white 25%);
+}
+
+.os-history > div {
+  width: calc(100% - 24px);
+  max-width: 396px;
+  max-height: calc(100% - 24px);
+  padding: 16px;
+  gap: 12px;
+}
+
+.os-history header {
+  gap: 4px;
+  padding-right: 28px;
+}
+
+.os-history header h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.os-history header p {
+  font-size: 12px;
+  line-height: 16px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.os-history-close {
+  width: 28px;
+  height: 28px;
+  top: 10px;
+  inset-inline-end: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.os-history-close:hover {
+  background: var(--muted);
+}
+
+.os-history-close:focus-visible {
+  outline: 2px solid var(--ring);
+}
+
+.os-history-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.os-history-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.os-history-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.os-history-stats span,
+.os-history-stats small {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--muted-foreground);
+}
+
+.os-history-stats strong {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-history-chart {
+  position: relative;
+  border-radius: 8px;
+  touch-action: none;
+}
+
+.os-history-chart:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.os-history-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.os-chart-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.os-chart-axis {
+  font-size: 10.5px;
+  fill: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.os-chart-line {
+  fill: none;
+  stroke: var(--os-chart-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Halka pencerenin zemin renginde: nokta çizginin üstünde okunur kalıyor. */
+.os-chart-dot {
+  fill: var(--os-chart-line);
+  stroke: var(--popover);
+  stroke-width: 2;
+}
+
+.os-chart-crosshair {
+  stroke: var(--muted-foreground);
+  stroke-width: 1;
+}
+
+.os-chart-tooltip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--popover);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+  font-size: 11px;
+  line-height: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.os-chart-tooltip[hidden] {
+  display: none;
+}
+
+.os-chart-tooltip strong {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.os-chart-tooltip span {
+  color: var(--muted-foreground);
+}
+
+.os-history-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}
+
+.os-history-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.os-history-changes h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.os-history-changes ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.os-history-changes li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.os-history-changes li > span:first-child {
+  color: var(--muted-foreground);
+}
+
+.os-history-changes li > strong {
+  font-weight: 600;
+  text-align: right;
+}
+
+.os-history-changes .os-price-delta {
+  font-size: 11px;
+  min-width: 72px;
+  text-align: right;
+}
+
+/* "İlk kayıt": yönü yok, gri. Yönlü olanların rengi .os-price-delta'dan. */
+.os-history-changes .os-price-delta:not([data-direction]) {
+  color: var(--muted-foreground);
+}
+
 @keyframes os-item-flash {
   20% {
     border-color: var(--brand);

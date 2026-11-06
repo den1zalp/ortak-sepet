@@ -472,6 +472,7 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
       : !OrtakSepetCart.arePricesEqual(oldPrice, newPrice);
 
     const currency = freshProduct.currency || item.currency || OrtakSepetCart.detectCurrencyFromPrice(newPrice);
+    const checkedAt = new Date().toISOString();
 
     return {
       ok: true,
@@ -516,7 +517,12 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
           : priceChanged
             ? oldPrice || item.previousPrice || null
             : null,
-        lastCheckedAt: new Date().toISOString(),
+        // Geçmişe o günün mağaza fiyatı yazılıyor, değişmemiş olsa da; elle
+        // girilen fiyat korunsa da. Satıştan kalkan ürün için nokta eklenmiyor.
+        priceHistory: productUnavailable
+          ? OrtakSepetCart.getPriceHistory(item)
+          : OrtakSepetCart.recordPriceHistory(item, freshProduct.price, checkedAt),
+        lastCheckedAt: checkedAt,
         lastUpdateStatus: productUnavailable && !keepManualPrice ? "unavailable" : keepManualPrice ? "manual-kept" : "success",
         lastUpdateError: null,
       },

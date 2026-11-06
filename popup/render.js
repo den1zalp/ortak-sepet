@@ -417,6 +417,15 @@ function fillCartItemActions(actions, item, fullTitle) {
 
   actions.appendChild(
     createItemButton({
+      icon: "history",
+      text: translate("priceHistory"),
+      accessibleLabel: translate("priceHistoryLabel", { title: fullTitle }),
+      data: { priceHistory: item.id },
+      align: "end",
+    }),
+  );
+  actions.appendChild(
+    createItemButton({
       icon: "edit",
       text: translate("manualPrice"),
       accessibleLabel: translate("manualPriceLabel", { title: fullTitle }),

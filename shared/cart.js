@@ -274,6 +274,49 @@ var OrtakSepetCart = (function () {
     return cleanText(oldPrice) === cleanText(newPrice);
   }
 
+  // Fiyat geçmişi: fiyatın okunduğu her gün için bir nokta { at, price }, fiyat
+  // değişmemiş olsa da. Grafik böylece fiyatın hangi günler kontrol edildiğini
+  // gösterebiliyor; yalnızca değişimleri tutunca bir haftalık düz çizginin
+  // bilinen bir fiyat mı yoksa boşluk mu olduğu anlaşılmıyordu. Aynı gün yeniden
+  // okununca o günün noktası son okunan fiyatla değişiyor. Elle girilen fiyat
+  // buraya girmiyor: geçmiş mağazanın fiyatını anlatıyor, sepette kullanılanı
+  // değil.
+  const PRICE_HISTORY_DAYS = 365;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  // Gün, kullanıcının kendi takvimine göre.
+  function localDayKey(at) {
+    const date = new Date(at);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  }
+
+  // Bu özellikten önce eklenmiş ürünün geçmişi yok; bilinen tek fiyatı, son
+  // kontrol edildiği anla başlangıç noktası sayılıyor.
+  function getPriceHistory(item) {
+    if (Array.isArray(item?.priceHistory)) return item.priceHistory;
+
+    const known = item?.manualPrice === true ? item.detectedPrice : item?.price;
+    const at = item?.lastCheckedAt || item?.addedAt;
+
+    return known && at ? [{ at, price: known }] : [];
+  }
+
+  // 365 günden eski noktalar düşüyor; en son nokta ne kadar eski olursa olsun
+  // kalıyor, ürünün bilinen son fiyatı o.
+  function recordPriceHistory(item, price, at = new Date().toISOString()) {
+    const history = getPriceHistory(item);
+    if (!price) return history;
+
+    const last = history[history.length - 1];
+    const next =
+      last && localDayKey(last.at) === localDayKey(at)
+        ? [...history.slice(0, -1), { at, price }]
+        : [...history, { at, price }];
+
+    const cutoff = new Date(at).getTime() - PRICE_HISTORY_DAYS * DAY_MS;
+    return next.filter((point, index) => index === next.length - 1 || new Date(point.at).getTime() >= cutoff);
+  }
+
   function getQuantity(item) {
     return item?.quantity && item.quantity > 0 ? item.quantity : 1;
   }
@@ -358,6 +401,8 @@ var OrtakSepetCart = (function () {
   }
 
   function applyProductToExistingItem(existingItem, product) {
+    // Fiyat aşağıda değişmeden: geçmişi olmayan üründe eski fiyat başlangıç.
+    existingItem.priceHistory = recordPriceHistory(existingItem, product.price);
     existingItem.quantity = getQuantity(existingItem) + 1;
     existingItem.selected = true;
     existingItem.title = product.title || existingItem.title;
@@ -406,6 +451,7 @@ var OrtakSepetCart = (function () {
 
   function createItem(product) {
     const currency = product.currency || detectCurrencyFromPrice(product.price);
+    const addedAt = new Date().toISOString();
 
     return {
       id: createId(),
@@ -416,7 +462,8 @@ var OrtakSepetCart = (function () {
       quantity: 1,
       selected: true,
       category: null,
-      addedAt: new Date().toISOString(),
+      addedAt,
+      priceHistory: product.price ? [{ at: addedAt, price: product.price }] : [],
     };
   }
 
@@ -504,6 +551,7 @@ var OrtakSepetCart = (function () {
     findMissingOrigins,
     getDeclaredOriginForItem,
     getItems,
+    getPriceHistory,
     getQuantity,
     getViewMode,
     hasUnavailableMainPrice,
@@ -512,6 +560,7 @@ var OrtakSepetCart = (function () {
     mergeInstallmentAvailable,
     mergeInstallmentText,
     normalizeUrl,
+    recordPriceHistory,
     regionForCurrency,
     resolveRegion,
     saveRefreshedItem,
