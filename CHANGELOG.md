@@ -2,6 +2,26 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.19.0 — 6 Kasım 2026
+
+### Yenilikler
+
+* **Fiyat geçmişi grafiği.** Sepetteki her ürünün kartında yeni bir grafik
+  düğmesi var. Tıklayınca ürünün fiyatının zaman içindeki değişimi açılıyor:
+  şu anki, en düşük ve en yüksek fiyat, basamaklı bir grafik ve fiyatın
+  değiştiği günlerin listesi. Grafiğin üstünden **7 gün**, **30 gün** ya da
+  **Tümü** seçilebiliyor; en düşük, en yüksek ve değişimler seçilen aralığa
+  göre. Grafikte bir noktanın üzerine gelince o günün fiyatı ve bir önceki
+  okumaya göre farkı yazıyor.
+* **Fiyat her gün not alınıyor.** "Fiyatları Güncelle" her çalıştığında o
+  günün fiyatı ürünün geçmişine yazılıyor, fiyat değişmemiş olsa da. Grafikte
+  her okuma bir nokta; böylece fiyatın hangi günler kontrol edildiği de
+  görünüyor. Son bir yılın kaydı tutuluyor. Elle fiyat girilen üründe grafik
+  mağazanın fiyatını gösteriyor.
+
+  Fiyat geçmişi bu sürümle tutulmaya başladı: sepetteki ürünlerin geçmişi,
+  son kontrol edildikleri günkü fiyatla başlıyor.
+
 ## 1.18.0 — 3 Kasım 2026
 
 ### Yenilikler
