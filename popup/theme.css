@@ -62,11 +62,9 @@ body {
 
 /* Popup içeriği kadar uzuyor; tarayıcı 600 px'te kesip sayfayı kaydırıyor.
    Liste ayrı bir kaydırma alanında değil, çünkü açılır menüler o alanın
-   içinde kalıp kırpılıyordu. Üst bar ve alttaki bildirim yapışkan.
-   Genişlik tarayıcının izin verdiği en fazla 800 px'in altında; yükseklik
-   600'den öteye gidemiyor. */
+   içinde kalıp kırpılıyordu. Üst bar ve alttaki bildirim yapışkan. */
 body {
-  width: 600px;
+  width: 420px;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -323,8 +321,7 @@ body {
   gap: 12px;
 }
 
-/* Dikey kaydırma çubuğu popup genişliğinin içinden yer alıyor; yatay çubuk
-   çıkmasın. */
+/* Dikey kaydırma çubuğu 420 px'in içinden yer alıyor; yatay çubuk çıkmasın. */
 html {
   overflow-x: hidden;
   scrollbar-width: thin;
@@ -1386,7 +1383,7 @@ html[data-density="compact"] .category-group {
 
 .os-history > div {
   width: calc(100% - 24px);
-  max-width: 540px;
+  max-width: 396px;
   max-height: calc(100% - 24px);
   padding: 16px;
   gap: 12px;
