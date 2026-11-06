@@ -22,6 +22,22 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   Fiyat geçmişi bu sürümle tutulmaya başladı: sepetteki ürünlerin geçmişi,
   son kontrol edildikleri günkü fiyatla başlıyor.
 
+### Değişenler
+
+* **Adet 1'deyken "−" düğmesi yok.** Adet 2 ve üstündeyken çıkıyor. Ürünü
+  silmek için kartta çöp kutusu var; eskiden adet 1'de "−"ye basmak ürünü
+  "Geri Al" bırakmadan siliyordu.
+* **"Linke Git" düğmesi kaldırıldı.** Ürün sayfası, sepette de Aldıklarım'da
+  da ürün adına tıklayınca açılıyor.
+
+### Düzeltilenler
+
+* **Alttaki bildirim yazısız çıkabiliyordu.** Ürün silme, "Alındı" ya da
+  sepeti temizleme gibi işlemlerden sonra "Geri Al" teklifi popup kapanıp
+  açılsa da beş dakika duruyor; ama neyin geri alınacağını söyleyen mesaj
+  saklanmadığı için popup yeniden açılınca bildirimde yalnızca "Geri Al"
+  kalıyordu. Artık mesaj da teklifle birlikte geri geliyor.
+
 ## 1.18.0 — 3 Kasım 2026
 
 ### Yenilikler
