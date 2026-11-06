@@ -101,7 +101,6 @@ const CART_ITEM_ACTIONS = {
   toggleSelected,
   editPrice: editItemPrice,
   remove: removeItem,
-  open: openItem,
   openLink: openItem,
   increase: increaseQuantity,
   decrease: decreaseQuantity,
@@ -112,7 +111,6 @@ const CART_ITEM_ACTIONS = {
 const PURCHASE_ACTIONS = {
   restorePurchase,
   deletePurchase,
-  openPurchase,
   openPurchaseLink: openPurchase,
 };
 
@@ -123,7 +121,8 @@ async function runItemAction(event, actions) {
   const name = Object.keys(actions).find((action) => target.dataset[action]);
   if (!name) return;
 
-  // Ürün adı bağlantısı: sekmeyi "Linke Git" ile aynı yoldan açıyoruz.
+  // Ürün adı bağlantısı: sekme browser.tabs.create ile açılıyor (actions.js →
+  // openItem); href orta tık ve klavye için duruyor.
   if (target.tagName === "A") event.preventDefault();
   await actions[name](target.dataset[name]);
 }

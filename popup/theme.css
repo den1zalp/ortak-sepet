@@ -957,6 +957,18 @@ html {
   background: color-mix(in oklab, var(--input) 30%, transparent);
 }
 
+/* Adet 1'de azaltma düğmesi yok (render.js → fillQuantity); sayı grubun ilk
+   öğesi olunca sol kenarı ve köşeleri kendisi çiziyor. */
+.os-qty > output:first-child {
+  border-inline-start: 1px solid var(--border);
+  border-start-start-radius: min(var(--radius-md), 10px);
+  border-end-start-radius: min(var(--radius-md), 10px);
+}
+
+.dark .os-qty > output:first-child {
+  border-inline-start-color: var(--input);
+}
+
 .os-item-actions {
   display: flex;
   align-items: center;
@@ -1287,8 +1299,7 @@ html[data-density="compact"] .os-item .os-item-badges {
 
 /* Adet ve işlemler ürün adının altında ince bir satır: çizgisiz, küçük
    düğmeler, metinle aynı hizada (seçim kutusu 16 px + boşluk 10 px).
-   "Linke Git" yok, ürün adı zaten bağlantı; manuel fiyat da normal
-   görünümde. */
+   Manuel fiyat yalnızca normal görünümde. */
 html[data-density="compact"] .os-item:not(.os-item-bought) > footer {
   padding: 0 0 0 26px;
   border-top: 0;
@@ -1309,7 +1320,6 @@ html[data-density="compact"] .os-qty > output {
   font-size: 12px;
 }
 
-html[data-density="compact"] .os-item-actions [data-open],
 html[data-density="compact"] .os-item-actions [data-edit-price] {
   display: none;
 }

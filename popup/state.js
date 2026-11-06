@@ -58,6 +58,17 @@ function setUndoVisible(isVisible) {
   updateStatusRow();
 }
 
+// Geri alınabilir bir işlemden sonra: ne olduğunu söyleyen mesaj ve "Geri Al".
+// Mesaj da geri alma kaydına yazılıyor; teklif popup kapanıp açılınca depodan
+// geri geliyor ve mesajı yanında olmazsa bildirimde yalnızca düğme kalıyordu.
+async function offerUndo(message) {
+  setStatus(message);
+  setUndoVisible(true);
+
+  const snapshot = await getUndoSnapshot();
+  if (snapshot) await browser.storage.local.set({ [UNDO_KEY]: { ...snapshot, message } });
+}
+
 // Alttaki bildirimi kapatır. "Geri Al" görünüyorsa teklif de siliniyor; yoksa
 // popup yeniden açılınca bildirim geri gelirdi.
 async function dismissStatus() {
@@ -69,8 +80,13 @@ async function dismissStatus() {
   }
 }
 
+// Popup açılırken: süresi geçmemiş geri alma teklifi mesajıyla birlikte geri
+// geliyor. Mesajı olmayan eski kayıtta (1.19.0 ve öncesi) genel bir cümle.
 async function refreshUndoVisibility() {
-  setUndoVisible(Boolean(await getUndoSnapshot()));
+  const snapshot = await getUndoSnapshot();
+
+  if (snapshot && !statusEl.textContent) setStatus(snapshot.message || translate("undoAvailable"));
+  setUndoVisible(Boolean(snapshot));
 }
 
 async function getViewMode() {

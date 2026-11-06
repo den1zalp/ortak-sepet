@@ -181,9 +181,9 @@ function applyCategoryAccent(element, groupKey) {
 }
 
 // Görsel, ad ve site: sepet ve alınanlar kartında ortak. Ürün adı ürün
-// sayfasına bağlantı: kompakt görünümde işlem düğmeleri gizli olduğu için
-// sayfaya gitmenin tek yolu bu. Tıklamayı init.js karşılıyor (linkAction ile
-// adı verilen işlem); href orta tık ve klavye için duruyor.
+// sayfasına bağlantı ve sayfaya gitmenin tek yolu; ayrı bir "Linke Git"
+// düğmesi yok. Tıklamayı init.js karşılıyor (linkAction ile adı verilen işlem);
+// href orta tık ve klavye için duruyor.
 function fillItemBasics(card, record, fullTitle, linkAction) {
   card.querySelector(".os-item-media").prepend(createProductImage(record.image));
 
@@ -367,6 +367,9 @@ function fillItemAmount(
 
 // Şablondaki adet düğmeleri data-qty ile işaretli; işleyici (init.js) ürünü
 // data-increase / data-decrease="<id>"'den buluyor.
+//
+// Adet 1'deyken azaltma düğmesi yok: bir altındaki "0" ürünü silmek demek,
+// onun için kartta çöp kutusu var. Azaltmayla silmek "Geri Al" da bırakmıyordu.
 function fillQuantity(card, item, fullTitle) {
   const quantity = getQuantity(item);
   card.querySelector(".os-qty").setAttribute("aria-label", translate("quantityGroup"));
@@ -374,6 +377,8 @@ function fillQuantity(card, item, fullTitle) {
   const value = card.querySelector(".os-qty-value");
   value.value = String(quantity);
   value.title = translate("quantity", { quantity });
+
+  if (quantity <= 1) card.querySelector('[data-qty="decrease"]').remove();
 
   for (const button of card.querySelectorAll("[data-qty]")) {
     const direction = button.dataset.qty;
@@ -386,6 +391,8 @@ function fillQuantity(card, item, fullTitle) {
   }
 }
 
+// Ürün sayfası kartta ayrı bir düğmeyle açılmıyor: ürün adı bağlantı
+// (fillItemBasics).
 function fillCartItemActions(actions, item, fullTitle) {
   actions.appendChild(
     createItemButton({
@@ -394,14 +401,6 @@ function fillCartItemActions(actions, item, fullTitle) {
       accessibleLabel: translate("markPurchasedLabel", { title: fullTitle }),
       data: { purchase: item.id },
       variant: "os-action-purchase",
-    }),
-  );
-  actions.appendChild(
-    createItemButton({
-      icon: "open",
-      text: translate("goToLink"),
-      accessibleLabel: translate("openLinkLabel", { title: fullTitle }),
-      data: { open: item.id },
     }),
   );
 
@@ -628,15 +627,6 @@ function fillPurchaseActions(actions, record, fullTitle) {
       text: translate("restoreToCart"),
       accessibleLabel: translate("restoreToCartLabel", { title: fullTitle }),
       data: { restorePurchase: record.id },
-      align: "end",
-    }),
-  );
-  actions.appendChild(
-    createItemButton({
-      icon: "open",
-      text: translate("goToLink"),
-      accessibleLabel: translate("openLinkLabel", { title: fullTitle }),
-      data: { openPurchase: record.id },
       align: "end",
     }),
   );

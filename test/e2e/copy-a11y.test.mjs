@@ -94,7 +94,7 @@ const a11y = await popup.evaluate(() => {
   const decrease = document.querySelector("[data-decrease]");
   const increase = document.querySelector("[data-increase]");
   const remove = document.querySelector("[data-remove]");
-  const open = document.querySelector("[data-open]");
+  const link = document.querySelector("#cartItems .os-item-link");
   const edit = document.querySelector("[data-edit-price]");
 
   return {
@@ -104,7 +104,9 @@ const a11y = await popup.evaluate(() => {
     decrease: decrease?.getAttribute("aria-label"),
     increase: increase?.getAttribute("aria-label"),
     remove: remove?.getAttribute("aria-label"),
-    open: open?.getAttribute("aria-label"),
+    // Ürün sayfası ayrı bir düğmeyle değil, ürün adının bağlantısıyla açılıyor.
+    openButton: Boolean(document.querySelector("[data-open], [data-open-purchase]")),
+    link: link ? `${link.tagName}: ${link.textContent} → ${link.getAttribute("href")}` : null,
     edit: edit?.getAttribute("aria-label"),
     actionGrid: document.getElementById("actionGrid")?.getAttribute("aria-label"),
   };
@@ -115,11 +117,16 @@ check("seçim kutusu ürün adıyla adlandırıldı", a11y.checkbox === "Seçili
 check("adet azalt etiketli", a11y.decrease === "Adet azalt: Philips Airfryer XXL", a11y.decrease);
 check("adet artır etiketli", a11y.increase === "Adet artır: Philips Airfryer XXL", a11y.increase);
 check("sil etiketli", a11y.remove === "Ürünü sil: Philips Airfryer XXL", a11y.remove);
-check("linke git etiketli", a11y.open === "Ürün sayfasını aç: Philips Airfryer XXL", a11y.open);
+check("ayrı linke git düğmesi yok", !a11y.openButton);
+check(
+  "ürün adı ürün sayfasına bağlantı",
+  a11y.link === "A: Philips Airfryer XXL → https://www.hepsiburada.com/urun-p-1",
+  a11y.link,
+);
 check("manuel fiyat etiketli", a11y.edit === "Manuel fiyat gir: Philips Airfryer XXL", a11y.edit);
 check("işlem alanı etiketli", a11y.actionGrid === "Sepet işlemleri", a11y.actionGrid);
 
-// --- 6. Kompakt görünüm: ürün adı ürün sayfasına götürüyor, "Linke Git" gizli ---
+// --- 6. Kompakt görünüm: ürün adı ürün sayfasına götürüyor, manuel fiyat gizli ---
 await popup.evaluate(async () => {
   await setCompactMode(true);
   applyCompactMode(true);
@@ -138,7 +145,6 @@ const titleLink = await popup.evaluate(async () => {
       quantity: visible("[data-increase]") && visible("[data-decrease]"),
       purchase: visible("[data-purchase]"),
       remove: visible("[data-remove]"),
-      open: visible("[data-open]"),
       edit: visible("[data-edit-price]"),
     },
   };
@@ -152,7 +158,7 @@ check(
   compactButtons.quantity && compactButtons.purchase && compactButtons.remove,
   JSON.stringify(compactButtons),
 );
-check("kompakt görünümde linke git ve manuel fiyat gizli", !compactButtons.open && !compactButtons.edit, JSON.stringify(compactButtons));
+check("kompakt görünümde manuel fiyat gizli", !compactButtons.edit, JSON.stringify(compactButtons));
 check("ürün adına tıklayınca ürün sayfası açıldı", JSON.stringify(titleLink.opened) === '["https://www.hepsiburada.com/urun-p-1"]', JSON.stringify(titleLink.opened));
 
 // --- 7. İngilizce tarafta da etiketler ---

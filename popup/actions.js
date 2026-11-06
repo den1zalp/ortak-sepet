@@ -322,8 +322,7 @@ async function removeItem(id) {
   await saveUndoSnapshot();
   await saveCartItems(updatedItems);
 
-  setStatus(translate("productRemoved"));
-  setUndoVisible(true);
+  await offerUndo(translate("productRemoved"));
   await renderCart();
 }
 
@@ -365,8 +364,7 @@ async function movePurchasedItems(itemsToMove) {
   await savePurchasedItems([...purchased, ...records]);
   await saveCartItems(items.filter((item) => !movedIds.has(item.id)));
 
-  setStatus(translate("purchasedMoved", { count: records.length }));
-  setUndoVisible(true);
+  await offerUndo(translate("purchasedMoved", { count: records.length }));
   await renderCart();
 }
 
@@ -413,8 +411,7 @@ async function restorePurchase(id) {
   await saveCartItems(items);
   await savePurchasedItems(purchased.filter((entry) => entry.id !== id));
 
-  setStatus(translate("purchaseRestored"));
-  setUndoVisible(true);
+  await offerUndo(translate("purchaseRestored"));
   await renderCart();
 }
 
@@ -426,8 +423,7 @@ async function deletePurchase(id) {
   await saveUndoSnapshot();
   await savePurchasedItems(purchased.filter((entry) => entry.id !== id));
 
-  setStatus(translate("purchaseDeleted"));
-  setUndoVisible(true);
+  await offerUndo(translate("purchaseDeleted"));
   await renderPurchased();
   await refreshTabs();
 }
@@ -475,8 +471,7 @@ async function clearCart() {
   await saveCartItems([]);
   await setViewMode("normal");
 
-  setStatus(translate("cartCleared"));
-  setUndoVisible(true);
+  await offerUndo(translate("cartCleared"));
   await renderCart();
 }
 
