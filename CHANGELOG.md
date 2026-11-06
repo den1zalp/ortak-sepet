@@ -24,6 +24,9 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
 ### Değişenler
 
+* **Popup daha geniş.** Genişlik 420 pikselden 600 piksele çıktı; ürün adları
+  daha az kesiliyor, fiyat geçmişi penceresi de genişledi. Yükseklik aynı:
+  tarayıcılar eklenti popup'ını en fazla 600 piksel yüksekliğe izin veriyor.
 * **Adet 1'deyken "−" düğmesi yok.** Adet 2 ve üstündeyken çıkıyor. Ürünü
   silmek için kartta çöp kutusu var; eskiden adet 1'de "−"ye basmak ürünü
   "Geri Al" bırakmadan siliyordu.
