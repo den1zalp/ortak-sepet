@@ -395,6 +395,36 @@ function findHepsiburadaInstallmentInfo() {
   };
 }
 
+// Amazon TR taksiti fiyatın altındaki kutuda yazıyor:
+// "veya peşin fiyatına 189 TL x 6 ay". Banka adları (Bonus, World, Axess…)
+// yalnızca logo resimlerinin alt metninde, metinde yok; tutar da taksit
+// sayısından önce geliyor. Genel tarama bu sırayı tanımadığı için kutuyu
+// doğrudan okuyoruz. Kutu yoksa ya da tanımadığımız bir şey yazıyorsa kararı
+// genel taramaya bırakıyoruz.
+function findAmazonTrInstallmentInfo() {
+  const box = document.querySelector("#installmentCalculator_feature_div");
+  if (!box) return null;
+
+  const teaserText =
+    box.querySelector("#best-offer-string-cc")?.textContent ||
+    box.querySelector(".dpic-collapsed-text")?.textContent ||
+    "";
+  const normalized = normalizeTurkishText(teaserText || box.textContent);
+  if (!normalized) return null;
+
+  const monthlyMatch = normalized.match(/[\d.,]+\s*(?:tl|₺)\s*x\s*(\d+)\s*ay/);
+  const countMatch = monthlyMatch || normalized.match(/(\d+)\s*taksit/);
+
+  if (countMatch && Number(countMatch[1]) >= 2) {
+    return {
+      installmentAvailable: true,
+      installmentText: "Taksit var",
+    };
+  }
+
+  return null;
+}
+
 function findN11InstallmentInfo() {
   const rawBodyText =
     document.body?.textContent || document.documentElement?.textContent || "";
@@ -720,6 +750,11 @@ function findInstallmentInfo() {
   if (isSiteHost("hepsiburada.com")) {
     const hepsiburadaInstallmentInfo = findHepsiburadaInstallmentInfo();
     if (hepsiburadaInstallmentInfo) return hepsiburadaInstallmentInfo;
+  }
+
+  if (isSiteHost("amazon.com.tr")) {
+    const amazonInstallmentInfo = findAmazonTrInstallmentInfo();
+    if (amazonInstallmentInfo) return amazonInstallmentInfo;
   }
 
   const titleElement =
