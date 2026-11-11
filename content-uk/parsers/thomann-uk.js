@@ -22,8 +22,10 @@ function parseThomannUk() {
   // Görünen tutar indirimli üründe .price__primary'de; indirimsizde doğrudan
   // .price içinde. İndirimli üründe .price "30-days best price" tutarını da
   // içerdiği için ona yalnızca .price__primary yoksa bakılıyor.
+  // formatStructuredPrice binlik ayırıcıyı da yazıyor ("£2,222.00"); diğer
+  // UK mağazalarıyla ve sayfanın kendi yazdığıyla aynı biçim.
   const price =
-    (currency === "GBP" ? formatGbpCurrencyFromNumber(amount) : null) ||
+    (currency === "GBP" ? formatStructuredPrice(amount, "GBP") : null) ||
     cleanPrice(getText(`${THOMANN_UK_OFFER} .price__primary`)) ||
     (document.querySelector(`${THOMANN_UK_OFFER} .price__primary`)
       ? null
@@ -40,7 +42,6 @@ function parseThomannUk() {
         ? false
         : null,
     image:
-      toAbsoluteUrl(getAttr(".spotlight__item-image img[src*='/pics/bdb/']", "src")) ||
       toAbsoluteUrl(getAttr("img.spotlight__item-image[src*='/pics/bdb/']", "src")) ||
       getAttr("meta[property='og:image']", "content"),
     url: window.location.href,

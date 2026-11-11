@@ -717,14 +717,17 @@ function analyzeFreeShippingClaim(normalized) {
 }
 
 function findShippingInfo() {
-  const bodyText = cleanText(document.body?.innerText || document.body?.textContent || "");
-  const normalized = normalizeForSearch(bodyText);
   const host = window.location.hostname;
 
+  // Thomann'ın kargo kutusu kesin bilgi veriyor; tüm sayfanın innerText'ini
+  // (sayfanın tamamını yerleşimden geçiren okuma) almadan önce bakılıyor.
   if (/(^|\.)thomann\.co\.uk$/i.test(host)) {
     const thomannShippingInfo = findThomannUkShippingInfo();
     if (thomannShippingInfo) return thomannShippingInfo;
   }
+
+  const bodyText = cleanText(document.body?.innerText || document.body?.textContent || "");
+  const normalized = normalizeForSearch(bodyText);
 
   if (host.includes("temu")) {
     const hasConditionalShipping =
