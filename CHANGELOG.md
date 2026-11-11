@@ -2,6 +2,18 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
+## 1.19.1 — 12 Kasım 2026
+
+### Düzeltilenler
+
+* **Amazon TR ürünlerinde taksit okunmuyordu.** Amazon taksit kutusunu
+  değiştirdi; artık fiyatın altında "veya peşin fiyatına 189 TL x 6 ay"
+  yazıyor ve banka adları yalnızca logolarda duruyor. Eklenti bu yeni
+  biçimi tanımadığı için taksitli ürünlerde de "Taksit bilgisi bulunamadı"
+  yazıyordu. Artık taksit bu kutudan okunuyor; taksit göstermeyen ürünler
+  eskisi gibi taksitsiz görünüyor. Sepetteki ürünler bir sonraki "Fiyatları
+  Güncelle"de düzelir.
+
 ## 1.19.0 — 6 Kasım 2026
 
 ### Yenilikler
