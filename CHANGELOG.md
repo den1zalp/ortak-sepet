@@ -2,7 +2,21 @@
 
 Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
 
-## 1.19.1 — 12 Kasım 2026
+## 1.20.0 — 12 Kasım 2026
+
+### Yenilikler
+
+* **Thomann UK desteği** (`thomann.co.uk`). Fiyat, ürün adı, görsel, stok ve
+  kargo okunuyor. Kargo ürün sayfasında yazdığı gibi: £149 altındaki
+  ürünlerde "Kargo £8.90", üstünde "Ücretsiz kargo". Fiyat kutusundaki
+  "30-days best price" ya da "B-Stock" tutarları alınmıyor.
+* **Taksit yerine "Sonra öde".** Bazı ürünlerde taksit yok ama ödeme
+  ertelenebiliyor; Thomann'da ucuz ürünlerde PayPal "Pay in 30 days"
+  sunuyor. Bu ürünlerin kartında artık "Taksit var" ile aynı görünümde bir
+  "Sonra öde" rozeti çıkıyor; CSV'de de yazıyor. Taksit varsa (PayPal
+  "Pay in 3") ürün "Taksit var" olarak görünüyor. Hangisinin geçerli olduğu
+  PayPal'ın o ürün için gösterdiği tekliften okunuyor, fiyattan tahmin
+  edilmiyor.
 
 ### Düzeltilenler
 
