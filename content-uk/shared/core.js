@@ -204,6 +204,7 @@ function getSiteName() {
   if (host === "swatch.com" || host.endsWith(".swatch.com")) return "Swatch UK";
   if (host === "underarmour.co.uk" || host.endsWith(".underarmour.co.uk")) return "Under Armour UK";
   if (host === "sportsdirect.com" || host.endsWith(".sportsdirect.com")) return "Sports Direct";
+  if (host === "thomann.co.uk" || host.endsWith(".thomann.co.uk")) return "Thomann UK";
 
   return host;
 }
@@ -529,6 +530,13 @@ function findFinanceInfo() {
     if (amazonFinanceInfo) return amazonFinanceInfo;
   }
 
+  // Thomann'da tek ürün teklifi PayPal kutusunun kararı (bkz. thomann-uk.js);
+  // genel tarama ürün açıklamasındaki ya da yorumlardaki "pay later" gibi
+  // ifadelere takılabilir.
+  if (/(^|\.)thomann\.co\.uk$/i.test(window.location.hostname)) {
+    return findThomannUkFinanceInfo();
+  }
+
   const { text: bodyText, markupText } = getPaymentRelatedText();
   const normalized = normalizeForSearch(bodyText);
 
@@ -712,6 +720,11 @@ function findShippingInfo() {
   const bodyText = cleanText(document.body?.innerText || document.body?.textContent || "");
   const normalized = normalizeForSearch(bodyText);
   const host = window.location.hostname;
+
+  if (/(^|\.)thomann\.co\.uk$/i.test(host)) {
+    const thomannShippingInfo = findThomannUkShippingInfo();
+    if (thomannShippingInfo) return thomannShippingInfo;
+  }
 
   if (host.includes("temu")) {
     const hasConditionalShipping =

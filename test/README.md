@@ -74,6 +74,7 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 | `live/stores-5.test.mjs` | Karaca, Konyalı Saat, Lacoste TR/UK, Marks & Spencer TR/UK |
 | `live/stores-6.test.mjs` | Mi TR/UK, Mudo, Oysho TR/UK, Pandora TR/UK, Penti |
 | `live/stores-7.test.mjs` | Pull & Bear TR/UK, Stradivarius TR/UK, Swatch TR/UK, SuperStep, Saat & Saat, Zuhal Müzik, Under Armour TR |
+| `live/thomann.test.mjs` | Thomann UK: fiyat sayfadakiyle aynı, "30-days best price" alınmıyor, taksit PayPal kutusunun yazdığıyla uyuşuyor (`installment` sayfadan okunuyor) |
 
 Ekran görüntüleri `test/screenshots/` altına düşer (.gitignore'da).
 

@@ -241,6 +241,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       if (productParser?.id === "amazon-uk") await waitForAmazonUkPaymentBox();
 
+      // Thomann'ın taksit teklifi PayPal kutusu çizilince geliyor; yeni açılan
+      // sayfada (fiyat güncellemesinin sekmesi gibi) o ana kadar bekleniyor.
+      if (productParser?.id === "thomann-uk") await waitForThomannUkPaypalOffer();
+
       const product = await waitForUkProductFromPage();
 
       if (productParser?.id === "diesel-uk") {

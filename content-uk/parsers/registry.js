@@ -252,6 +252,12 @@
       matches: hostIs("sportsdirect.com"),
       parse: () => parseSportsDirect(),
     },
+    {
+      id: "thomann-uk",
+      label: "Thomann UK",
+      matches: hostIs("thomann.co.uk"),
+      parse: () => parseThomannUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

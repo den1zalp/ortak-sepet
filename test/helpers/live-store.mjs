@@ -277,14 +277,21 @@ async function runProductChecks({ listing, productUrls, browser, sw, check }) {
 
       // Taksit: sitenin taksit yazdığı yerde "var", hiç yazmadığı yerde "yok"
       // bekleniyor. Yanlış pozitif de yanlış negatif kadar kötü — sepetteki
-      // taksit grubu ve toplamı buna bakıyor.
-      if (listing.installment === "some") {
+      // taksit grubu ve toplamı buna bakıyor. Teklif ürüne göre değişiyorsa
+      // (Thomann) beklenti sayfadan okunuyor: installment(page) "some",
+      // "none" ya da null (bilinmiyor, kontrol atlanır) döner.
+      const installment =
+        typeof listing.installment === "function"
+          ? await listing.installment(page)
+          : listing.installment;
+
+      if (installment === "some") {
         check(
           `${listing.name} taksit okundu`,
           product.installmentAvailable === true,
           product.installmentText,
         );
-      } else if (listing.installment === "none") {
+      } else if (installment === "none") {
         check(
           `${listing.name} taksit uydurmadı`,
           product.installmentAvailable === false,
@@ -317,7 +324,8 @@ async function runProductChecks({ listing, productUrls, browser, sw, check }) {
 
 // listings: { name, listing | sitemap, pattern, toProductUrl?, readySelector,
 //             site, region?, priceRe, imageRe?, expectedPrice, rejectPrice?,
-//             installment?: "none" | "some", titleRe?, maxProducts?,
+//             installment?: "none" | "some" | (page) => "none" | "some" | null,
+//             titleRe?, maxProducts?,
 //             skipImageFetch? }
 export async function runStoreChecks(listings, options = {}) {
   const { check, summary } = createChecker();

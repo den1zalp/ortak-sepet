@@ -108,7 +108,8 @@
     "*://*.stradivarius.com/gb/*",
     "*://*.swatch.com/en-gb/*",
     "*://*.underarmour.co.uk/*",
-    "*://*.sportsdirect.com/*"
+    "*://*.sportsdirect.com/*",
+    "*://*.thomann.co.uk/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -312,7 +313,8 @@
         "*://*.stradivarius.com/gb/*",
         "*://*.swatch.com/en-gb/*",
         "*://*.underarmour.co.uk/*",
-        "*://*.sportsdirect.com/*"
+        "*://*.sportsdirect.com/*",
+        "*://*.thomann.co.uk/*"
       ],
       "js": [
         "shared/structured-data.js",
@@ -353,6 +355,7 @@
         "content-uk/parsers/swatch-uk.js",
         "content-uk/parsers/underarmour-uk.js",
         "content-uk/parsers/sportsdirect.js",
+        "content-uk/parsers/thomann-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

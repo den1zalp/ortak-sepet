@@ -104,6 +104,12 @@ function normalizeDeliveryText(text) {
     return translate("deliveryInfoAvailable");
   }
 
+  // Sayfada yazan kargo ücreti (Thomann UK: "Delivery £8.90").
+  const deliveryFee = String(text).match(/^delivery\s+(£\s?[\d.,]+)$/i)?.[1];
+  if (deliveryFee) {
+    return currentLanguage === "en" ? `Delivery ${deliveryFee}` : `Kargo ${deliveryFee}`;
+  }
+
   return text;
 }
 
