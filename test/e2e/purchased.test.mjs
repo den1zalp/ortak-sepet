@@ -120,7 +120,7 @@ const purchasedView = await popup.evaluate(() => {
     metas: groups.map((g) => g.querySelector(".category-meta").textContent),
     summary: document.getElementById("purchasedSummary").textContent,
     firstDate: document.querySelector("#purchasedItems .purchase-date")?.textContent,
-    buttons: Array.from(document.querySelectorAll("#purchasedItems .cart-actions button")).slice(0, 3).map((b) => b.textContent),
+    buttons: Array.from(document.querySelector("#purchasedItems .cart-actions")?.querySelectorAll("button") || []).map((b) => b.textContent),
   };
 });
 
@@ -138,7 +138,8 @@ check("GBP ayı ayrı para biriminde", purchasedView.metas[2].includes("£60.00"
 check("özet bu ay + tümü", purchasedView.summary.includes("Bu ay:") && purchasedView.summary.includes("Tümü:"), purchasedView.summary);
 check("özet toplamı iki para birimi", purchasedView.summary.includes("7.498,00 TL + £60.00"), purchasedView.summary);
 check("alınma tarihi gösteriliyor", /Alınma: \d{2}\.\d{2}\.\d{4}/.test(purchasedView.firstDate || ""), purchasedView.firstDate);
-check("kayıt butonları", purchasedView.buttons.join(",") === "Sepete Geri Al,Linke Git,Kaydı Sil", purchasedView.buttons.join(","));
+// "Linke Git" 1.19.0'da kaldırıldı; ürün sayfası ürün adına tıklayınca açılıyor.
+check("kayıt butonları", purchasedView.buttons.join(",") === "Sepete Geri Al,Kaydı Sil", purchasedView.buttons.join(","));
 
 // --- 6. Sepete geri alma ---
 await popup.evaluate(async () => {

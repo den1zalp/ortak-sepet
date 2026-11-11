@@ -1,4 +1,4 @@
-import { launchExtension, createChecker, screenshotPath } from "../helpers/extension.mjs";
+import { launchExtension, createChecker, screenshotPath, clickMenuItem } from "../helpers/extension.mjs";
 
 const { check, summary } = createChecker();
 
@@ -47,8 +47,7 @@ check("adet toplamı", labels.itemCount === "4", labels.itemCount);
 
 // --- 2. Sepeti temizle: iki adımlı onay ---
 // Temizle "…" menüsünde; ilk tık onay istediği için menü açık kalıyor.
-await popup.click("#moreActionsBtn");
-await popup.click("#clearCartBtn");
+await clickMenuItem(popup, "#moreActionsBtn", "#clearCartBtn");
 await new Promise((r) => setTimeout(r, 300));
 
 const afterFirstClick = await popup.evaluate(async () => ({
@@ -92,9 +91,13 @@ check("adetler korundu", JSON.stringify(afterUndo.quantities) === "[1,2,1]", JSO
 check("geri al butonu tekrar gizlendi", afterUndo.undoHidden === true);
 
 // --- 4. Onay zaman aşımı ---
-await popup.click("#moreActionsBtn");
-await popup.click("#clearCartBtn");
-await new Promise((r) => setTimeout(r, 5400));
+// Önce onayın gerçekten istendiğini doğrula; tıklama kaçarsa buton zaten
+// "Sepeti Temizle" yazdığı için aşağıdaki kontrol boşuna geçerdi.
+await clickMenuItem(popup, "#moreActionsBtn", "#clearCartBtn");
+await new Promise((r) => setTimeout(r, 300));
+const armedAgain = await popup.evaluate(() => document.getElementById("clearCartBtn").textContent);
+check("onay yeniden istendi", armedAgain === "Emin misin?", armedAgain);
+await new Promise((r) => setTimeout(r, 5100));
 const afterTimeout = await popup.evaluate(() => document.getElementById("clearCartBtn").textContent);
 check("onay 5 sn sonra düşüyor", afterTimeout === "Sepeti Temizle", afterTimeout);
 

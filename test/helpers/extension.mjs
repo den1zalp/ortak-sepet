@@ -105,6 +105,28 @@ export function readProductFromTab(sw, url) {
   }, url);
 }
 
+// Basecoat açılır menüsü (ör. "…") açılırken küçükten büyüyerek beliriyor ve
+// bu geçiş bitmeden öğeye yapılan tıklama alttaki ürün kartına düşüyor.
+// Menüyü açtıktan hemen sonra tıklamak makinenin hızına göre geçip kalıyordu;
+// burada öğenin gerçekten tıklama alacağı ana kadar bekleniyor.
+export async function clickMenuItem(page, triggerSelector, itemSelector) {
+  await page.click(triggerSelector);
+  await page.waitForFunction(
+    (selector) => {
+      const item = document.querySelector(selector);
+      const popover = item?.closest("[data-popover]");
+      if (!item || !popover || getComputedStyle(popover).opacity !== "1") return false;
+
+      const rect = item.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return Boolean(hit && item.contains(hit));
+    },
+    { timeout: 5000 },
+    itemSelector,
+  );
+  await page.click(itemSelector);
+}
+
 // Görsel adresini gerçekten indirmeyi dener; adres doğru görünüp sunucu resim
 // döndürmüyorsa sepette boş kare çıkıyor. check(...) ile doğrudan kullanılsın
 // diye [ad, sonuç, ayrıntı] üçlüsü döner.

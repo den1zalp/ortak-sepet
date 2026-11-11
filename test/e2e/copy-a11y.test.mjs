@@ -1,4 +1,4 @@
-import { launchExtension, createChecker, screenshotPath } from "../helpers/extension.mjs";
+import { launchExtension, createChecker, screenshotPath, clickMenuItem } from "../helpers/extension.mjs";
 
 const { check, summary } = createChecker();
 
@@ -56,8 +56,7 @@ check("toplam satırı iki para birimi", text.includes("Toplam: 6.998,00 TL + £
 
 // --- 3. Gerçekten panoya yazıyor mu ---
 // Kopyala "…" menüsünde; menü kapalıyken öğe tıklanamıyor.
-await popup.click("#moreActionsBtn");
-await popup.click("#copyCartBtn");
+await clickMenuItem(popup, "#moreActionsBtn", "#copyCartBtn");
 await new Promise((r) => setTimeout(r, 500));
 
 const copyResult = await popup.evaluate(async () => ({
