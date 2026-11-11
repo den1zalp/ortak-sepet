@@ -254,6 +254,11 @@ function createItemBadges(item) {
     badges.push(
       createBadge(getInstallmentBadgeText(item), { dot: true, tone: "success", className: "os-badge-installment" }),
     );
+  } else if (item.payLaterAvailable === true) {
+    // Taksit yok ama ödeme ertelenebiliyor (Thomann: PayPal "Pay in 30 days").
+    badges.push(
+      createBadge(translate("payLaterBadge"), { dot: true, tone: "success", className: "os-badge-pay-later" }),
+    );
   }
 
   const shippingDisplay = getShippingDisplay(item);

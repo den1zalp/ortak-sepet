@@ -43,6 +43,18 @@ check("UK negatif bilinen", Cart.isUnknownInstallmentInfo({ installmentAvailable
 check("UK pozitif", Cart.isUnknownInstallmentInfo({ installmentAvailable: true, installmentText: "Finance / pay later available" }), false);
 check("TR unknown", Cart.isUnknownInstallmentInfo({ installmentAvailable: false, installmentText: "Taksit bilgisi bulunamadı" }), true);
 check("TR negatif bilinen", Cart.isUnknownInstallmentInfo({ installmentAvailable: false, installmentText: "Taksit yok" }), false);
+check("Thomann 'pay in 30 days' bilinen", Cart.isUnknownInstallmentInfo({ installmentAvailable: false, installmentText: "No instalments, pay in 30 days with PayPal" }), false);
+
+// --- sonra öde birleştirme ---
+const payLaterItem = { installmentAvailable: false, installmentText: "No instalments, pay in 30 days with PayPal", payLaterAvailable: true, payLaterText: "Pay in 30 days with PayPal" };
+const unknownRead = { installmentAvailable: false, installmentText: "Finance information not found", payLaterAvailable: null };
+const payIn3Read = { installmentAvailable: true, installmentText: "Pay in 3 with PayPal", payLaterAvailable: false, payLaterText: "" };
+check("okunamayan teklif sonra öde'yi silmiyor", Cart.mergePayLaterAvailable(unknownRead, payLaterItem), true);
+check("okunamayan teklif metni koruyor", Cart.mergePayLaterText(unknownRead, payLaterItem), "Pay in 30 days with PayPal");
+check("taksite dönen üründe sonra öde kalkıyor", Cart.mergePayLaterAvailable(payIn3Read, payLaterItem), false);
+check("sonra öde yeni okunuyor", Cart.mergePayLaterAvailable(payLaterItem, { installmentAvailable: true }), true);
+check("alanı olmayan eski kayıt bilinmiyor kalıyor", Cart.mergePayLaterAvailable(unknownRead, {}), null);
+check("sonra öde söylemeyen mağaza false yazıyor", Cart.mergePayLaterAvailable({ installmentAvailable: false, installmentText: "Taksit yok" }, {}), false);
 
 // --- ekleme ---
 const trProduct = {

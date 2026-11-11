@@ -366,6 +366,21 @@ var OrtakSepetCart = (function () {
       : freshProduct.installmentText;
   }
 
+  // "Sonra öde" (ör. PayPal "Pay in 30 days") ödeme teklifinin parçası; taksit
+  // bilgisiyle aynı anda okunuyor. Teklif okunamadıysa önceki değer kalıyor,
+  // okunduysa teklifte yer alıp almadığı yazılıyor.
+  function mergePayLaterAvailable(freshProduct, currentItem) {
+    return isUnknownInstallmentInfo(freshProduct)
+      ? currentItem.payLaterAvailable ?? null
+      : freshProduct.payLaterAvailable === true;
+  }
+
+  function mergePayLaterText(freshProduct, currentItem) {
+    return isUnknownInstallmentInfo(freshProduct)
+      ? currentItem.payLaterText || ""
+      : freshProduct.payLaterText || "";
+  }
+
   // Re-reading before a write only helps if nothing writes in between. The
   // price refresh saves from several parallel workers: two that finish
   // together both read the same snapshot, and the second write silently
@@ -430,6 +445,8 @@ var OrtakSepetCart = (function () {
 
     existingItem.installmentAvailable = mergeInstallmentAvailable(product, existingItem);
     existingItem.installmentText = mergeInstallmentText(product, existingItem);
+    existingItem.payLaterAvailable = mergePayLaterAvailable(product, existingItem);
+    existingItem.payLaterText = mergePayLaterText(product, existingItem);
 
     existingItem.shippingAvailable = product.shippingAvailable;
     existingItem.freeShipping = product.freeShipping;
@@ -559,6 +576,8 @@ var OrtakSepetCart = (function () {
     isUnknownInstallmentInfo,
     mergeInstallmentAvailable,
     mergeInstallmentText,
+    mergePayLaterAvailable,
+    mergePayLaterText,
     normalizeUrl,
     recordPriceHistory,
     regionForCurrency,

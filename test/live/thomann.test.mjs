@@ -17,15 +17,16 @@ const text = (selector) => (page) =>
     return node ? node.textContent.replace(/\s+/g, " ").trim() : null;
   }, selector);
 
-async function paypalInstallment(page) {
+// PayPal kutusunun yazdığı teklif: "installments", "payLater" ya da null.
+async function paypalOffer(page) {
   for (let attempt = 0; attempt < 10; attempt += 1) {
     for (const frame of page.frames()) {
       if (!/paypal\.com/i.test(frame.url())) continue;
 
       const message = await frame.evaluate(() => document.body?.innerText || "").catch(() => "");
 
-      if (/pay in \d+ interest-free payments/i.test(message)) return "some";
-      if (/pay in 30 days/i.test(message)) return "none";
+      if (/pay in \d+ interest-free payments/i.test(message)) return "installments";
+      if (/pay in 30 days/i.test(message)) return "payLater";
     }
 
     await wait(500);
@@ -33,6 +34,16 @@ async function paypalInstallment(page) {
 
   console.log("—    PayPal kutusu okunamadı, taksit kontrolü atlandı");
   return null;
+}
+
+async function paypalInstallment(page) {
+  const offer = await paypalOffer(page);
+  return offer === null ? null : offer === "installments" ? "some" : "none";
+}
+
+async function paypalPayLater(page) {
+  const offer = await paypalOffer(page);
+  return offer === null ? null : offer === "payLater";
 }
 
 const thomann = {
@@ -48,6 +59,7 @@ const thomann = {
     text("[itemprop='offers'] .price-wrapper .price")(page),
   rejectPrice: text("[itemprop='offers'] .strike-price-saving-text"),
   installment: paypalInstallment,
+  payLater: paypalPayLater,
   maxProducts: 3,
 };
 

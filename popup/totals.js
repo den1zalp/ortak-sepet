@@ -194,6 +194,13 @@ function getInstallmentDisplay(item) {
     };
   }
 
+  if (item.payLaterAvailable === true) {
+    return {
+      text: translate("payLaterBadge"),
+      bold: false,
+    };
+  }
+
   return {
     text: translate("unavailable"),
     bold: false,

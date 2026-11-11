@@ -23,6 +23,7 @@ Geliştirme için paketlenmemiş kurulum aşağıda anlatılıyor.
 * Ürün adı, fiyat, görsel, site ve ürün linki gösterme
 * Kargo / teslimat bilgisi okuma
 * Taksit / finance bilgisi okuma
+* Taksit yoksa ödemeyi erteleme ("Sonra öde" / pay later) seçeneğini gösterme
 * TL ve GBP toplamlarını ayrı ayrı hesaplama
 * Genel toplam ve seçili ürün toplamı hesaplama
 * Ürün adedi artırma ve azaltma

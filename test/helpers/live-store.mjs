@@ -298,6 +298,20 @@ async function runProductChecks({ listing, productUrls, browser, sw, check }) {
           product.installmentText,
         );
       }
+
+      // "Sonra öde" (taksitsiz erteleme): payLater(page) true / false / null
+      // (bilinmiyor, kontrol atlanır).
+      if (typeof listing.payLater === "function") {
+        const payLater = await listing.payLater(page);
+
+        if (payLater !== null) {
+          check(
+            `${listing.name} sonra öde ${payLater ? "okundu" : "uydurmadı"}`,
+            (product.payLaterAvailable === true) === payLater,
+            `${product.payLaterAvailable} ${product.payLaterText || ""}`,
+          );
+        }
+      }
     } catch (error) {
       check(`${url} yüklendi`, false, error.message.split("\n")[0]);
     }
@@ -325,7 +339,7 @@ async function runProductChecks({ listing, productUrls, browser, sw, check }) {
 // listings: { name, listing | sitemap, pattern, toProductUrl?, readySelector,
 //             site, region?, priceRe, imageRe?, expectedPrice, rejectPrice?,
 //             installment?: "none" | "some" | (page) => "none" | "some" | null,
-//             titleRe?, maxProducts?,
+//             payLater?: (page) => boolean | null, titleRe?, maxProducts?,
 //             skipImageFetch? }
 export async function runStoreChecks(listings, options = {}) {
   const { check, summary } = createChecker();

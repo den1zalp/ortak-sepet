@@ -500,6 +500,8 @@ async function updateSingleItem(item, onPhase = () => {}, releaseSlot = () => {}
 
         installmentAvailable: OrtakSepetCart.mergeInstallmentAvailable(freshProduct, item),
         installmentText: OrtakSepetCart.mergeInstallmentText(freshProduct, item),
+        payLaterAvailable: OrtakSepetCart.mergePayLaterAvailable(freshProduct, item),
+        payLaterText: OrtakSepetCart.mergePayLaterText(freshProduct, item),
 
         shippingAvailable: freshProduct.shippingAvailable,
         freeShipping: freshProduct.freeShipping,

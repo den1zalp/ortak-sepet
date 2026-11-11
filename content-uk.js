@@ -47,6 +47,10 @@ function normalizeProduct(product) {
 
     installmentAvailable: financeInfo.installmentAvailable,
     installmentText: financeInfo.installmentText,
+    // Taksit değil, ödemeyi erteleme ("Pay in 30 days"). Yalnızca bunu ayrıca
+    // söyleyen mağazalarda dolu (şimdilik Thomann); diğerlerinde null.
+    payLaterAvailable: financeInfo.payLaterAvailable ?? null,
+    payLaterText: financeInfo.payLaterText || "",
 
     shippingAvailable: shippingInfo.shippingAvailable,
     freeShipping: shippingInfo.freeShipping,

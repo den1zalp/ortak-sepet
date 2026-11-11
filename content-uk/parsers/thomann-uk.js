@@ -151,14 +151,19 @@ function findThomannUkFinanceInfo() {
       installmentText: offer.term
         ? `Pay in ${offer.term} with PayPal`
         : "PayPal instalments available",
+      payLaterAvailable: false,
+      payLaterText: "",
     };
   }
 
   // "Pay in 30 days" (PAY_LATER_PAY_IN_1): ödeme erteleniyor ama bölünmüyor.
+  // Taksit sayılmıyor; sepette ayrı "Sonra öde" rozetiyle gösteriliyor.
   if (offer.type === "PAY_LATER_PAY_IN_1") {
     return {
       installmentAvailable: false,
       installmentText: "No instalments, pay in 30 days with PayPal",
+      payLaterAvailable: true,
+      payLaterText: "Pay in 30 days with PayPal",
     };
   }
 
