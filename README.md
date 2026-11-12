@@ -211,17 +211,6 @@ AMO doğrulaması için:
 npx --yes web-ext lint
 ```
 
-## Testler
-
-```bash
-npm install
-npm run test:setup   # Chrome for Testing (bir kez)
-npm test             # birim + uçtan uca testler
-npm run test:live    # canlı ürün sayfalarında parser doğrulaması
-```
-
-Ayrıntılar ve yeni test yazma rehberi: [`test/README.md`](test/README.md).
-
 ## Tek Kaynaktan İki Tarayıcı
 
 Aynı klasör her iki tarayıcıya da yüklenir. Farklılıklar manifest içinde çözülür:
@@ -251,7 +240,6 @@ ortak-sepet/
 - vendor/                # Basecoat (popup bileşenleri, MIT) ve Geist fontu (OFL-1.1)
 - _locales/              # eklenti açıklamasının TR/EN çevirisi
 - icons/
-- test/                  # unit / e2e / live testleri (pakete girmez)
 - tools/                 # mağaza paketleyici (pakete girmez)
 ```
 
