@@ -4,7 +4,8 @@
 //   Birkenstock TR — indirimli tutar, üstü çizili liste fiyatının yanında duruyor
 //   Crocs TR       — iki tutarın sırası mobil/masaüstü düzeninde ters
 //   Birkenstock UK — mağaza global alan adının /gb/ yolunda
-//   Crocs UK       — sayfada seçili renge ait olmayan başka fiyat blokları var
+//   Crocs UK       — renk grubu fiyatları seçili renge ait değil; indirimli
+//                    renkte üstü çizili liste fiyatı alınmıyor
 //
 // Not: crocs.co.uk taze bir tarayıcı profiline Cloudflare doğrulama sayfası
 // gösterebiliyor. O durumda o site atlanıyor (aşağıda "ATLANDI" satırı);
@@ -70,6 +71,63 @@ const LISTINGS = [
   },
 ];
 
+
+// Crocs UK'de fiyat seçili renge göre değişiyor ve indirimli renkler ayrı bir
+// grupta duruyor. Her renk grubundan bir renge geçip eklentinin okuduğu tutarı
+// sayfanın ekran okuyucu satırıyla karşılaştırıyoruz: indirimli renkte
+// "Sale price: £35.99 (40%), Original price: £59.99", diğerinde "£59.99".
+function crocsUkExpectedPrice(page) {
+  return page.evaluate(() => {
+    const status = document.querySelector("[data-testid='pdp-price'] [role='status']")?.textContent || "";
+    const sale = status.match(/sale price:\s*(£[\d,]+(?:\.\d{2})?)/i);
+    const any = status.match(/£[\d,]+(?:\.\d{2})?/);
+    const original = status.match(/original price:\s*(£[\d,]+(?:\.\d{2})?)/i);
+
+    return {
+      price: sale ? sale[1] : any ? any[0] : null,
+      original: original ? original[1] : null,
+      color: document.querySelector("[data-testid='pdp-selected-color-name']")?.textContent?.trim() || "",
+    };
+  });
+}
+
+async function checkCrocsUkColours(page, firstProduct) {
+  const first = await crocsUkExpectedPrice(page);
+  check("Crocs UK fiyat sayfadakiyle aynı", firstProduct.price === first.price, `${firstProduct.price} / sayfa ${first.price}`);
+
+  const groupCount = await page.evaluate(
+    () => document.querySelectorAll("[data-testid^='pdp-color-group-price-']").length,
+  );
+
+  for (let index = 0; index < groupCount; index += 1) {
+    const switched = await page.evaluate((groupIndex) => {
+      const label = document.querySelector(`[data-testid='pdp-color-group-price-${groupIndex}']`);
+      let group = label?.parentElement;
+      while (group && !group.querySelector("[data-slot='swatch']")) group = group.parentElement;
+
+      const swatch = group?.querySelector("[data-slot='swatch'][aria-checked='false']:not([aria-disabled='true'])");
+      if (!swatch) return null;
+
+      swatch.click();
+      return swatch.getAttribute("aria-label");
+    }, index);
+
+    if (!switched) continue;
+    await wait(3000);
+
+    const expected = await crocsUkExpectedPrice(page);
+    const response = await readProductFromTab(sw, page.url());
+    const product = response?.product || {};
+    const tag = `Crocs UK renk grubu ${index + 1} (${switched})`;
+
+    check(`${tag} fiyat sayfadakiyle aynı`, Boolean(expected.price) && product.price === expected.price, `${product.price} / sayfa ${expected.price}`);
+    if (expected.original) {
+      check(`${tag} üstü çizili tutar alınmadı`, product.price !== expected.original, `${product.price} / liste ${expected.original}`);
+    }
+    check(`${tag} başlıkta seçili renk`, (product.title || "").endsWith(` - ${expected.color}`), product.title);
+    check(...(await imageLoads(product.image, `${tag} görsel açılıyor`)));
+  }
+}
 
 for (const listing of LISTINGS) {
   console.log(`\n===== ${listing.name} =====`);
@@ -188,6 +246,10 @@ for (const listing of LISTINGS) {
         / - .+$/.test(product.title || ""),
         product.title,
       );
+
+      if (listing.name === "Crocs UK") {
+        await checkCrocsUkColours(page, product);
+      }
     } catch (error) {
       check(`${url} yüklendi`, false, error.message.split("\n")[0]);
     }

@@ -38,6 +38,11 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   yazıyordu. Artık taksit bu kutudan okunuyor; taksit göstermeyen ürünler
   eskisi gibi taksitsiz görünüyor. Sepetteki ürünler bir sonraki "Fiyatları
   Güncelle"de düzelir.
+* **Crocs UK ürünlerinde fiyat okunmuyordu.** crocs.co.uk sitesini yeniledi
+  ve eklenti fiyat kutusunu bulamıyordu. Artık fiyat "Select a size"
+  düğmesinin altındaki kutudan, seçili renge göre okunuyor; indirimli
+  renklerde üstü çizili liste fiyatı değil ödenecek tutar alınıyor. Ürün
+  görseli de artık seçili rengin fotoğrafı.
 
 ## 1.19.0 — 6 Kasım 2026
 
