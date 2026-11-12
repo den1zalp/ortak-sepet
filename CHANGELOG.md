@@ -10,6 +10,17 @@ Sürüm numarası `manifest.json` içindeki `version` alanından gelir.
   kargo okunuyor. Kargo ürün sayfasında yazdığı gibi: £149 altındaki
   ürünlerde "Kargo £8.90", üstünde "Ücretsiz kargo". Fiyat kutusundaki
   "30-days best price" ya da "B-Stock" tutarları alınmıyor.
+* **Andertons desteği** (`andertons.co.uk`). Fiyat, ürün adı, görsel, stok,
+  kargo ve finance okunuyor. Kargo ürüne göre: £149 altında "Kargo
+  £5.99'dan", üstünde "Ücretsiz kargo". Finance, fiyatın altındaki
+  hesaplayıcı o ürün için aylık ödeme gösterdiğinde "Taksit var" olarak
+  görünüyor. Üstü çizili liste fiyatı alınmıyor.
+* **guitarguitar desteği** (`guitarguitar.co.uk`). Fiyat, ürün adı, görsel,
+  stok, kargo ve finance okunuyor. Ürün sayfasında aylık ödeme ("Pay
+  Monthly") ya da Klarna / Clearpay ile bölerek ödeme yazıyorsa ürün "Taksit
+  var" olarak görünüyor. Ücretsiz ertesi gün teslimat olan ürünlerde kargo
+  "Ücretsiz ertesi gün teslimat"; £50 altında kargo ücreti sayfada yazmadığı
+  için "Sepette hesaplanır". RRP fiyatı alınmıyor.
 * **Taksit yerine "Sonra öde".** Bazı ürünlerde taksit yok ama ödeme
   ertelenebiliyor; Thomann'da ucuz ürünlerde PayPal "Pay in 30 days"
   sunuyor. Bu ürünlerin kartında artık "Taksit var" ile aynı görünümde bir
