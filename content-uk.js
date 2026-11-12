@@ -249,6 +249,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // sayfada (fiyat güncellemesinin sekmesi gibi) o ana kadar bekleniyor.
       if (productParser?.id === "thomann-uk") await waitForThomannUkPaypalOffer();
 
+      // Andertons'ın finance hesaplayıcısı da sayfa açıldıktan sonra doluyor.
+      if (productParser?.id === "andertons-uk") await waitForAndertonsUkFinanceFrame();
+
       const product = await waitForUkProductFromPage();
 
       if (productParser?.id === "diesel-uk") {

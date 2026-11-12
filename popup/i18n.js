@@ -104,10 +104,14 @@ function normalizeDeliveryText(text) {
     return translate("deliveryInfoAvailable");
   }
 
-  // Sayfada yazan kargo ücreti (Thomann UK: "Delivery £8.90").
-  const deliveryFee = String(text).match(/^delivery\s+(£\s?[\d.,]+)$/i)?.[1];
+  // Sayfada yazan kargo ücreti: "Delivery £8.90" (Thomann UK) ya da en düşük
+  // ücret "Delivery from £5.99" (Andertons).
+  const deliveryFee = String(text).match(/^delivery\s+(from\s+)?(£\s?[\d.,]+)$/i);
   if (deliveryFee) {
-    return currentLanguage === "en" ? `Delivery ${deliveryFee}` : `Kargo ${deliveryFee}`;
+    const [, from, fee] = deliveryFee;
+
+    if (from) return currentLanguage === "en" ? `Delivery from ${fee}` : `Kargo ${fee}'dan`;
+    return currentLanguage === "en" ? `Delivery ${fee}` : `Kargo ${fee}`;
   }
 
   return text;

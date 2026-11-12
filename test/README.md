@@ -75,6 +75,7 @@ parser eklerken veya mevcut birine dokunurken elle çalıştır.
 | `live/stores-6.test.mjs` | Mi TR/UK, Mudo, Oysho TR/UK, Pandora TR/UK, Penti |
 | `live/stores-7.test.mjs` | Pull & Bear TR/UK, Stradivarius TR/UK, Swatch TR/UK, SuperStep, Saat & Saat, Zuhal Müzik, Under Armour TR |
 | `live/thomann.test.mjs` | Thomann UK: fiyat sayfadakiyle aynı, "30-days best price" alınmıyor, taksit ve "Sonra öde" PayPal kutusunun yazdığıyla uyuşuyor (`installment` / `payLater` sayfadan okunuyor) |
+| `live/andertons-guitarguitar.test.mjs` | Andertons ve guitarguitar: fiyat sayfadakiyle aynı, üstü çizili tutar alınmıyor, finance sayfanın gösterdiğiyle uyuşuyor (Andertons: hesaplayıcı görünür mü; guitarguitar: ödeme bloğu var mı) |
 
 Ekran görüntüleri `test/screenshots/` altına düşer (.gitignore'da).
 

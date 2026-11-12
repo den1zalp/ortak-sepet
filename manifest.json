@@ -109,7 +109,9 @@
     "*://*.swatch.com/en-gb/*",
     "*://*.underarmour.co.uk/*",
     "*://*.sportsdirect.com/*",
-    "*://*.thomann.co.uk/*"
+    "*://*.thomann.co.uk/*",
+    "*://*.andertons.co.uk/*",
+    "*://*.guitarguitar.co.uk/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",
@@ -314,7 +316,9 @@
         "*://*.swatch.com/en-gb/*",
         "*://*.underarmour.co.uk/*",
         "*://*.sportsdirect.com/*",
-        "*://*.thomann.co.uk/*"
+        "*://*.thomann.co.uk/*",
+        "*://*.andertons.co.uk/*",
+        "*://*.guitarguitar.co.uk/*"
       ],
       "js": [
         "shared/structured-data.js",
@@ -356,6 +360,8 @@
         "content-uk/parsers/underarmour-uk.js",
         "content-uk/parsers/sportsdirect.js",
         "content-uk/parsers/thomann-uk.js",
+        "content-uk/parsers/andertons-uk.js",
+        "content-uk/parsers/guitarguitar-uk.js",
         "content-uk/parsers/registry.js",
         "content-uk.js"
       ],

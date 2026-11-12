@@ -160,6 +160,8 @@ Geliştirme için paketlenmemiş kurulum aşağıda anlatılıyor.
 * Swatch UK (`swatch.com/en-gb`)
 * Under Armour UK (`underarmour.co.uk`)
 * Thomann UK (`thomann.co.uk`)
+* Andertons (`andertons.co.uk`)
+* guitarguitar (`guitarguitar.co.uk`)
 
 ## Kullanım
 
@@ -273,7 +275,7 @@ polyfill'i güncellemek için tutulur.
 
 ## Marka ve Bağlantı Bildirimi
 
-Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Moko Art Design, Birkenstock, Crocs, Vans, Boyner, Nike, Adidas, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark, iFixit, Mavi, LTB, Koton, LC Waikiki, Colin's, Tudors, DeFacto, Mudo, Penti, Beymen, Desa, Karaca, SuperStep, Gratis, Watsons, Rossmann, Atasun Optik, Konyalı Saat, Saat & Saat, Zuhal Müzik, Apple, Xiaomi, Levi's, Jack & Jones, Calvin Klein, Champion, Lacoste, Marks & Spencer, Pandora, Oysho, Pull & Bear, Stradivarius, Swatch, Under Armour, Sports Direct, Thomann veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
+Bu proje Amazon, Hepsiburada, Trendyol, n11, Teknosa, Vatan Bilgisayar, MediaMarkt, Pazarama, Çiçeksepeti, idefix, D&R, İtopya, İncehesap, IKEA, Samsonite, Decathlon, Sephora, Zippo, Moko Art Design, Birkenstock, Crocs, Vans, Boyner, Nike, Adidas, Zara, Bershka, H&M, JeansLab, eBay, Vinted, Argos, Currys, Diesel, Temu, AliExpress, Gymshark, iFixit, Mavi, LTB, Koton, LC Waikiki, Colin's, Tudors, DeFacto, Mudo, Penti, Beymen, Desa, Karaca, SuperStep, Gratis, Watsons, Rossmann, Atasun Optik, Konyalı Saat, Saat & Saat, Zuhal Müzik, Apple, Xiaomi, Levi's, Jack & Jones, Calvin Klein, Champion, Lacoste, Marks & Spencer, Pandora, Oysho, Pull & Bear, Stradivarius, Swatch, Under Armour, Sports Direct, Thomann, Andertons, guitarguitar veya listelenen diğer platformlarla bağlantılı, sponsorlu, onaylı ya da resmi bir proje değildir.
 
 Listelenen tüm marka adları, yalnızca eklentinin hangi sitelerde çalışmayı hedeflediğini açıklamak amacıyla kullanılmıştır. Tüm marka adları ve ticari markalar ilgili sahiplerine aittir.
 

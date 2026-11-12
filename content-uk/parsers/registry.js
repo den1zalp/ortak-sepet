@@ -258,6 +258,18 @@
       matches: hostIs("thomann.co.uk"),
       parse: () => parseThomannUk(),
     },
+    {
+      id: "andertons-uk",
+      label: "Andertons",
+      matches: hostIs("andertons.co.uk"),
+      parse: () => parseAndertonsUk(),
+    },
+    {
+      id: "guitarguitar-uk",
+      label: "guitarguitar",
+      matches: hostIs("guitarguitar.co.uk"),
+      parse: () => parseGuitarguitarUk(),
+    },
   ];
 
   function getOrtakSepetUkParserForUrl(input) {

@@ -205,6 +205,8 @@ function getSiteName() {
   if (host === "underarmour.co.uk" || host.endsWith(".underarmour.co.uk")) return "Under Armour UK";
   if (host === "sportsdirect.com" || host.endsWith(".sportsdirect.com")) return "Sports Direct";
   if (host === "thomann.co.uk" || host.endsWith(".thomann.co.uk")) return "Thomann UK";
+  if (host === "andertons.co.uk" || host.endsWith(".andertons.co.uk")) return "Andertons";
+  if (host === "guitarguitar.co.uk" || host.endsWith(".guitarguitar.co.uk")) return "guitarguitar";
 
   return host;
 }
@@ -431,6 +433,10 @@ function getPaymentRelatedText() {
 
     try {
       root.querySelectorAll(paymentSelector).forEach((element) => {
+        // SVG ikon kütüphanesindeki tanımlar (<symbol id="icon-logo-klarna">)
+        // sayfada widget değil; site her sayfada bütün ödeme logolarını
+        // tanımlıyor. Andertons'ta her ürün bu yüzden "finance var" çıkıyordu.
+        if (element.closest("symbol, defs")) return;
         if (!isPageChrome(element)) markupParts.push(getElementMarkupText(element));
       });
 
@@ -535,6 +541,16 @@ function findFinanceInfo() {
   // ifadelere takılabilir.
   if (/(^|\.)thomann\.co\.uk$/i.test(window.location.hostname)) {
     return findThomannUkFinanceInfo();
+  }
+
+  // Andertons'ta teklifi fiyatın altındaki finance hesaplayıcısı, guitarguitar'da
+  // ürün sayfasındaki ödeme blokları söylüyor (bkz. parser dosyaları).
+  if (/(^|\.)andertons\.co\.uk$/i.test(window.location.hostname)) {
+    return findAndertonsUkFinanceInfo();
+  }
+
+  if (/(^|\.)guitarguitar\.co\.uk$/i.test(window.location.hostname)) {
+    return findGuitarguitarUkFinanceInfo();
   }
 
   const { text: bodyText, markupText } = getPaymentRelatedText();
@@ -726,6 +742,16 @@ function findShippingInfo() {
     if (thomannShippingInfo) return thomannShippingInfo;
   }
 
+  if (/(^|\.)andertons\.co\.uk$/i.test(host)) {
+    const andertonsShippingInfo = findAndertonsUkShippingInfo();
+    if (andertonsShippingInfo) return andertonsShippingInfo;
+  }
+
+  if (/(^|\.)guitarguitar\.co\.uk$/i.test(host)) {
+    const guitarguitarShippingInfo = findGuitarguitarUkShippingInfo();
+    if (guitarguitarShippingInfo) return guitarguitarShippingInfo;
+  }
+
   const bodyText = cleanText(document.body?.innerText || document.body?.textContent || "");
   const normalized = normalizeForSearch(bodyText);
 
@@ -852,6 +878,28 @@ function getTextBySelectors(selectors) {
   return "";
 }
 
+
+// JSON-LD'deki ilk teklifin stok durumu: true / false / null (yazmıyor).
+// findStructuredOffer() yalnızca fiyatı ve para birimini döndürdüğü için
+// teklif burada ayrıca bulunuyor.
+function getStructuredStockAvailable() {
+  for (const script of document.querySelectorAll("script[type='application/ld+json']")) {
+    try {
+      const product = findProductInJsonLd(JSON.parse(script.textContent));
+      const offer = [product?.offers].flat(Infinity).find((item) => item?.availability);
+      if (!offer) continue;
+
+      const availability = String(offer.availability);
+      if (/InStock|LimitedAvailability|PreOrder|BackOrder/i.test(availability)) return true;
+      if (/OutOfStock|SoldOut|Discontinued/i.test(availability)) return false;
+      return null;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
 
 function formatGbpCurrencyFromNumber(value) {
   const number = Number(value);
